@@ -1,0 +1,66 @@
+.Btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 36px; /* smaller width */
+  height: 36px; /* smaller height */
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition-duration: 0.3s;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.15);
+  background-color: rgb(239, 68, 68);
+}
+
+.sign {
+  width: 100%;
+  transition-duration: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sign svg {
+  width: 14px; /* smaller icon */
+  height: 14px;
+}
+
+.sign svg path {
+  fill: white;
+}
+
+.text {
+  position: absolute;
+  right: 0%;
+  width: 0%;
+  opacity: 0;
+  color: white;
+  font-size: 0.9em; /* smaller font */
+  font-weight: 600;
+  transition-duration: 0.3s;
+}
+
+.Btn:hover {
+  width: 100px; /* smaller hover width */
+  border-radius: 40px;
+  transition-duration: 0.3s;
+}
+
+.Btn:hover .sign {
+  width: 30%;
+  transition-duration: 0.3s;
+  padding-left: 12px;
+}
+
+.Btn:hover .text {
+  opacity: 1;
+  width: 70%;
+  transition-duration: 0.3s;
+  padding-right: 8px;
+}
+
+.Btn:active {
+  transform: translate(1px, 1px); /* subtler click effect */
+}

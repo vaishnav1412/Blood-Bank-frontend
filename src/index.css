@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+	--dark: oklch(40.8% 0.153 2.432);
+	--dark_overlay: #161a1b56;
+	--light: #4f5561;
+	--dark_red: oklch(40.8% 0.153 2.432);;
+	--dark_red_overlay: oklch(59.2% 0.249 0.584);
+	--red: #400606;
+	--off_white: #f2f2f2;
+	--white: #ffffff;
+
+	--md_br: 8px;
+	--sm_br: 4px;
+}
+
+hr
+{
+  color: #c2c2c2;
+}
+
+ 

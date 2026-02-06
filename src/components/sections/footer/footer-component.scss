@@ -1,0 +1,10 @@
+.footer_bg {
+	background: linear-gradient(
+			to right,
+			var(--dark_red) 0%,
+			var(--dark_red_overlay) 100%
+		),
+		url("https://t4.ftcdn.net/jpg/02/21/47/99/360_F_221479946_2yUmWRmVPBka6d4zcXbBhJbRra8WcpQV.jpg") center/cover
+			no-repeat;
+	// add the fixed property to fix the background image
+}

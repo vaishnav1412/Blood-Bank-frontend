@@ -1,0 +1,23 @@
+.profile-wrapper {
+	background: #F2F2F2
+		
+			center/cover no-repeat;
+	background-blend-mode: multiply;
+	
+	animation: fadeup 1s ease-in-out forwards;
+	animation-delay: .5s;
+	transform: translateY(50px);
+	opacity: 0;
+	
+}
+.profile-background {
+	background: linear-gradient(to right, var(--dark)0%, var(--light) 100%),
+		url("../../../assets/images/blood-donation\(7\).jpg")
+			center/cover no-repeat;
+	background-blend-mode: multiply;
+	
+	animation: fadeup 1s ease-in-out forwards;
+	animation-delay: .5s;
+	transform: translateY(50px);
+	opacity: 0;
+}
