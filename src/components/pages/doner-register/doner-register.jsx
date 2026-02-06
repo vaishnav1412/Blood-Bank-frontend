@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import HeroComponent from "../../sections/form-hero/form-hero";
-
+import toast from "react-hot-toast";
 import ThreeStepProcessComponent from "../../sections/three-step-process/three-step-process-component";
 import SideBySideComponent from "../../sections/side-by-side/side-by-side-component";
 import QuoteComponent from "../../sections/quote/quote-component";
@@ -33,7 +34,7 @@ const DonateBloodRegisterPage = () => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate()
 
   const validateForm = () => {
     const newErrors = {};
@@ -69,64 +70,71 @@ const DonateBloodRegisterPage = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const formValidationErrors = validateForm();
-    if (Object.keys(formValidationErrors).length > 0) {
-      setErrors(formValidationErrors);
-      console.log(errors);
+  if (loading) return;
 
-      return;
-    }
+  const formValidationErrors = validateForm();
 
-    setErrors({});
-    setLoading(true);
+  if (Object.keys(formValidationErrors).length > 0) {
+    setErrors(formValidationErrors);
+    return;
+  }
 
-    Axios.post("http://localhost:5000/doner/doner-register", {
-      name: formData.name,
-      gender: formData.gender,
-      bloodGroup: formData.bloodGroup,
-      dob: formData.dob,
-      weight: formData.weight,
-      platelet: formData.platelet,
-      donationCount: formData.donationCount,
-      district: formData.district,
-      taluk: formData.taluk,
-      mobile: formData.mobile,
-      whatsapp: formData.whatsapp,
-      email: formData.email,
-      reEmail: formData.reEmail,
-    })
-      .then((response) => {
-        console.log("success");
-        console.log(response.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {
-        setTimeout
-        
-      });
+  setErrors({});
+  setLoading(true);
 
-    setFormData({
-      name: "",
-      gender: "",
-      bloodGroup: "",
-      dob: "",
-      weight: "",
-      platelet: "",
-      donationCount: "",
-      taluk: "",
-      district: "",
-      mobile: "",
-      whatsapp: "",
-      email: "",
-      reEmail: "",
-      agreeToPolicy: false,
+  // ✅ Toast Loading
+  const toastId = toast.loading("Sending OTP...");
+
+  try {
+    const response = await Axios.post(
+      "http://localhost:5000/doner/doner-register",
+      {
+        name: formData.name,
+        gender: formData.gender,
+        bloodGroup: formData.bloodGroup,
+        dob: formData.dob,
+        weight: formData.weight,
+        platelet: formData.platelet,
+        donationCount: formData.donationCount,
+        district: formData.district,
+        taluk: formData.taluk,
+        mobile: formData.mobile,
+        whatsapp: formData.whatsapp,
+        email: formData.email,
+        reEmail: formData.reEmail,
+      }
+    );
+
+    console.log(response.data);
+
+    // ✅ Success Toast
+    toast.success("OTP sent successfully! Check your email 📩", {
+      id: toastId,
     });
-  };
+
+    // ✅ Do NOT reset form immediately
+    // Redirect to OTP page later
+      navigate("/register-otp",{state:{email:formData.email}})
+    // Example:
+    // navigate("/verify-otp", { state: { email: formData.email } });
+
+  } catch (error) {
+    console.log(error);
+
+    const message =
+      error.response?.data?.message || "Registration failed. Try again.";
+
+    // ❌ Error Toast
+    toast.error(message, { id: toastId });
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const DonateBloodPageDetails = {
     quote: {
