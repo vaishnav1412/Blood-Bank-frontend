@@ -1,0 +1,260 @@
+.donation-gallery {
+  // Container styles
+  width: 100%;
+  overflow-x: hidden;
+
+  // Custom scrollbar for the entire component
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #ec4899, #db2777);
+    border-radius: 10px;
+    
+    &:hover {
+      background: linear-gradient(to bottom, #db2777, #be185d);
+    }
+  }
+
+  // Gallery item hover effects
+  .donation-gallery-item {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px -12px rgba(236, 72, 153, 0.25);
+    }
+    
+    // Image zoom effect
+    .image-container {
+      overflow: hidden;
+      
+      img {
+        transition: transform 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+      }
+      
+      &:hover img {
+        transform: scale(1.15);
+      }
+    }
+  }
+  
+  // Filter buttons animation
+  .filter-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(to right, #ec4899, #db2777);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    
+    &:hover::after {
+      transform: translateX(0);
+    }
+    
+    &.active::after {
+      transform: translateX(0);
+    }
+  }
+  
+  // Pulse animation for stats
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(236, 72, 153, 0.6);
+    }
+  }
+  
+  .stats-item {
+    animation: pulse-glow 4s infinite;
+    
+    &:hover {
+      animation: pulse-glow 2s infinite;
+    }
+  }
+  
+  // Quote card animation
+  .quote-card {
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(to right, #ec4899, #db2777, #be185d);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+  
+  // Text truncation utility
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  // Responsive adjustments
+  @media (max-width: 640px) {
+    .gallery-grid {
+      grid-template-columns: 1fr !important;
+      
+      > div {
+        &.sm\\:col-span-2 {
+          grid-column: 1;
+        }
+      }
+    }
+    
+    .filter-container {
+      .filter-btn {
+        min-width: fit-content;
+        padding: 8px 12px;
+        
+        span:last-child {
+          display: none; // Hide count on very small screens
+        }
+      }
+    }
+  }
+  
+  @media (min-width: 641px) and (max-width: 768px) {
+    .filter-container {
+      .filter-btn {
+        min-width: 120px;
+        text-align: center;
+      }
+    }
+  }
+  
+  // Image modal responsive fixes
+  .fixed {
+    .relative {
+      @media (max-width: 640px) {
+        padding: 0 8px;
+      }
+    }
+    
+    img {
+      @media (max-width: 640px) {
+        max-height: 40vh !important;
+      }
+    }
+  }
+  
+  // Loading skeleton animation
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+  
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #f0f0f0 25%,
+      #e0e0e0 50%,
+      #f0f0f0 75%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+}
+
+// Modal animation classes
+.modal-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.modal-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.modal-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.modal-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 300ms, transform 300ms;
+}
+
+// Ensure images load smoothly
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+// Mobile-first responsive utilities (simplified without @layer)
+.min-h-64 {
+  min-height: 16rem;
+}
+
+.h-48 {
+  height: 12rem;
+}
+
+.h-56 {
+  height: 14rem;
+}
+
+.h-64 {
+  height: 16rem;
+}
+
+// Responsive variants
+@media (min-width: 640px) {
+  .sm\:h-56 {
+    height: 14rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:h-64 {
+    height: 16rem;
+  }
+}

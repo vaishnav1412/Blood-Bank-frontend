@@ -25,8 +25,8 @@ const HeaderComponent = () => {
   const navigation = [
     { name: "Home", href: "/" },
     { name: "Host Blood Drive", href: "/host-blood-drive" },
-    { name: "Gallery", href: "" },
-    { name: "Help Needed", href: "/contact" },
+    { name: "Gallery", href: "/gallery" },
+    { name: "Contact Us", href: "/contact" },
     { name: "Need Blood", href: "/need-blood", secondLast: true },
     user
       ? {

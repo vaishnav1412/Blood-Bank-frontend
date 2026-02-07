@@ -1,0 +1,220 @@
+.host-blood-drive-wrapper {
+  width: 100%;
+  position: relative;
+
+  // Progress step animation
+  .progress-step {
+    transition: all 0.3s ease;
+    
+    &.active {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(236, 72, 153, 0.3);
+    }
+  }
+
+  // Form animations
+  .form-step {
+    animation: slideIn 0.5s ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  // Shake animation for errors
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+
+  .shake-animation {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  // Custom range slider
+  input[type="range"] {
+    -webkit-appearance: none;
+    
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      background: #ec4899;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    &::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      background: #ec4899;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+  }
+
+  // Checkbox styling
+  input[type="checkbox"] {
+    &:checked {
+      background-color: #ec4899;
+      border-color: #ec4899;
+    }
+    
+    &:focus {
+      ring: 2px;
+      ring-color: #ec4899;
+    }
+  }
+
+  // Button hover effects
+  button:not(:disabled) {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  // Success modal animation
+  .modal-enter {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  .modal-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms, transform 300ms;
+  }
+
+  // Organization type cards
+  .org-type-card {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    &.selected {
+      box-shadow: 0 5px 15px rgba(236, 72, 153, 0.3);
+    }
+  }
+
+  // Equipment selection cards
+  .equipment-card {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      border-color: #ec4899;
+      background-color: #fdf2f8;
+    }
+    
+    &.selected {
+      border-color: #ec4899;
+      background-color: #fdf2f8;
+      box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .lg\\:flex-row {
+      flex-direction: column;
+    }
+    
+    .lg\\:w-2\\/5, .lg\\:w-3\\/5 {
+      width: 100%;
+    }
+    
+    .grid-cols-5 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-cols-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .progress-steps {
+      .step-label {
+        display: none;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .grid-cols-5 {
+      grid-template-columns: 1fr;
+    }
+    
+    .grid-cols-3 {
+      grid-template-columns: 1fr;
+    }
+    
+    .grid-cols-2 {
+      grid-template-columns: 1fr;
+    }
+    
+    .md\\:grid-cols-2 {
+      grid-template-columns: 1fr;
+    }
+    
+    .navigation-buttons {
+      flex-direction: column;
+      gap: 12px;
+      
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  // Spinner animation
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .fa-spinner {
+    animation: spin 1s linear infinite;
+  }
+
+  // Date input styling
+  input[type="date"], input[type="time"] {
+    &::-webkit-calendar-picker-indicator {
+      filter: invert(0.5);
+      cursor: pointer;
+      
+      &:hover {
+        filter: invert(0.3);
+      }
+    }
+  }
+
+  // Focus states for accessibility
+  :focus-visible {
+    outline: 2px solid #ec4899;
+    outline-offset: 2px;
+  }
+
+  // Smooth scrolling for form steps
+  .form-container {
+    scroll-behavior: smooth;
+  }
+}

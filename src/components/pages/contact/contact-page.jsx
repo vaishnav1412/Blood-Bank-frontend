@@ -55,8 +55,8 @@ const ContactPage = () => {
 
 	const ContactPageDetails = {
 		hero: {
-			subheadingText: "Got any Questions?",
-			headingText: "Don't Know What to Do? Let Us Assist You.",
+			subheadingText: "",
+			headingText: "",
 			classHint: "contact-page-hero",
 		},
 	};

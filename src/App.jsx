@@ -16,6 +16,7 @@ import AdminNeedHelp from "./components/views/admin/admin-need-help";
 import ForgotOtpPage from "./components/pages/forgot-password-otp/forgot-password-otp";
 import RegisterOtpPage from "./components/pages/register-otp/register-otp";
 import ForgotPasswordPage from "./components/pages/forgot-password-password/forgotPasswordPassword";
+import Gallery from "./components/pages/gallery/gallery";
 import { Toaster } from "react-hot-toast";
 
 export default function App() {
@@ -64,22 +65,24 @@ export default function App() {
         <Route exact path="/" element={<HomePage />} />
         <Route path="/register" element={<DonerRegister />} />
         <Route path="/donate-blood" element={<DonerLogin />} />
+        <Route path="/gallery" element={<Gallery/>}/>
+        <Route path="/register-otp" element={<RegisterOtpPage />} />
+        <Route path="/need-blood" element={<NeedBloodPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+
+
+
+
+        <Route path="/host-blood-drive" element={<HostBloodDrivePage />} />
 
 
 
         
-
-        <Route path="/host-blood-drive" element={<HostBloodDrivePage />} />
+        <Route path="/doner-profile" element={<BloodDonerProfile />} />
         <Route path="/resetemail" element={<ForgotEmailPage />} />
         <Route path="/resetotp" element={<ForgotOtpPage />} />
-        <Route path="/register-otp" element={<RegisterOtpPage />} />
         <Route path="/reset-password" element={<ForgotPasswordPage />} />
 
-        <Route path="/need-blood" element={<NeedBloodPage />} />
-
-        <Route path="/doner-profile" element={<BloodDonerProfile />} />
-
-        <Route path="/contact" element={<ContactPage />} />
         <Route path="/admin" element={<Admin />}>
           <Route index element={<Dashboard />} />
           <Route path="donate-blood" element={<AdminDonateBlood />} />

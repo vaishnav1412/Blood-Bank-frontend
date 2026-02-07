@@ -3,12 +3,10 @@ import HeroComponent from "../../sections/hero/hero-component";
 import ThreeStepProcessComponent from "../../sections/three-step-process/three-step-process-component";
 import SideBySideComponent from "../../sections/side-by-side/side-by-side-component";
 import QuoteComponent from "../../sections/quote/quote-component";
-import FormComponent from "../../sections/form/form-component";
-import ContactForm from "../../sections/form/contact-form";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
 import FooterComponent from "../../sections/footer/footer-component";
-
+import HostBloodDrive from "../../sections/form/host-blood-drive";
 import Axios from "axios";
 import newUsersInsertRequest from "../../utility-functions/new-users-insert-request";
 
@@ -87,8 +85,8 @@ const HostBloodDrivePage = () => {
 },
 
 		hero: {
-			subheadingText: "Join us to save lives",
-			headingText: "Host a Blood Drive to save lives with us",
+			subheadingText: "",
+			headingText: "",
 			classHint: "host-blood-drive-page-hero",
 		},
 		stepsText: {
@@ -121,12 +119,7 @@ const HostBloodDrivePage = () => {
   },
 ];
 
-	const fields = [
-	{ key: "institution", name: "institution", type: "text", placeholder: "Institution Name", required: true },
-	{ key: "phone", name: "phone", type: "tel", placeholder: "Phone Number", required: true },
-	{ key: "district", name: "district", type: "select", required: true },
-	{ key: "preferredDate", name: "preferredDate", type: "date", required: true },
-];
+
 
 	
 
@@ -136,14 +129,10 @@ const HostBloodDrivePage = () => {
 		<>
 			<HeaderComponent />
 			<HeroComponent {...HostBloodDrivePageDetails.hero} />
-			<ContactForm
-				fields={fields}
-				heading={"Host a Blood Drive in Your Institution"}
-				buttonText={"Submit Request"}
-				handleSubmit={handleSubmit}
-				formData={formData}
-				setFormData={setFormData}
-			/>
+		
+
+<HostBloodDrive/>
+
 			<ThreeStepProcessComponent
 				stepsText={HostBloodDrivePageDetails.stepsText}
 				stepDetails={stepDetails}
