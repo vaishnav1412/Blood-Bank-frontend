@@ -1,6 +1,7 @@
 import { useState } from "react";
 import HeroComponent from "../../sections/hero/hero-component";
 import ContactForm from "../../sections/form/contact-form";
+import ForgotPasswordForm from "../../sections/form/forgot-password";
 import ContactDetailsComponent from "../../sections/details/details-component";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
@@ -54,18 +55,13 @@ const ForgotEmailPage = () => {
 
 	const ResetEmailCaptions = {
 		hero: {
-			subheadingText: "Got any Questions?",
-			headingText: "Don't Know What to Do? Let Us Assist You.",
+			subheadingText: "",
+			headingText: "",
 			classHint: "contact-page-hero",
 		},
 	};
 
 
-	const fields = [
-		
-		{ key: "email", name: "email", type: "email", placeholder: "Email", required: true },
-		
-	];
 
 	const ResetEmailDetails = [
 		{
@@ -96,12 +92,7 @@ const ForgotEmailPage = () => {
 			<HeaderComponent />
 
 			<HeroComponent {...ResetEmailCaptions .hero} />
-			<ContactForm fields={fields}
-				heading={"We’ll Help You Get Back In"}
-				buttonText={"Get OTP"}
-				handleSubmit={handleSubmit}
-				formData={formData}
-				setFormData={setFormData}/>
+			<ForgotPasswordForm/>
 			
 			<ContactDetailsComponent contactDetails={ResetEmailDetails} />
 			<BeforeFooterCTA />
