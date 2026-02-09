@@ -68,7 +68,7 @@ const RegisterOtpPage = () => {
 
       // ✅ Redirect after success
       setTimeout(() => {
-        navigate("/donate-blood"); // login page
+        navigate("/login"); // login page
       }, 2000);
 
     } catch (error) {

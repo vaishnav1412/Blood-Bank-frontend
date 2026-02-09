@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { 
   FaEnvelope, 
   FaKey, 
   FaCheckCircle, 
   FaSpinner,
-  FaArrowLeft,
   FaShieldAlt,
   FaPaperPlane,
   FaClock,
@@ -14,7 +14,7 @@ import "./forgot-password";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
 
 const ForgotPasswordForm = () => {
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password, 4: Success
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     email: "",
     otp: "",
@@ -27,6 +27,7 @@ const ForgotPasswordForm = () => {
   const [timer, setTimer] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
   const [resendAvailable, setResendAvailable] = useState(false);
+  const [userId, setUserId] = useState(null); // Store user ID for password reset
 
   // Timer for OTP resend
   useEffect(() => {
@@ -44,21 +45,15 @@ const ForgotPasswordForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // OTP input - only numbers and limit to 6 digits
     if (name === "otp") {
       const numericValue = value.replace(/\D/g, '').slice(0, 6);
       setFormData(prev => ({ ...prev, [name]: numericValue }));
-    } 
-    // Password - trim spaces
-    else if (name === "newPassword" || name === "confirmPassword") {
+    } else if (name === "newPassword" || name === "confirmPassword") {
       setFormData(prev => ({ ...prev, [name]: value.trim() }));
-    }
-    // Email - allow normal input
-    else {
+    } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
     
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
@@ -93,7 +88,6 @@ const ForgotPasswordForm = () => {
   const validatePassword = () => {
     const newErrors = {};
     
-    // Password strength validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     
     if (!formData.newPassword.trim()) {
@@ -111,6 +105,7 @@ const ForgotPasswordForm = () => {
     return newErrors;
   };
 
+  // API call to send OTP
   const handleSendOTP = async () => {
     const emailErrors = validateEmail();
     
@@ -121,28 +116,49 @@ const ForgotPasswordForm = () => {
     
     setIsLoading(true);
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     try {
-      // Simulate API call to send OTP
-      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      console.log("OTP sent to:", formData.email);
+      const response = await axios.post("http://localhost:5000/doner/send-otp", {
+        email: formData.email,
+        purpose: "password_reset"
+      });
       
-      setOtpSent(true);
-      setTimer(60); // 60 seconds timer
-      setResendAvailable(false);
-      setStep(2);
-      
-      // Show success message
-      alert(`OTP sent successfully to ${formData.email}`);
+      if (response.data.success) {
+        console.log("OTP sent to:", formData.email);
+        setOtpSent(true);
+        setTimer(60); // 60 seconds timer
+        setResendAvailable(false);
+        setStep(2);
+        
+        // Show success message
+        alert(`OTP sent successfully to ${formData.email}`);
+      } else {
+        alert(response.data.message || "Failed to send OTP. Please try again.");
+      }
       
     } catch (error) {
       console.error("Failed to send OTP:", error);
-      alert("Failed to send OTP. Please try again.");
+      alert("Failed to send OTP. Please check your email address or try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // API call to verify OTP
   const handleVerifyOTP = async () => {
     const otpErrors = validateOTP();
     
@@ -154,15 +170,18 @@ const ForgotPasswordForm = () => {
     setIsLoading(true);
     
     try {
-      // Simulate OTP verification
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Replace with your actual API endpoint
+      const response = await axios.post("http://localhost:3001/api/verify-otp", {
+        email: formData.email,
+        otp: formData.otp
+      });
       
-      // In real app, verify OTP with backend
-      if (formData.otp === "123456") { // Demo OTP
+      if (response.data.success) {
         console.log("OTP verified successfully");
+        setUserId(response.data.userId); // Store user ID for password reset
         setStep(3);
       } else {
-        setErrors({ otp: "Invalid OTP. Please try again." });
+        setErrors({ otp: response.data.message || "Invalid OTP. Please try again." });
       }
       
     } catch (error) {
@@ -173,20 +192,25 @@ const ForgotPasswordForm = () => {
     }
   };
 
+  // API call to resend OTP
   const handleResendOTP = async () => {
     if (!resendAvailable) return;
     
     setIsLoading(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await axios.post("http://localhost:3001/api/resend-otp", {
+        email: formData.email
+      });
       
-      console.log("Resending OTP to:", formData.email);
-      
-      setTimer(60);
-      setResendAvailable(false);
-      
-      alert("New OTP sent successfully!");
+      if (response.data.success) {
+        console.log("Resending OTP to:", formData.email);
+        setTimer(60);
+        setResendAvailable(false);
+        alert("New OTP sent successfully!");
+      } else {
+        alert(response.data.message || "Failed to resend OTP.");
+      }
       
     } catch (error) {
       console.error("Failed to resend OTP:", error);
@@ -196,6 +220,7 @@ const ForgotPasswordForm = () => {
     }
   };
 
+  // API call to reset password
   const handleResetPassword = async () => {
     const passwordErrors = validatePassword();
     
@@ -207,13 +232,20 @@ const ForgotPasswordForm = () => {
     setIsLoading(true);
     
     try {
-      // Simulate password reset API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Replace with your actual API endpoint
+      const response = await axios.post("http://localhost:3001/api/reset-password", {
+        userId: userId,
+        email: formData.email,
+        newPassword: formData.newPassword,
+        otp: formData.otp // Include OTP for verification
+      });
       
-      console.log("Password reset successful for:", formData.email);
-      console.log("New password:", formData.newPassword); // In real app, this would be hashed
-      
-      setStep(4);
+      if (response.data.success) {
+        console.log("Password reset successful for:", formData.email);
+        setStep(4);
+      } else {
+        alert(response.data.message || "Failed to reset password. Please try again.");
+      }
       
     } catch (error) {
       console.error("Password reset failed:", error);
@@ -224,7 +256,8 @@ const ForgotPasswordForm = () => {
   };
 
   const handleBackToLogin = () => {
-    // Navigate to login page
+    // Use React Router for navigation if you have it
+    // navigate("/login");
     window.location.href = "/login";
   };
 
@@ -272,9 +305,9 @@ const ForgotPasswordForm = () => {
               </div>
 
               {/* Security Tips */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <h4 className="font-bold text-blue-800 mb-2 flex items-center">
-                  <FaShieldAlt className="mr-2" />
+              <div className="bg-blue border border-blue-200 rounded-xl p-4">
+                <h4 className="font-bold  mb-2 flex items-center">
+                  <FaShieldAlt className="mr-2  " />
                   Security Tips
                 </h4>
                 <ul className="text-sm text-blue-700 space-y-1">
@@ -309,7 +342,7 @@ const ForgotPasswordForm = () => {
         return (
           <div className="form-step animate-fade-in">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaKey className="text-white text-2xl" />
               </div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2">
@@ -584,7 +617,7 @@ const ForgotPasswordForm = () => {
 
   return (
     <WrapperSection>
-      <div className="forgot-password-wrapper bg-gradient-to-b from-white to-pink-200 md:-mt-80 rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+      <div className="forgot-password-wrapper bg-gradient-to-b from-white to-pink-200 md:-mt-[420px] -mt-[650px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
         <div className="max-w-md mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
@@ -643,7 +676,7 @@ const ForgotPasswordForm = () => {
           </div>
 
           {/* Security Notice */}
-          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="mt-6 bg-pink-400 border border-blue-200 rounded-xl p-4">
             <div className="flex items-start">
               <FaShieldAlt className="text-blue-500 mt-1 mr-3" />
               <div>

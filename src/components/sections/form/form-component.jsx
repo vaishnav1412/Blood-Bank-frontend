@@ -48,7 +48,7 @@ const FormComponent = ({
   return (
     <WrapperSection>
       {/* Main Wrapper */}
-      <div className="form-wrapper w-full max-w-xl mx-auto relative -mt-32">
+      <div className="form-wrapper w-full max-w-xl mx-auto relative md:-mt-[420px] -mt-32">
 
         {/* Glow Border */}
         <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-400 via-pink-300 to-pink-400 rounded-2xl blur opacity-30"></div>
