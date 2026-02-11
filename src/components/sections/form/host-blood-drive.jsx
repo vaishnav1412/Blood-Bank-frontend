@@ -3,9 +3,6 @@ import {
   FaCalendarAlt,
   FaUsers,
   FaHospital,
-  FaMapMarkerAlt,
-  FaPhone,
-  FaEnvelope,
   FaClock,
   FaCheckCircle,
   FaUniversity,
@@ -15,13 +12,14 @@ import {
   FaPaperPlane,
   FaSpinner,
   FaCalendarCheck,
-  FaUserFriends,
-  FaTint,
-  FaRegCalendarCheck,
+  
   FaChartLine
 } from "react-icons/fa";
 import "./host-blood-drive";
+import axios from "axios";
+import toast from "react-hot-toast";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
+const API = import.meta.env.VITE_API_URL;
 
 const HostBloodDrive = () => {
   const [activeStep, setActiveStep] = useState(1);
@@ -197,9 +195,10 @@ const HostBloodDrive = () => {
     setErrors({});
   };
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // 1. Validate Final Step
     const finalErrors = validateStep(4);
     if (Object.keys(finalErrors).length > 0) {
       setErrors(finalErrors);
@@ -208,20 +207,23 @@ const HostBloodDrive = () => {
     
     setIsSubmitting(true);
     
+    // 2. Show loading toast
+    const toastId = toast.loading("Submitting your application...");
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 3. API Call (Sending formData directly)
+      const response = await axios.post(`${API}/doner/applicationSubmission`, formData);
       
-      console.log("Blood Drive Application:", formData);
+      console.log("Server Response:", response.data);
       
-      // Generate application ID
-      const applicationId = `BD${Date.now().toString().slice(-6)}`;
+      // 4. Update toast to success
+      toast.success("Application submitted successfully!", { id: toastId });
       
-      // Show success modal
+      // 5. Show the custom Success Modal (to show the Application ID)
       setShowSuccessModal(true);
       setIsSubmitted(true);
       
-      // Reset form after submission
+      // 6. Reset Form Logic (runs in background)
       setTimeout(() => {
         setFormData({
           organizationType: "",
@@ -250,11 +252,16 @@ const HostBloodDrive = () => {
         });
         setActiveStep(1);
         setIsSubmitted(false);
+        setShowSuccessModal(false); // Optional: Close modal automatically after reset
       }, 5000);
       
     } catch (error) {
       console.error("Submission error:", error);
-      alert("Failed to submit application. Please try again.");
+      
+      // 7. Update toast to error (Replaces the old alert)
+      const errorMessage = error.response?.data?.message || "Failed to submit application. Please try again.";
+      toast.error(errorMessage, { id: toastId });
+      
     } finally {
       setIsSubmitting(false);
     }
@@ -632,33 +639,100 @@ const HostBloodDrive = () => {
             </div>
 
             {/* Awareness Program */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Would you like us to conduct an awareness program?
-              </label>
-              <div className="flex space-x-4">
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, awarenessProgram: "yes" }))}
-                  className={`flex-1 py-3 rounded-xl border-2 transition-all ${formData.awarenessProgram === "yes" 
-                    ? 'border-green-500 bg-green-50 text-green-700' 
-                    : 'border-gray-200 bg-white hover:border-green-300'}`}
-                >
-                  <div className="text-xl mb-1">✅</div>
-                  <span className="font-medium">Yes, Please</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, awarenessProgram: "no" }))}
-                  className={`flex-1 py-3 rounded-xl border-2 transition-all ${formData.awarenessProgram === "no" 
-                    ? 'border-gray-500 bg-gray-100 text-gray-700' 
-                    : 'border-gray-200 bg-white hover:border-gray-300'}`}
-                >
-                  <div className="text-xl mb-1">❌</div>
-                  <span className="font-medium">Not Required</span>
-                </button>
-              </div>
-            </div>
+           <div>
+  <label className="block text-sm font-semibold text-gray-700 mb-3">
+    Would you like us to conduct an awareness program?
+  </label>
+  <div className="flex space-x-4">
+    <button
+      type="button"
+      onClick={() => setFormData(prev => ({ ...prev, awarenessProgram: "yes" }))}
+      className={`relative flex-1 py-4 rounded-xl border-2 transition-all duration-500 ease-in-out overflow-hidden group ${
+        formData.awarenessProgram === "yes" 
+          ? 'border-green-500 bg-gradient-to-br from-green-50 to-green-100 text-green-700 shadow-lg shadow-green-500/20 scale-[1.02]' 
+          : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30 hover:shadow-md'
+      }`}
+    >
+      {/* Shine effect for selected state */}
+      {formData.awarenessProgram === "yes" && (
+        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      )}
+      
+      {/* Checkmark indicator for selected state */}
+      {formData.awarenessProgram === "yes" && (
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+          <FaCheckCircle className="text-white text-sm" />
+        </div>
+      )}
+      
+      <div className="flex flex-col items-center justify-center">
+        <span className="text-2xl mb-1 transform group-hover:scale-110 transition-transform duration-300">
+          ✅
+        </span>
+        <span className="font-bold flex items-center">
+          Yes, Please
+          {formData.awarenessProgram === "yes" && (
+            <FaCheckCircle className="ml-2 text-green-500 animate-pulse" />
+          )}
+        </span>
+        {formData.awarenessProgram === "yes" && (
+          <span className="text-xs mt-1 text-green-600 font-medium animate-pulse">
+            Selected
+          </span>
+        )}
+      </div>
+      
+      {/* Animated underline */}
+      {formData.awarenessProgram === "yes" && (
+        <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-green-400 to-green-500 rounded-full animate-pulse" />
+      )}
+    </button>
+    
+    <button
+      type="button"
+      onClick={() => setFormData(prev => ({ ...prev, awarenessProgram: "no" }))}
+      className={`relative flex-1 py-4 rounded-xl border-2 transition-all duration-500 ease-in-out overflow-hidden group ${
+        formData.awarenessProgram === "no" 
+          ? 'border-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 shadow-lg shadow-gray-500/20 scale-[1.02]' 
+          : 'border-gray-200 bg-white hover:border-gray-400 hover:bg-gray-50/30 hover:shadow-md'
+      }`}
+    >
+      {/* Shine effect for selected state */}
+      {formData.awarenessProgram === "no" && (
+        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      )}
+      
+      {/* Checkmark indicator for selected state */}
+      {formData.awarenessProgram === "no" && (
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+          <FaCheckCircle className="text-white text-sm" />
+        </div>
+      )}
+      
+      <div className="flex flex-col items-center justify-center">
+        <span className="text-2xl mb-1 transform group-hover:scale-110 transition-transform duration-300">
+          ❌
+        </span>
+        <span className="font-bold flex items-center">
+          Not Required
+          {formData.awarenessProgram === "no" && (
+            <FaCheckCircle className="ml-2 text-gray-500 animate-pulse" />
+          )}
+        </span>
+        {formData.awarenessProgram === "no" && (
+          <span className="text-xs mt-1 text-gray-600 font-medium animate-pulse">
+            Selected
+          </span>
+        )}
+      </div>
+      
+      {/* Animated underline */}
+      {formData.awarenessProgram === "no" && (
+        <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full animate-pulse" />
+      )}
+    </button>
+  </div>
+</div>
 
             {/* Terms & Conditions */}
             <div className="bg-pink-50 border border-pink-200 rounded-xl p-4">
@@ -710,7 +784,7 @@ const HostBloodDrive = () => {
   const SuccessModal = () => (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 text-center">
-        <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 bg-pink_dark rounded-full flex items-center justify-center mx-auto mb-6">
           <FaCheckCircle className="text-white text-3xl" />
         </div>
         
@@ -878,7 +952,7 @@ const HostBloodDrive = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold transition-all hover:shadow-lg flex items-center disabled:opacity-70"
+                    className="px-8 py-3 bg-pink_second_dark text-white rounded-xl font-bold transition-all hover:shadow-lg flex items-center disabled:opacity-70 hover:bg-pink_dark"
                   >
                     {isSubmitting ? (
                       <>

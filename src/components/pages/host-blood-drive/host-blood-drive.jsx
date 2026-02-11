@@ -1,4 +1,3 @@
-import { useState } from "react";
 import HeroComponent from "../../sections/hero/hero-component";
 import ThreeStepProcessComponent from "../../sections/three-step-process/three-step-process-component";
 import SideBySideComponent from "../../sections/side-by-side/side-by-side-component";
@@ -7,148 +6,26 @@ import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
 import FooterComponent from "../../sections/footer/footer-component";
 import HostBloodDrive from "../../sections/form/host-blood-drive";
-import Axios from "axios";
-import newUsersInsertRequest from "../../utility-functions/new-users-insert-request";
+import { stepDetails ,HostBloodDrivePageDetails } from "../../../data/content/camp";
 
 const HostBloodDrivePage = () => {
-	const [formData, setFormData] = useState({
-		name: "",
-		phone: "",
-		institute: "",
-		taluk: "",
-		district:"",
-		message: "",
-	});
-
-	const handleSubmit = (e) => {
-		e.preventDefault();
-
-		console.log(formData);
-
-		Axios.post("http://localhost:3001/create-host-blood-drive", {
-			name: formData.name,
-			email: formData.email,
-			phone: formData.phone,
-			institute: formData.institute,
-			taluk: formData.taluk,
-			district:formData.district,
-			message: formData.message,
-		})
-			.then((response) => {
-				console.log("success");
-				console.log(response.data);
-			})
-			.catch((error) => {
-				console.log(error);
-			});
-
-		newUsersInsertRequest(formData, "host-blood-drive");
-
-		setFormData({
-			name: "",
-			phone: "",
-			institute: "",
-			taluk: "",
-			district: "",
-			message: "",
-		});
-	};
-
-	const HostBloodDrivePageDetails = {
-		quote: {
-			classHint: "quote host-drive-quote",
-			quoteText: `“Your decision to host a blood drive with us can be the reason someone smiles today, tomorrow, and for many years to come. Let's make a difference together!”`,
-		},
-		benefits_host_drive: {
-			subheadingText: "Being a Hero",
-			headingText: "Benefits of Hosting a Blood Drive",
-			classHint: "side-col-image benefits-host-drive",
-			paraText: `Hosting a blood drive is a great way to give back to your community and help save lives.
-			By providing a convenient location for people to donate, you can help ensure that there is a steady supply of blood for those in need.
-			Blood drives also provide an opportunity for team building and community involvement, and can boost morale and engagement among employees or group members.`,
-			imageUrl: "../../../assets/images/blood-donation(1).jpg",
-			buttonText: "Host Now",
-			buttonLink: "/host-blood-drive",
-			buttonHave: true,
-		},
-
-	hosting_blood_drive: {
-	subheadingText: "Collaborate for a Cause",
-	headingText: "Host a Blood Donation Camp",
-	classHint: "side-col-image hosting-blood-drive",
-	paraText: `Are you an institution or organization looking to make a real impact? Partner with us to host a blood donation camp and awareness program at your premises. 
-	Simply submit your interest through the form — our coordinator will get in touch to plan and organize the entire event with you.`,
-	imageUrl: "../../../assets/images/blood-donation(1).jpg",
-	buttonText: "Apply to Host",
-	buttonLink: "/host-blood-drive",
-	buttonHave: true,
-},
-
-		hero: {
-			subheadingText: "",
-			headingText: "",
-			classHint: "host-blood-drive-page-hero",
-		},
-		stepsText: {
-			subheadingText: "Guide for Hosting",
-			headingText: "Promoting Your Blood Drive",
-		},
-	};
-
-	const stepDetails = [
-  {
-    key: "submit-application",
-    stepNumber: "01",
-    stepName: "Submit Application",
-    stepDescription:
-      "Institutions fill out the form with contact and location details.",
-  },
-  {
-    key: "get-a-call",
-    stepNumber: "02",
-    stepName: "Coordinator Call",
-    stepDescription:
-      "Our team will contact you to discuss and schedule the camp.",
-  },
-  {
-    key: "camp-setup",
-    stepNumber: "03",
-    stepName: "Camp & Awareness Program",
-    stepDescription:
-      "We conduct the blood donation camp and an optional awareness session.",
-  },
-];
-
-
-
-	
-
-
-
-	return (
-		<>
-			<HeaderComponent />
-			<HeroComponent {...HostBloodDrivePageDetails.hero} />
-		
-
-<HostBloodDrive/>
-
-			<ThreeStepProcessComponent
-				stepsText={HostBloodDrivePageDetails.stepsText}
-				stepDetails={stepDetails}
-			/>
-			<SideBySideComponent
-				{...HostBloodDrivePageDetails.benefits_host_drive}
-			/>
-
-			<QuoteComponent {...HostBloodDrivePageDetails.quote} />
-			<SideBySideComponent
-				{...HostBloodDrivePageDetails.hosting_blood_drive}
-			/>
-			<BeforeFooterCTA />
-			<FooterComponent />
-		</>
-	);
+  
+  return (
+    <>
+      <HeaderComponent />
+      <HeroComponent {...HostBloodDrivePageDetails.hero} />
+      <HostBloodDrive />
+      <ThreeStepProcessComponent
+        stepsText={HostBloodDrivePageDetails.stepsText}
+        stepDetails={stepDetails}
+      /> 
+      <SideBySideComponent {...HostBloodDrivePageDetails.benefits_host_drive} />
+      <QuoteComponent {...HostBloodDrivePageDetails.quote} />
+      <SideBySideComponent {...HostBloodDrivePageDetails.hosting_blood_drive} />
+      <BeforeFooterCTA />
+      <FooterComponent />
+    </>
+  );
 };
 
 export default HostBloodDrivePage;
