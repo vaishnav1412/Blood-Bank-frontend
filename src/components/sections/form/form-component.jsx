@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./form-component-styles.scss";
+import { FaSpinner } from "react-icons/fa";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
 import { labelStyles ,inputStyles } from "../../../data/style/style";
 import PropTypes from "prop-types";
@@ -154,15 +155,44 @@ const FormComponent = ({
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-gradient-to-r from-pink-600 to-pink-700 
-              hover:from-pink-700 hover:to-pink-800 text-white font-semibold 
-              rounded-lg transition-all duration-200 hover:shadow-lg"
-            >
-              {loading ? "Submitting..." : buttonText}
-            </button>
+           <button
+  type="submit"
+  disabled={loading}
+  className={`relative w-full py-4 rounded-xl font-bold transition-all duration-500 ease-in-out overflow-hidden group ${
+    !loading
+      ? `bg-gradient-to-r from-pink-600 via-pink-700 to-pink-600 bg-[length:200%_100%]
+         hover:bg-[length:100%_100%] text-white shadow-lg
+         hover:shadow-2xl hover:shadow-pink-500/30 transform hover:-translate-y-0.5
+         before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/0 
+         before:via-white/20 before:to-white/0 before:translate-x-[-200%] 
+         hover:before:translate-x-[200%] before:transition-transform before:duration-1000
+         animate-gradient-x`
+      : "bg-gradient-to-r from-pink-600/50 to-pink-700/50 text-white cursor-not-allowed"
+  }`}
+>
+  {/* Animated background shine effect for enabled state */}
+  {!loading && (
+    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+  )}
+  
+  <span className="relative flex items-center justify-center">
+    {loading ? (
+      <>
+        <FaSpinner className="animate-spin mr-3" />
+        Submitting...
+      </>
+    ) : (
+      <>
+        <span className="relative">
+          {buttonText}
+          {/* Underline animation */}
+          <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
+        </span>
+        <span className="ml-2 opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300">→</span>
+      </>
+    )}
+  </span>
+</button>
 
             {/* Signup Link */}
             <p className="text-center text-sm text-gray-600 pt-4 border-t border-pink-100">

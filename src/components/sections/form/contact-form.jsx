@@ -6,14 +6,16 @@ import {
   FaComment, 
   FaPaperPlane, 
   FaCheckCircle,
-  FaMapMarkerAlt,
   FaClock,
-  FaWhatsapp,
   FaTimes,
   FaSpinner
 } from "react-icons/fa";
 import "./contact-form.scss";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
+import { contactInfo,subjects } from "../../../data/content/contact";
+import axios from "axios";
+import toast from "react-hot-toast";
+const API = import.meta.env.VITE_API_URL;
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -23,58 +25,10 @@ const ContactForm = () => {
     subject: "",
     message: ""
   });
-  
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState("form");
-
-  const subjects = [
-    "Blood Donation Query",
-    "Become a Donor",
-    "Emergency Request",
-    "Organize Blood Drive",
-    "Volunteer Opportunity",
-    "General Inquiry",
-    "Technical Support",
-    "Partnership"
-  ];
-
-  const contactInfo = [
-    {
-      icon: <FaPhone className="text-xl" />,
-      title: "Call Us",
-      details: "+91 98765 43210",
-      subtitle: "24/7 Emergency Helpline",
-      action: "tel:+919876543210",
-      color: "from-pink-500 to-red-500"
-    },
-    {
-      icon: <FaWhatsapp className="text-xl" />,
-      title: "WhatsApp",
-      details: "+91 98765 43210",
-      subtitle: "Quick response guaranteed",
-      action: "https://wa.me/919876543210",
-      color: "from-green-500 to-green-600"
-    },
-    {
-      icon: <FaEnvelope className="text-xl" />,
-      title: "Email Us",
-      details: "help@bloodbank.com",
-      subtitle: "Response within 2 hours",
-      action: "mailto:help@bloodbank.com",
-      color: "from-blue-500 to-cyan-500"
-    },
-    {
-      icon: <FaMapMarkerAlt className="text-xl" />,
-      title: "Visit Us",
-      details: "123 Blood Center, City",
-      subtitle: "Open 8 AM - 8 PM",
-      action: "#locations",
-      color: "from-purple-500 to-pink-500"
-    }
-  ];
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -125,7 +79,7 @@ const ContactForm = () => {
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
     
     const validationErrors = validateForm();
@@ -135,12 +89,18 @@ const ContactForm = () => {
     }
     
     setIsSubmitting(true);
+    const toastId = toast.loading("Sending your message...");
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // AXIOS API CALL
+      // Replace '/api/contact' with your actual backend endpoint
+ 
+
+      const response = await axios.post(`${API}/doner/contact`, formData);
       
-      console.log("Form submitted:", formData);
+      console.log("Form submitted successfully:", response.data);
+      
+      toast.success("Message sent successfully!", { id: toastId });
       
       // Reset form
       setFormData({
@@ -160,7 +120,11 @@ const ContactForm = () => {
       
     } catch (error) {
       console.error("Form submission error:", error);
-      alert("Failed to submit form. Please try again.");
+      
+      // Handle error response
+      const errorMessage = error.response?.data?.message || "Failed to submit form. Please try again.";
+      toast.error(errorMessage, { id: toastId });
+      
     } finally {
       setIsSubmitting(false);
     }
