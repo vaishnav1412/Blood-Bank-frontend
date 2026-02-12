@@ -38,13 +38,13 @@ import {
   FaFileImage,
   FaTrash,
   FaEye,
-  FaExclamationTriangle,
   FaBan,
   FaFilter
 } from "react-icons/fa";
 import "./donerProfile.scss";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
 import toast from 'react-hot-toast';
+import axios from "axios";
 
 const DonorProfile = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -61,6 +61,8 @@ const DonorProfile = () => {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [user,setUser] = useState([])
+  const [health,setHealth] =useState([])
   const [uploadForm, setUploadForm] = useState({
     donationDate: "",
     donationCenter: "",
@@ -316,19 +318,83 @@ const DonorProfile = () => {
     toast.success("New certificate generated successfully!", { duration: 3000 });
   };
 
-  const handleAddHealthStatus = (healthData) => {
+
+
+
+
+
+
+const profileDetails = async () => {
+  try {
+    // ✅ Get token from localStorage
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.log("No token found, please login again");
+      return;
+    }
+
+    // ✅ API Call with Authorization Header
+    const response = await axios.get(
+      "http://localhost:5000/doner/profile-details",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Profile Data:", response.data);
+
+    // ✅ Extract donor + health details
+    const { donor, health } = response.data;
+
+    // ✅ Set state (example)
+    setUser(donor);
+    setHealth(health);
+
+  } catch (error) {
+    console.log("Error fetching profile:", error.response?.data || error.message);
+  }
+};
+
+useEffect(()=>{
+profileDetails()
+},[])
+
+  const handleAddHealthStatus = async (healthData) => {
+  const token = localStorage.getItem("token");
+  const toastId = toast.loading("Updating health status...");
+  try {
+    const response = await axios.post('http://localhost:5000/doner/healthStatus', healthData, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     setDonorData(prev => ({
       ...prev,
-      weight: healthData.weight,
-      platelet: healthData.platelet,
-      healthStatus: "Good",
-      lastHealthCheck: new Date().toISOString().split('T')[0],
-      medicalConditions: healthData.medicalConditions || "None",
-      allergies: healthData.allergies || "None"
+      ...response.data.donor, 
+      healthStatus: "Good"
     }));
     setShowHealthForm(false);
-    toast.success("Health status added successfully!", { duration: 3000 });
-  };
+    toast.success("Health status updated successfully!", { id: toastId, duration: 3000 });
+  } catch (error) {
+    console.error("Health status update error:", error);
+    const errorMessage = error.response?.data?.message || "Failed to update health status";
+    toast.error(errorMessage, { id: toastId });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
 
   const handleResetPassword = () => {
     const toastId = toast.loading("Sending password reset email...");
@@ -994,7 +1060,7 @@ const DonorProfile = () => {
 
   return (
     <WrapperSection>
-      <div className="donor-profile-wrapper bg-gradient-to-b from-white to-pink-50 md:-mt-80 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl shadow-pink-500/10 overflow-hidden">
+      <div className="donor-profile-wrapper bg-gradient-to-b from-white to-pink-50 md:-mt-[430px] -mt-[650px] rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl shadow-pink-500/10 overflow-hidden">
         {/* Profile Header - Responsive Grid */}
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {/* Left Column - Profile Card */}
@@ -1022,7 +1088,7 @@ const DonorProfile = () => {
                   <p className="text-xs sm:text-sm text-gray-600 mt-1">ID: {donorData.id}</p>
                   <div className="flex items-center justify-center sm:justify-start mt-1 text-xs text-gray-500">
                     <FaUserFriends className="mr-1" />
-                    Since {new Date(donorData.registrationDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    Since {new Date(user.registrationDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                   </div>
                 </div>
               </div>
@@ -1030,18 +1096,41 @@ const DonorProfile = () => {
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-2 mb-4">
                 <div className="bg-pink-50 rounded-xl p-2 sm:p-3 text-center">
-                  <div className="text-lg sm:text-xl font-bold text-pink-600">{donorData.donationCount}</div>
+                  <div className="text-lg sm:text-xl font-bold text-pink-600">{user.donationCount}</div>
                   <div className="text-xs text-gray-600">Donations</div>
                 </div>
                 <div className="bg-red-50 rounded-xl p-2 sm:p-3 text-center">
-                  <div className="text-lg sm:text-xl font-bold text-red-600">{donorData.points}</div>
+                  <div className="text-lg sm:text-xl font-bold text-red-600">{user.donationCount*250}</div>
                   <div className="text-xs text-gray-600">Points</div>
                 </div>
                 <div className="bg-blue-50 rounded-xl p-2 sm:p-3 text-center">
-                  <div className="text-lg sm:text-xl font-bold text-blue-600">{donorData.bloodGroup}</div>
+                  <div className="text-lg sm:text-xl font-bold text-blue-600">{user.bloodGroup}</div>
                   <div className="text-xs text-gray-600">Blood</div>
                 </div>
               </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
               {/* Health Status Card */}
               <div className="mb-4 p-3 bg-gradient-to-r from-pink-50 to-red-50 rounded-xl">
@@ -1051,10 +1140,10 @@ const DonorProfile = () => {
                     <div>
                       <div className="font-bold text-gray-800 text-sm">Health Status</div>
                       <div className="text-xs text-gray-600">
-                        {donorData.healthStatus === "Not Added" ? (
+                        {!health ? (
                           <span className="text-yellow-600">Not updated</span>
                         ) : (
-                          donorData.healthStatus
+                          "Updated"
                         )}
                       </div>
                     </div>
@@ -1067,15 +1156,15 @@ const DonorProfile = () => {
                     Add
                   </button>
                 </div>
-                {donorData.weight && (
+                {health.weight && (
                   <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-pink-200">
                     <div>
                       <span className="text-xs text-gray-500">Weight</span>
-                      <p className="font-medium text-gray-800 text-sm">{donorData.weight} kg</p>
+                      <p className="font-medium text-gray-800 text-sm">{health.weight} kg</p>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Platelet</span>
-                      <p className="font-medium text-gray-800 text-sm">{donorData.platelet}</p>
+                      <p className="font-medium text-gray-800 text-sm">{health.platelet}</p>
                     </div>
                   </div>
                 )}
@@ -1085,19 +1174,19 @@ const DonorProfile = () => {
               <div className="space-y-2">
                 <div className="flex items-center text-xs text-gray-600">
                   <FaPhone className="mr-2 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{donorData.mobile}</span>
+                  <span className="truncate">{user.mobile}</span>
                 </div>
                 <div className="flex items-center text-xs text-gray-600">
                   <FaWhatsapp className="mr-2 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{donorData.whatsapp || donorData.mobile}</span>
+                  <span className="truncate">{user.whatsapp || user.mobile}</span>
                 </div>
                 <div className="flex items-center text-xs text-gray-600">
                   <FaEnvelope className="mr-2 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{donorData.email}</span>
+                  <span className="truncate">{user.email}</span>
                 </div>
                 <div className="flex items-center text-xs text-gray-600">
                   <FaMapMarkerAlt className="mr-2 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{donorData.location}</span>
+                  <span className="truncate">{user.taluk}</span>
                 </div>
               </div>
 
