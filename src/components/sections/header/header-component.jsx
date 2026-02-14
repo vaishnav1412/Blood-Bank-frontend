@@ -66,7 +66,7 @@ const HeaderComponent = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    navigate("/donate-blood");
+    navigate("/login");
   };
 
   useEffect(() => {
@@ -102,7 +102,7 @@ const HeaderComponent = () => {
           </a>
         </div>
 
-        {/* Mobile menu button hidden on large screens */}
+        
         <div className="flex lg:hidden">
           <button
             type="button"

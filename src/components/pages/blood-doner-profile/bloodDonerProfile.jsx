@@ -5,9 +5,11 @@ import QuoteComponent from "../../sections/quote/quote-component";
 import CriteriaComponent from "../../sections/criteria/criteria-component";
 import HeaderComponent from "../../sections/header/header-component";
 import FooterComponent from "../../sections/footer/footer-component";
-import { DonateBloodPageDetails,stepDetails } from "../../../data/content/userProfile";
+import {
+  DonateBloodPageDetails,
+  stepDetails,
+} from "../../../data/content/userProfile";
 const BloodDonerProfile = () => {
-  
   return (
     <>
       <HeaderComponent />
