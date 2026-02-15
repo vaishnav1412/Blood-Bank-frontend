@@ -1,20 +1,23 @@
 import HomePage from "./components/pages/home/home-page";
-import {  Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+
+//user part
 import DonerLogin from "./components/pages/doner-login/doner-login";
 import ForgotEmailPage from "./components/pages/forgot-password-email/forgot-password-email";
 import DonerRegister from "./components/pages/doner-register/doner-register";
 import HostBloodDrivePage from "./components/pages/host-blood-drive/host-blood-drive";
 import NeedBloodPage from "./components/pages/need-blood/need-blood-page";
-import ContactPage from "./components/pages/contact/contact-page";
-import Admin from "./components/layouts/admin";
 import BloodDonerProfile from "./components/pages/blood-doner-profile/bloodDonerProfile";
-import Dashboard from "./components/views/admin/dashboard";
-import AdminDonateBlood from "./components/views/admin/admin-donate-blood";
-import AdminNeedBlood from "./components/views/admin/admin-need-blood";
-import AdminHostBloodDrive from "./components/views/admin/admin-host-blood-drive";
-import AdminNeedHelp from "./components/views/admin/admin-need-help";
-import RegisterOtpPage from "./components/pages/register-otp/register-otp";
 import Gallery from "./components/pages/gallery/gallery";
+import ContactPage from "./components/pages/contact/contact-page";
+import RegisterOtpPage from "./components/pages/register-otp/register-otp";
+import Admin from "./components/layouts/admin";
+//admin part
+import AdminLogin from "./components/pages/admin-login/admin-login";
+
+
+
+
 import { Toaster } from "react-hot-toast";
 
 export default function App() {
@@ -63,30 +66,18 @@ export default function App() {
         <Route exact path="/" element={<HomePage />} />
         <Route path="/register" element={<DonerRegister />} />
         <Route path="/login" element={<DonerLogin />} />
-        <Route path="/gallery" element={<Gallery/>}/>
+        <Route path="/gallery" element={<Gallery />} />
         <Route path="/register-otp" element={<RegisterOtpPage />} />
         <Route path="/need-blood" element={<NeedBloodPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/host-blood-drive" element={<HostBloodDrivePage />} />
         <Route path="/forgot-password" element={<ForgotEmailPage />} />
-
-
-
-
-
         <Route path="/doner-profile" element={<BloodDonerProfile />} />
-
-
+        <Route path="/admin-login" element={<AdminLogin/>}/>
+        
+       <Route path="/admin/*" element={<Admin />} />
+          
        
-
-        <Route path="/admin" element={<Admin />}>
-          <Route index element={<Dashboard />} />
-          <Route path="donate-blood" element={<AdminDonateBlood />} />
-          <Route path="need-blood" element={<AdminNeedBlood />} />
-          <Route path="host-blood-drive" element={<AdminHostBloodDrive />} />
-          <Route path="need-help" element={<AdminNeedHelp />} />
-           
-        </Route>
       </Routes>
     </>
   );

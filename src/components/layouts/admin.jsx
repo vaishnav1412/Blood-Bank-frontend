@@ -1,53 +1,24 @@
-import React from "react";
-import { Route, Routes, Navigate, Outlet } from "react-router-dom";
-
+import { Route, Routes, Navigate } from "react-router-dom";
 import Sidebar from "../sidebar/sidebar";
-// import HeaderStats from "../sections/header-stats/header_stats";
-// import AdminNavbar from "../sections/admin-navbar/admin-navbar";
-
-// import Dashboard from "../views/admin/dashboard";
-// import AdminDonateBlood from "../views/admin/admin-donate-blood";
-// import AdminNeedBlood from "../views/admin/admin-need-blood";
-// import AdminHostBloodDrive from "../views/admin/admin-host-blood-drive";
-// import AdminNeedHelp from "../views/admin/admin-need-help";
+import Dashboard from "../views/admin/dashboard";
+import UserManagement from "../views/admin/user-management";
+import AdminHostBloodDrive from "../views/admin/host-blood-drive";
 
 export default function Admin() {
-	return (
-		<>
-			<Sidebar />
-			<div className="relative md:ml-64 bg-off_white outline">
-				{/* <AdminNavbar /> */}
-				{/* Header */}
-				{/* <HeaderStats /> */}
-				<div className="w-full h-full mx-auto bg-off_white">
-					<Outlet />
-					{/* <Routes>
-						<Route path="/" exact element={<Dashboard />} />
-						<Route
-							path="donate-blood"
-							exact
-							element={<AdminDonateBlood />}
-						/>
-						<Route
-							path="need-blood"
-							exact
-							element={<AdminNeedBlood />}
-						/>
-						<Route
-							path="host-blood-drive"
-							exact
-							element={<AdminHostBloodDrive />}
-						/>
-						<Route
-							path="need-help"
-							exact
-							element={<AdminNeedHelp />}
-						/>
-						<Route path="/redirect" element={<Navigate to="/" />} />
-					</Routes> */}
-					{/* <FooterAdmin /> */}
-				</div>
-			</div>
-		</>
-	);
+  
+  return (
+    <>
+      <Sidebar />
+      <div className="relative md:ml-64 bg-off_white min-h-screen pt-16 md:pt-0 overflow-x-hidden">
+        <div className="w-full h-full mx-auto bg-off_white px-3 sm:px-4 md:px-6 py-4 md:py-6 max-w-full">
+          <Routes>
+            <Route index element={<Dashboard />} />
+            <Route path="user-management" element={<UserManagement />} />
+            <Route path="camp-management" element={<AdminHostBloodDrive />} />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </Routes>
+        </div>
+      </div>
+    </>
+  );
 }
