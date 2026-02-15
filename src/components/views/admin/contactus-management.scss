@@ -1,0 +1,484 @@
+// Variables
+ $primary: #ef4444;
+ $primary-dark: #dc2626;
+ $bg-color: #f4f7f6; // Light gray background to prevent "white only" look
+ $card-bg: #ffffff;
+ $text-main: #1e293b;
+ $text-muted: #64748b;
+ $border-color: #e2e8f0;
+ $success: #10b981;
+ $warning: #f59e0b;
+
+.admin-contact-management {
+  background-color: $bg-color;
+  min-height: 100vh;
+  padding: 1rem;
+  color: $text-main;
+  font-family: 'Inter', sans-serif;
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
+}
+
+// --- Header ---
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .title-area {
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: $text-main;
+
+      svg { color: $primary; }
+    }
+    .page-subtitle {
+      font-size: 0.8rem;
+      color: $text-muted;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+    
+    button {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    .action-btn-secondary {
+      background: $card-bg;
+      border: 1px solid $border-color;
+      color: $text-muted;
+    }
+
+    .action-btn-primary {
+      background: $primary;
+      color: white;
+    }
+  }
+}
+
+// --- Stats Grid ---
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .stat-card {
+    background: $card-bg;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid #cbd5e1;
+
+    &.unread { border-left-color: $primary; }
+    &.replied { border-left-color: $success; }
+    &.urgent { border-left-color: $warning; }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: $text-main;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: $text-muted;
+    }
+  }
+}
+
+// --- Controls ---
+.controls-section {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.search-bar {
+  position: relative;
+  width: 100%;
+
+  svg {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $text-muted;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid $border-color;
+    background: $card-bg;
+    font-size: 0.875rem;
+    &:focus { outline: none; border-color: $primary; }
+  }
+}
+
+.category-pills {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar { display: none; }
+
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: $card-bg;
+    border: 1px solid $border-color;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: $text-muted;
+
+    b { font-weight: 600; }
+
+    &.active {
+      background: $primary;
+      color: white;
+      border-color: $primary;
+    }
+  }
+}
+
+// --- Bulk Actions Bar ---
+.bulk-actions-bar {
+  background: #1e293b;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    button {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+    }
+  }
+}
+
+// --- Desktop Table ---
+.table-wrapper {
+  display: none;
+  background: $card-bg;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+
+  @media (min-width: 1024px) {
+    display: block;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid $border-color;
+    }
+
+    th {
+      background: #f8fafc;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: $text-muted;
+      font-weight: 600;
+    }
+
+    .unread-row {
+      background: #fffbeb; // Light yellow for unread
+      td { font-weight: 500; }
+    }
+
+    .sender-cell {
+      display: flex;
+      flex-direction: column;
+      .sender-email { font-size: 0.75rem; color: $text-muted; font-weight: 400; }
+    }
+
+    .subject-cell {
+      font-weight: 500;
+      .preview { display: block; font-size: 0.75rem; color: $text-muted; font-weight: 400; margin-top: 0.25rem; }
+    }
+  }
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+  button {
+    background: none;
+    border: 1px solid $border-color;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-muted;
+    &:hover { border-color: $primary; color: $primary; }
+  }
+}
+
+// --- Mobile Card List ---
+.mobile-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  @media (min-width: 1024px) {
+    display: none; // Hide on desktop
+  }
+
+  .message-card {
+    background: $card-bg;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border-left: 4px solid transparent;
+    cursor: pointer;
+
+    &.unread {
+      background: #fffbeb;
+      border-left-color: $primary;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        background: $primary;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+      }
+
+      .meta {
+        flex: 1;
+        h4 { font-size: 0.875rem; margin-bottom: 0; }
+        .time { font-size: 0.7rem; color: $text-muted; }
+      }
+    }
+
+    .card-body {
+      h5 { font-size: 0.9rem; margin-bottom: 0.25rem; }
+      p { font-size: 0.8rem; color: $text-muted; margin: 0; }
+    }
+
+    .card-footer {
+      margin-top: 0.75rem;
+      border-top: 1px solid $border-color;
+      padding-top: 0.75rem;
+      .card-action-btn {
+        background: none;
+        border: none;
+        color: $primary;
+        font-weight: 600;
+        font-size: 0.8rem;
+        cursor: pointer;
+        padding: 0;
+      }
+    }
+  }
+}
+
+// --- Priority Badges ---
+.priority-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1;
+
+  &.urgent { background: #fee2e2; color: #991b1b; }
+  &.high { background: #fef3c7; color: #92400e; }
+  &.medium { background: #dbeafe; color: #1e40af; }
+  &.low { background: #f1f5f9; color: #475569; }
+}
+
+// --- Modals (Bottom Sheet Style) ---
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end; // Start at bottom for mobile
+  justify-content: center;
+
+  @media (min-width: 768px) {
+    align-items: center; // Center on desktop
+  }
+}
+
+.modal-content {
+  background: $card-bg;
+  width: 100%;
+  max-height: 90vh;
+  border-radius: 1.5rem 1.5rem 0 0;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out forwards;
+  
+  @media (min-width: 768px) {
+    max-width: 500px;
+    border-radius: 1rem;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .modal-drag-handle {
+    width: 40px;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin: 0.75rem auto;
+    @media (min-width: 768px) { display: none; }
+  }
+
+  .modal-header {
+    padding: 0 1.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    h3 { font-size: 1.125rem; }
+    .close-btn {
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+  }
+
+  .modal-body {
+    padding: 0 1.5rem 1.5rem;
+    
+    .sender-info { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
+    .sender-avatar {
+      width: 40px; height: 40px; background: $primary; color: white; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-weight: 600;
+    }
+    .sender-email { font-size: 0.8rem; color: $text-muted; }
+    
+    .message-content {
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .meta-tags { display: flex; gap: 1rem; align-items: center; }
+    .time { font-size: 0.75rem; color: $text-muted; display: flex; align-items: center; gap: 0.25rem; }
+    
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid $border-color;
+      border-radius: 0.5rem;
+      font-family: inherit;
+    }
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid $border-color;
+    display: flex;
+    gap: 0.75rem;
+    
+    button {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-cancel { background: #f1f5f9; color: $text-main; }
+    .btn-send { background: $primary; color: white; }
+    .btn-delete { background: #b91c1c; color: white; }
+  }
+}
+
+// Delete Modal Specific
+.delete-modal {
+  text-align: center;
+  padding-bottom: 2rem;
+  .delete-icon {
+    width: 48px; height: 48px; background: #fee2e2; color: #b91c1c;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem; font-size: 1.5rem;
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

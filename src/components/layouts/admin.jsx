@@ -3,6 +3,8 @@ import Sidebar from "../sidebar/sidebar";
 import Dashboard from "../views/admin/dashboard";
 import UserManagement from "../views/admin/user-management";
 import AdminHostBloodDrive from "../views/admin/host-blood-drive";
+import GalleryManagement from "../views/admin/gallery-management";
+import ContactManagement from "../views/admin/contactus-management";
 
 export default function Admin() {
   
@@ -15,7 +17,10 @@ export default function Admin() {
             <Route index element={<Dashboard />} />
             <Route path="user-management" element={<UserManagement />} />
             <Route path="camp-management" element={<AdminHostBloodDrive />} />
+            <Route path="gallery-management" element={<GalleryManagement/>}/>
+            <Route path="contact-management" element={<ContactManagement/>}/>
             <Route path="*" element={<Navigate to="/admin" replace />} />
+            
           </Routes>
         </div>
       </div>
