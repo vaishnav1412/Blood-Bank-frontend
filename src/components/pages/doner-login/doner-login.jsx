@@ -14,11 +14,10 @@ import FormComponent from "../../sections/form/form-component";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
 import FooterComponent from "../../sections/footer/footer-component";
-import axios from "axios";
+import { loginDonor } from "../../../services/donorServices";
+import { getErrorMessage } from "../../../utils/getErrorMessage";
 import toast from "react-hot-toast";
 
-// Constants that won't change
-const API = import.meta.env.VITE_API_URL;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const DonateBloodPage = () => {
@@ -26,7 +25,6 @@ const DonateBloodPage = () => {
     email: "",
     password: "",
   });
-
   const [error, setError] = useState({
     emailError: "",
     passwordError: "",
@@ -40,7 +38,7 @@ const DonateBloodPage = () => {
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
-      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setFormData((prev) => ({ ...prev, email: savedEmail }));
       setRememberMe(true);
     }
   }, []);
@@ -54,96 +52,80 @@ const DonateBloodPage = () => {
     }
   }, [rememberMe, formData.email]);
 
-  // Validate form function - useCallback because it's used in dependency array
+  
   const validateForm = useCallback(() => {
-    const emailError = !formData.email.trim() 
-      ? "Email is required." 
-      : !EMAIL_REGEX.test(formData.email) 
-        ? "Enter a valid email." 
+    const emailError = !formData.email.trim()
+      ? "Email is required."
+      : !EMAIL_REGEX.test(formData.email)
+        ? "Enter a valid email."
         : "";
 
-    const passwordError = !formData.password.trim() 
-      ? "Password is required." 
-      : formData.password.length < 6 
-        ? "Password must be at least 6 characters." 
+    const passwordError = !formData.password.trim()
+      ? "Password is required."
+      : formData.password.length < 6
+        ? "Password must be at least 6 characters."
         : "";
 
-    return { emailError, passwordError, isValid: !emailError && !passwordError };
+    return {
+      emailError,
+      passwordError,
+      isValid: !emailError && !passwordError,
+    };
   }, [formData.email, formData.password]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
 
-    if (loading) return;
+  e.preventDefault();
+  if (loading) return;
 
-    // Validate form
-    const { emailError, passwordError, isValid } = validateForm();
-    setError({ emailError, passwordError });
+  const { emailError, passwordError, isValid } = validateForm();
+  setError({ emailError, passwordError });
 
-    if (!isValid) return;
+  if (!isValid) return;
+  const toastId = toast.loading("Logging in...");
+  setLoading(true);
 
-    const toastId = toast.loading("Logging in...");
-    setLoading(true);
+  try {
 
-    try {
-      const response = await axios.post(`${API}/doner/login`, {
-        email: formData.email.trim(),
-        password: formData.password,
-      });
+    const data = await loginDonor(formData.email, formData.password);
+    toast.success("Login successful!", { id: toastId });
 
-      toast.success("Login successful!", { id: toastId });
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("donor", JSON.stringify(data.donor));
 
-      // Store token and user data
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("donor", JSON.stringify(response.data.donor));
+    navigate("/doner-profile");
 
-      // Redirect to profile
-      navigate("/doner-profile");
-
-      // Reset password field for security
-      setFormData(prev => ({ ...prev, password: "" }));
-
-    } catch (err) {
-      // Handle different error types
-      const status = err.response?.status;
-      let message = "Login failed. Please try again.";
-
-      if (status === 401) {
-        message = "Invalid email or password.";
-      } else if (status === 404) {
-        message = "User not found.";
-      } else if (status >= 500) {
-        message = "Server error. Please try again later.";
-      } else if (err.response?.data?.message) {
-        message = err.response.data.message;
-      }
-
-      toast.error(message, { id: toastId });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle input changes
-  const handleInputChange = useCallback((name, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, password: "" }));
     
-    // Clear error for this field when user starts typing
-    if (error[`${name}Error`]) {
-      setError(prev => ({
-        ...prev,
-        [`${name}Error`]: ""
-      }));
-    }
-  }, [error]);
+  } catch (err) {
 
-  // Toggle remember me
+   toast.error(getErrorMessage(err), { id: toastId });
+
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const handleInputChange = useCallback(
+    (name, value) => {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+
+      if (error[`${name}Error`]) {
+        setError((prev) => ({
+          ...prev,
+          [`${name}Error`]: "",
+        }));
+      }
+    },
+    [error],
+  );
+
   const toggleRememberMe = useCallback(() => {
-    setRememberMe(prev => !prev);
+    setRememberMe((prev) => !prev);
   }, []);
 
   return (
@@ -156,8 +138,8 @@ const DonateBloodPage = () => {
         buttonText={loading ? "Logging in..." : "Login"}
         handleSubmit={handleSubmit}
         formData={formData}
-        setFormData={setFormData} // Keep this for FormComponent's internal use
-        onInputChange={handleInputChange} // New prop for better control
+        setFormData={setFormData} 
+        onInputChange={handleInputChange} 
         error={error}
         loading={loading}
         rememberMe={rememberMe}

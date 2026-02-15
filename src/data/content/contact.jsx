@@ -71,3 +71,11 @@ export  const contactDetails = [
     "Technical Support",
     "Partnership"
   ];
+
+  export  const ContactPageDetails = {
+    hero: {
+      subheadingText: "",
+      headingText: "",
+      classHint: "contact-page-hero",
+    },
+  };

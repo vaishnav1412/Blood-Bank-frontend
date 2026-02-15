@@ -25,3 +25,8 @@ export  const registerSelectStyles = `
   sm:text-sm peer
 `;
 
+export  const reuseableClass = {
+    for_last: `last:bg-button_original last:text-white last:hover:bg-white last:hover:text-dark`,
+    for_second_last: `rounded-rsm border border-white/[.5] hover:bg-white hover:text-dark`,
+  };
+

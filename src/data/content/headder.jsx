@@ -1,0 +1,44 @@
+export const getNavigation = (user) => [
+  { name: "Home", href: "/" },
+  { name: "Host Blood Drive", href: "/host-blood-drive" },
+  { name: "Gallery", href: "/gallery" },
+  { name: "Contact Us", href: "/contact" },
+  { name: "Need Blood", href: "/need-blood", secondLast: true },
+
+  user
+    ? {
+        name:
+          user.name && user.name.length > 12
+            ? user.name.slice(0, 10) + "..."
+            : user.name || "Profile",
+        href: "/doner-profile",
+        last: true,
+      }
+    : {
+        name: "Doner Login",
+        href: "/login",
+        last: true,
+      },
+];
+
+export const getMobileNavigation = (user) => [
+  { name: "Home", href: "/", icon: "🏠" },
+  { name: "Host Blood Drive", href: "/host-blood-drive", icon: "🏥" },
+  { name: "Gallery", href: "/gallery", icon: "📸" },
+  { name: "Contact Us", href: "/contact", icon: "📞" },
+  { name: "Need Blood", href: "/need-blood", icon: "🩸", highlight: true },
+
+  user
+    ? {
+        name: user.name?.split(" ")[0] || "Profile",
+        href: "/doner-profile",
+        icon: "👤",
+        last: true,
+      }
+    : {
+        name: "Doner Login",
+        href: "/login",
+        icon: "🔑",
+        last: true,
+      },
+];

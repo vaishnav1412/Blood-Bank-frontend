@@ -69,7 +69,9 @@ export default function App() {
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/register-otp" element={<RegisterOtpPage />} />
         <Route path="/need-blood" element={<NeedBloodPage />} />
+
         <Route path="/contact" element={<ContactPage />} />
+        
         <Route path="/host-blood-drive" element={<HostBloodDrivePage />} />
         <Route path="/forgot-password" element={<ForgotEmailPage />} />
         <Route path="/doner-profile" element={<BloodDonerProfile />} />
