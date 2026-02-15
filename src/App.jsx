@@ -1,6 +1,8 @@
 import HomePage from "./components/pages/home/home-page";
 import { Routes, Route } from "react-router-dom";
-
+import ProtectedRoute from "./routes/ProtectedRoute";
+import PublicRoute from "./routes/PublicRoute";
+import { toastOptions } from "./config/toastConfig";
 //user part
 import DonerLogin from "./components/pages/doner-login/doner-login";
 import ForgotEmailPage from "./components/pages/forgot-password-email/forgot-password-email";
@@ -23,49 +25,19 @@ import { Toaster } from "react-hot-toast";
 export default function App() {
   return (
     <>
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-        gutter={12}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#1e1e1e",
-            color: "#fff",
-            borderRadius: "8px",
-            padding: "12px 16px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
-            fontSize: "0.875rem",
-            fontFamily: "Manrope, sans-serif",
-          },
-
-          success: {
-            iconTheme: {
-              primary: "#22c55e", // Tailwind green-500
-              secondary: "#1e1e1e",
-            },
-          },
-
-          error: {
-            iconTheme: {
-              primary: "#ef4444", // Tailwind red-500
-              secondary: "#1e1e1e",
-            },
-          },
-
-          loading: {
-            iconTheme: {
-              primary: "#3b82f6", // Tailwind blue-500
-              secondary: "#1e1e1e",
-            },
-          },
-        }}
-      />
+     <Toaster
+  position="top-center"
+  reverseOrder={false}
+  gutter={12}
+  toastOptions={toastOptions}
+/>
 
       <Routes>
-        <Route exact path="/" element={<HomePage />} />
-        <Route path="/register" element={<DonerRegister />} />
-        <Route path="/login" element={<DonerLogin />} />
+        <Route exact path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><DonerRegister /></PublicRoute>} />
+        <Route path="/login" element={<PublicRoute><DonerLogin /></PublicRoute>} />
+
+        
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/register-otp" element={<RegisterOtpPage />} />
         <Route path="/need-blood" element={<NeedBloodPage />} />

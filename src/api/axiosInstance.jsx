@@ -1,37 +1,51 @@
 import axios from "axios";
+
 const API = import.meta.env.VITE_API_URL;
 
 const axiosInstance = axios.create({
   baseURL: API,
 });
 
-axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+/* ================================
+   ✅ Request Interceptor
+   Attach token automatically
+================================ */
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
-  return config;
-});
-
+/* ================================
+   ✅ Response Interceptor
+   Handle expired session safely
+================================ */
 axiosInstance.interceptors.response.use(
   (response) => response,
+
   (error) => {
+    // If token expired or unauthorized
     if (error.response?.status === 401) {
+      // Clear stored auth data
       localStorage.removeItem("token");
       localStorage.removeItem("donor");
 
-      // ✅ Prevent infinite refresh loop
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
-      }
+      // 🚫 Do NOT redirect automatically here
+      // Redirect must be handled only in ProtectedRoute
+      console.warn("Session expired. Please login again.");
     }
 
     return Promise.reject(error);
   }
 );
-
-
 
 export default axiosInstance;

@@ -3,14 +3,15 @@ import PropTypes from "prop-types";
 
 const PublicRoute = ({ children }) => {
   const token = localStorage.getItem("token");
+  const donor = localStorage.getItem("donor");
 
-  if (token) {
-    return <Navigate to="/donor-profile" replace />;
+  // Redirect only if user is truly logged in
+  if (token && donor) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
-
 
 PublicRoute.propTypes = {
   children: PropTypes.node.isRequired,
