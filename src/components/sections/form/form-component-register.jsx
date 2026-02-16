@@ -4,7 +4,10 @@ import "./form-component-styles.scss";
 import { DropdownIcon } from "../dropdown-icon/dropdown-icon";
 import { districtTalukMap } from "../../../data/utils/districtTalukMap";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
-import { registerInputStyles ,registerSelectStyles} from "../../../data/style/style";
+import {
+  registerInputStyles,
+  registerSelectStyles,
+} from "../../../data/style/style";
 const FormComponentRegister = ({
   heading,
   buttonText,
@@ -28,17 +31,15 @@ const FormComponentRegister = ({
     focusedFields ? "text-gray-500" : "text-gray-600"
   }`;
 
- 
-
   return (
     <WrapperSection>
       {/* Form Container with Pink Border Effect */}
-      <div className="form-wrapper w-full max-w-4xl mx-auto relative -mt-44">
+      <div className="form-wrapper w-full max-w-4xl mx-auto relative md:-mt-[490px] -mt-[150px]">
         {/* Pink Gradient Border */}
         <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-400 via-pink-300 to-pink-400 rounded-2xl blur opacity-30"></div>
 
         {/* Main Form Card */}
-        <div className="relative bg-gradient-to-br from-pink_super_light via-white to-pink-50 p-6 py-8 lg:p-12 rounded-2xl shadow-xl border border-pink-100">
+        <div className="relative bg-gradient-to-br from-pink-300 via-pink-200 to-pink-100 p-6 py-8 lg:p-12 rounded-2xl shadow-xl border border-pink-100">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 mb-4 shadow-md">
               <svg
@@ -62,7 +63,7 @@ const FormComponentRegister = ({
 
           <form className="space-y-6 w-full" onSubmit={handleSubmit}>
             {/* Personal Details Section */}
-            <div className="bg-gradient-to-r from-pink-50 to-pink-100/50 p-4 rounded-lg border-l-4 border-pink-400 shadow-sm">
+            <div className="bg-gradient-to-r from-pink-100 to-pink-100/50 p-4 rounded-lg border-l-4 border-pink-400 shadow-sm">
               <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <svg
                   className="w-5 h-5 text-pink-500"
@@ -151,7 +152,7 @@ const FormComponentRegister = ({
                 </select>
 
                 {/* ✅ Custom Dropdown Icon */}
-                <DropdownIcon/>
+                <DropdownIcon />
 
                 {/* ✅ Floating Label */}
                 <label
@@ -199,7 +200,7 @@ const FormComponentRegister = ({
                 </select>
 
                 {/* Dropdown Icon */}
-               <DropdownIcon/>
+                <DropdownIcon />
 
                 {/* Label */}
                 <label
@@ -328,7 +329,7 @@ const FormComponentRegister = ({
                 </select>
 
                 {/* ✅ Dropdown Icon */}
-               <DropdownIcon/>
+                <DropdownIcon />
 
                 {/* ✅ Floating Label */}
                 <label
@@ -409,7 +410,7 @@ const FormComponentRegister = ({
             </div>
 
             {/* Communication Details Section */}
-            <div className="bg-gradient-to-r from-pink-50 to-pink-100/50 p-4 rounded-lg border-l-4 border-pink-400 shadow-sm mt-8">
+            <div className="bg-gradient-to-r from-pink-100 to-pink-100/50 p-4 rounded-lg border-l-4 border-pink-400 shadow-sm mt-8">
               <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <svg
                   className="w-5 h-5 text-pink-500"
@@ -463,7 +464,7 @@ const FormComponentRegister = ({
                 </select>
 
                 {/* Dropdown Icon */}
-              <DropdownIcon/>
+                <DropdownIcon />
 
                 {/* Label */}
                 <label
@@ -506,7 +507,7 @@ const FormComponentRegister = ({
                 </select>
 
                 {/* Dropdown Icon */}
-                <DropdownIcon/>
+                <DropdownIcon />
 
                 {/* Label */}
                 <label
@@ -705,7 +706,7 @@ const FormComponentRegister = ({
             </div>
 
             {/* Privacy Policy */}
-            <div className="bg-pink-50/80 p-4 rounded-lg border border-pink-100">
+            <div className="bg-white/40 p-4 rounded-lg border border-pink-200">
               <div className="flex items-start gap-3">
                 <input
                   type="checkbox"
@@ -759,86 +760,88 @@ const FormComponentRegister = ({
             {/* Submit Button */}
             <div className="pt-4">
               <button
-  type="submit"
-  disabled={loading}
-  className={`relative w-full py-4 px-6 rounded-xl font-semibold transition-all duration-500 ease-in-out overflow-hidden group ${
-    !loading
-      ? `bg-gradient-to-r from-pink-600 via-pink-700 to-pink-600 bg-[length:200%_100%]
+                type="submit"
+                disabled={loading}
+                className={`relative w-full py-4 px-6 rounded-xl font-semibold transition-all duration-500 ease-in-out overflow-hidden group ${
+                  !loading
+                    ? `bg-gradient-to-r from-pink-600 via-pink-700 to-pink-600 bg-[length:200%_100%]
          hover:bg-[length:100%_100%] text-white shadow-lg
          hover:shadow-2xl hover:shadow-pink-500/30 transform hover:-translate-y-0.5
          before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/0 
          before:via-white/20 before:to-white/0 before:translate-x-[-200%] 
          hover:before:translate-x-[200%] before:transition-transform before:duration-1000
          animate-gradient-x`
-      : "bg-gradient-to-r from-pink-600/50 to-pink-700/50 text-white cursor-not-allowed opacity-70"
-  }`}
->
-  {/* Animated background shine effect */}
-  {!loading && (
-    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-  )}
-  
-  <span className="relative flex items-center justify-center gap-2">
-    {loading ? (
-      <>
-        <svg
-          className="animate-spin h-5 w-5 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        <span className="relative">
-          Submitting...
-          <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
-        </span>
-      </>
-    ) : (
-      <>
-        <svg
-          className="w-5 h-5 group-hover:scale-110 transition-transform duration-300"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          ></path>
-        </svg>
-        <span className="relative">
-          {buttonText}
-          <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
-        </span>
-        <span className="opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300">→</span>
-      </>
-    )}
-  </span>
-</button>
+                    : "bg-gradient-to-r from-pink-600/50 to-pink-700/50 text-white cursor-not-allowed opacity-70"
+                }`}
+              >
+                {/* Animated background shine effect */}
+                {!loading && (
+                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                )}
+
+                <span className="relative flex items-center justify-center gap-2">
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span className="relative">
+                        Submitting...
+                        <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-5 h-5 group-hover:scale-110 transition-transform duration-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        ></path>
+                      </svg>
+                      <span className="relative">
+                        {buttonText}
+                        <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
+                      </span>
+                      <span className="opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300">
+                        →
+                      </span>
+                    </>
+                  )}
+                </span>
+              </button>
             </div>
 
             {/* Login Navigation */}
-            <div className="text-center pt-6 border-t border-pink-100">
+            <div className="text-center pt-6 border-t border-pink-400">
               <p className="text-gray-600 text-sm">
                 Already a member?{" "}
                 <a
-                  href="/donate-blood"
+                  href="/login"
                   className="text-pink-600 hover:text-pink-800 font-semibold hover:underline transition-colors"
                 >
                   Log in here

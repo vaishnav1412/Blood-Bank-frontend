@@ -17,6 +17,7 @@ import {
   DonateBloodPageDetails,
   stepDetails,
 } from "../../../data/content/register";
+
 const DonateBloodRegisterPage = () => {
   const [formData, setFormData] = useState({
     name: "",

@@ -1,4 +1,3 @@
-
 import HeroComponent from "../../sections/hero/hero-component";
 import ForgotPasswordForm from "../../sections/form/forgot-password";
 import ContactDetailsComponent from "../../sections/details/details-component";

@@ -36,8 +36,8 @@ export const DonateBloodPageDetails = {
       buttonHave: false,
     },
     hero: {
-      subheadingText: "Donate Blood",
-      headingText: "Save life by donating blood today",
+      subheadingText: "",
+      headingText: "",
       classHint: "donate-blood-page-hero",
     },
     stepsText: {

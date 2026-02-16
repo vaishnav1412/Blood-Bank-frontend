@@ -591,7 +591,7 @@ const ForgotPasswordForm = () => {
         return (
           <div className="form-step animate-fade-in">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaShieldAlt className="text-white text-2xl" />
               </div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2">
@@ -748,29 +748,44 @@ const ForgotPasswordForm = () => {
             </div>
 
             <button
-              onClick={handleResetPassword}
-              disabled={isLoading}
-              className="w-full mt-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 rounded-xl font-bold transition-all duration-300 hover:shadow-xl flex items-center justify-center disabled:opacity-70"
-            >
-              {isLoading ? (
-                <>
-                  <FaSpinner className="animate-spin mr-3" />
-                  Resetting Password...
-                </>
-              ) : (
-                <>
-                  <FaShieldAlt className="mr-3" />
-                  Reset Password
-                </>
-              )}
-            </button>
+  onClick={handleResetPassword}
+  disabled={isLoading}
+  className="group relative w-full mt-6 bg-gradient-to-r from-pink-500 via-pink-600 to-pink-700 text-white py-4 rounded-xl font-bold transition-all duration-500 hover:shadow-2xl hover:shadow-pink-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 disabled:hover:shadow-none overflow-hidden"
+>
+  {/* Shine Effect */}
+  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+  
+  {/* Pulse Ring */}
+  <div className="absolute inset-0 rounded-xl border-2 border-white/40 opacity-0 group-hover:opacity-100 group-hover:animate-ping"></div>
+  
+  {/* Button Content */}
+  <span className="relative z-10 flex items-center justify-center">
+    {isLoading ? (
+      <>
+        <FaSpinner className="animate-spin mr-3 text-white" />
+        <span className="relative">
+          Resetting Password
+          <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+        </span>
+      </>
+    ) : (
+      <>
+        <FaShieldAlt className="mr-3 text-white group-hover:rotate-12 transition-transform duration-300" />
+        <span className="relative">
+          Reset Password
+          <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+        </span>
+      </>
+    )}
+  </span>
+</button>
           </div>
         );
 
       case 4: // Success
         return (
           <div className="form-step animate-fade-in text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <FaCheckCircle className="text-white text-3xl" />
             </div>
 
@@ -807,8 +822,8 @@ const ForgotPasswordForm = () => {
 
   return (
     <WrapperSection>
-      <div className="forgot-password-wrapper bg-gradient-to-b from-white to-pink-200 md:-mt-[420px] -mt-[650px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
-        <div className="max-w-md mx-auto">
+      <div className="forgot-password-wrapper bg-gradient-to-br from-pink-300 via-pink-200 to-pink-100 md:-mt-[480px] -mt-[650px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+        <div className="max-w-lg mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
