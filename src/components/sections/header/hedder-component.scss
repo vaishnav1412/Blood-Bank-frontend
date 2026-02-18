@@ -45,42 +45,77 @@ html, body {
   }
 }
 
-// Desktop Logout Button Logic
+// Desktop Logout Button - Improved styling
 .logout-btn-wrapper {
-  // Base styles for the button
-  min-width: 36px; // Ensures it doesn't collapse too much
+  // Base styles
+  min-width: 90px; // Fixed minimum width
+  padding: 0.5rem 1rem;
+  background: linear-gradient(to right, oklch(52.5% 0.223 3.958), #400606);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
   
-  // The text that appears on hover
-  .logout-text {
-    max-width: 0;
-    opacity: 0;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    overflow: hidden;
+  // Icon styling
+  .logout-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    svg {
+      width: 16px;
+      height: 16px;
+    }
   }
-
-  // Hover state to expand
+  
+  // Text styling - Always visible on desktop
+  .logout-text {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+  }
+  
+  // Hover effect
   &:hover {
-    width: auto; // Let it grow naturally
-    // Optional: Add a background glow effect
+    background: linear-gradient(to right, #991b1b, #9f1239);
     box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+    transform: translateY(-1px);
+  }
+  
+  // Active state
+  &:active {
+    transform: translateY(1px);
+    box-shadow: none;
   }
 }
 
-// Specific adjustment for small desktops (laptops)
+// Responsive adjustments
 @media (min-width: 1024px) and (max-width: 1280px) {
   .logout-btn-wrapper {
-    // On smaller desktops, keep the icon centered
-    justify-content: center;
+    min-width: 80px; // Slightly smaller on medium screens
+    padding: 0.4rem 0.8rem;
     
-    // Optional: Only show text on hover or keep hidden
     .logout-text {
-      display: none; 
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// For very large screens
+@media (min-width: 1536px) {
+  .logout-btn-wrapper {
+    min-width: 100px;
+    padding: 0.6rem 1.2rem;
+    
+    .logout-icon svg {
+      width: 18px;
+      height: 18px;
     }
     
-    &:hover {
-      // Ensure it doesn't try to expand awkwardly on small screens
-      width: 36px; 
+    .logout-text {
+      font-size: 1rem;
     }
   }
 }
@@ -97,7 +132,7 @@ html, body {
 
 // Focus states for accessibility
 *:focus-visible {
-  outline: 2px solid #ec4899;
+  outline: 2px solid oklch(52.5% 0.223 3.958);
   outline-offset: 2px;
   border-radius: 4px;
 }

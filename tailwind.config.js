@@ -27,6 +27,7 @@ export default {
         pink_light:"oklch(65.6% 0.241 354.308)",
         pink_second_light:"oklch(71.8% 0.202 349.761)",
         pink_super_light:"oklch(89.2% 0.058 10.001)",
+       
         
       },
 

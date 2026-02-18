@@ -126,10 +126,10 @@ const HeaderComponent = () => {
           {user && (
             <button
               onClick={handleLogout}
-              className="logout-btn-wrapper group flex items-center justify-center h-9 w-9 lg:w-auto lg:px-4 lg:py-2 bg-gradient-to-r from-light_red to-red border border-white/20 rounded-rmd hover:from-red-800 hover:to-rose-800 transition-all duration-300 overflow-hidden"
+              className="logout-btn-wrapper group flex items-center justify-center px-4 py-2 bg-gradient-to-r from-light_red to-red border border-white/20 rounded-rsm hover:from-red-800 hover:to-rose-800 transition-all duration-300"
             >
-              {/* Icon always visible */}
-              <span className="logout-icon flex items-center justify-center">
+              {/* Icon */}
+              <span className="logout-icon flex items-center justify-center mr-2">
                 <svg
                   className="w-4 h-4 text-white"
                   viewBox="0 0 24 24"
@@ -143,8 +143,8 @@ const HeaderComponent = () => {
                 </svg>
               </span>
 
-              {/* Text hidden on smaller desktops, visible on hover/xl screens */}
-              <span className="logout-text hidden lg:group-hover:inline-block ml-2 text-sm font-bold text-white whitespace-nowrap">
+              {/* Text - Always visible on desktop */}
+              <span className="logout-text text-sm font-bold text-white whitespace-nowrap">
                 Logout
               </span>
             </button>
@@ -271,7 +271,17 @@ const HeaderComponent = () => {
                     }}
                     className="nav-item logout-button w-full flex items-center space-x-4 px-4 py-3 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
-                    <span className="text-lg w-6 text-center">🚪</span>
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
                     <span className="font-medium">Logout</span>
                   </button>
                 </div>

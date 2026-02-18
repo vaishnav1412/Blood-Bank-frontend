@@ -12,7 +12,7 @@
 	--red: #400606;
 	--off_white: #f2f2f2;
 	--white: #ffffff;
-
+    --danger: oklch(57.7% 0.245 27.325);
 	--md_br: 8px;
 	--sm_br: 4px;
 }

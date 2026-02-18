@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import axios from "axios";
 import {
   FaEnvelope,
   FaKey,
@@ -11,10 +10,18 @@ import {
   FaClock,
   FaExclamationTriangle,
 } from "react-icons/fa";
+import {
+  sendForgotOtp,
+  verifyForgotOtp,
+  resendForgotOtp,
+  resetForgotPassword,
+} from "../../../services/donorServices";
+import { getErrorMessage } from "../../../utils/getErrorMessage";
 import "./forgot-password";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
+import { useNavigate } from "react-router-dom";
 
-const ForgotPasswordForm = () => {
+const  ForgotPasswordForm = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     email: "",
@@ -25,11 +32,13 @@ const ForgotPasswordForm = () => {
 
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [isResending, setIsResending] = useState(false); 
+  const [isResending, setIsResending] = useState(false);
   const [timer, setTimer] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
   const [resendAvailable, setResendAvailable] = useState(false);
-  const [userId, setUserId] = useState(null); 
+  const [userId, setUserId] = useState(null);
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     let interval;
@@ -105,17 +114,10 @@ const ForgotPasswordForm = () => {
     setIsLoading(true);
     const toastId = toast.loading("Sending OTP to your email...");
     try {
-      const response = await axios.post(
-        "http://localhost:5000/doner/send-otp",
-        {
-          email: formData.email,
-          purpose: "password_reset",
-        },
-      );
-      if (response.data.success) {
-        console.log("OTP sent to:", formData.email);
+      const response = await sendForgotOtp(formData.email);
+      if (response.success) {
         setOtpSent(true);
-        setTimer(60); 
+        setTimer(60);
         setResendAvailable(false);
         setStep(2);
         toast.success(`OTP sent successfully `, {
@@ -124,7 +126,7 @@ const ForgotPasswordForm = () => {
         });
       } else {
         toast.error(
-          response.data.message || "Failed to send OTP. Please try again.",
+          response.message || "Failed to send OTP. Please try again.",
           {
             id: toastId,
             duration: 5000,
@@ -132,18 +134,7 @@ const ForgotPasswordForm = () => {
         );
       }
     } catch (error) {
-      console.error("Failed to send OTP:", error);
-      let errorMessage =
-        "Failed to send OTP. Please check your email address or try again.";
-      if (error.response) {
-        errorMessage = error.response.data.message || errorMessage;
-      } else if (error.request) {
-        errorMessage = "Network error. Please check your connection.";
-      }
-      toast.error(errorMessage, {
-        id: toastId,
-        duration: 5000,
-      });
+      toast.error(getErrorMessage(error), { id: toastId });
     } finally {
       setIsLoading(false);
     }
@@ -158,16 +149,10 @@ const ForgotPasswordForm = () => {
     setIsLoading(true);
     const toastId = toast.loading("Verifying OTP...");
     try {
-      const response = await axios.post(
-        "http://localhost:5000/doner/verify-forgot-otp",
-        {
-          email: formData.email,
-          otp: formData.otp,
-        },
-      );
-      if (response.data.success) {
+      const response = await verifyForgotOtp(formData.email, formData.otp);
+      if (response.success) {
         console.log("OTP verified successfully");
-        setUserId(response.data.userId); 
+        setUserId(response.userId);
         setStep(3);
         toast.success("OTP verified successfully!", {
           id: toastId,
@@ -175,25 +160,15 @@ const ForgotPasswordForm = () => {
         });
       } else {
         setErrors({
-          otp: response.data.message || "Invalid OTP. Please try again.",
+          otp: response.message || "Invalid OTP. Please try again.",
         });
-        toast.error(response.data.message || "Invalid OTP. Please try again.", {
+        toast.error(response.message || "Invalid OTP. Please try again.", {
           id: toastId,
           duration: 5000,
         });
       }
     } catch (error) {
-      console.error("OTP verification failed:", error);
-      setErrors({ otp: "Verification failed. Please try again." });
-
-      let errorMessage = "Verification failed. Please try again.";
-      if (error.response) {
-        errorMessage = error.response.data.message || errorMessage;
-      }
-      toast.error(errorMessage, {
-        id: toastId,
-        duration: 5000,
-      });
+      toast.error(getErrorMessage(error), { id: toastId });
     } finally {
       setIsLoading(false);
     }
@@ -201,42 +176,26 @@ const ForgotPasswordForm = () => {
 
   const handleResendOTP = async () => {
     if (!resendAvailable) return;
-     setIsResending(true);
+    setIsResending(true);
     const toastId = toast.loading("Sending new OTP...");
     try {
-      const response = await axios.post(
-        "http://localhost:5000/doner/resend-otp",
-        {
-          email: formData.email,
-        },
-      );
-      if (response.data.success) {
-        console.log("Resending OTP to:", formData.email);
+      const response = await resendForgotOtp(formData.email);
+
+      if (response.success) {
         setTimer(60);
         setResendAvailable(false);
-       
-        toast.success("New OTP sent successfully!", {
-          id: toastId,
-          duration: 3000,
-        });
+
+        toast.success("New OTP sent successfully!", { id: toastId });
       } else {
-        toast.error(response.data.message || "Failed to resend OTP.", {
+        toast.error(response.message || "Failed to resend OTP.", {
           id: toastId,
           duration: 5000,
         });
       }
     } catch (error) {
-      console.error("Failed to resend OTP:", error);
-      let errorMessage = "Failed to resend OTP. Please try again.";
-      if (error.response) {
-        errorMessage = error.response.data.message || errorMessage;
-      }
-      toast.error(errorMessage, {
-        id: toastId,
-        duration: 5000,
-      });
+      toast.error(getErrorMessage(error), { id: toastId });
     } finally {
-       setIsResending(false);
+      setIsResending(false);
     }
   };
 
@@ -249,16 +208,13 @@ const ForgotPasswordForm = () => {
     setIsLoading(true);
     const toastId = toast.loading("Resetting your password...");
     try {
-      const response = await axios.post(
-        "http://localhost:5000/doner/reset-password",
-        {
-          userId: userId,
-          email: formData.email,
-          newPassword: formData.newPassword,
-          otp: formData.otp,
-        },
-      );
-      if (response.data.success) {
+      const response = await resetForgotPassword({
+        userId,
+        email: formData.email,
+        otp: formData.otp,
+        newPassword: formData.newPassword,
+      });
+      if (response.success) {
         console.log("Password reset successful for:", formData.email);
         setStep(4);
         toast.success("Password reset successfully! Redirecting to login...", {
@@ -267,8 +223,7 @@ const ForgotPasswordForm = () => {
         });
       } else {
         toast.error(
-          response.data.message ||
-            "Failed to reset password. Please try again.",
+          response.message || "Failed to reset password. Please try again.",
           {
             id: toastId,
             duration: 5000,
@@ -276,24 +231,16 @@ const ForgotPasswordForm = () => {
         );
       }
     } catch (error) {
-      console.error("Password reset failed:", error);
-      let errorMessage = "Failed to reset password. Please try again.";
-      if (error.response) {
-        errorMessage = error.response.data.message || errorMessage;
-      }
-      toast.error(errorMessage, {
-        id: toastId,
-        duration: 5000,
-      });
+      toast.error(getErrorMessage(error), { id: toastId });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleBackToLogin = () => {
-    window.location.href = "/login";
+    navigate("/login")
   };
-  
+
   const renderStep = () => {
     switch (step) {
       case 1: // Email Input
@@ -351,45 +298,47 @@ const ForgotPasswordForm = () => {
               </div>
             </div>
 
-           <button
-  onClick={handleSendOTP}
-  disabled={isLoading}
-  className={`relative w-full mt-6 py-4 rounded-xl font-bold transition-all duration-500 ease-in-out overflow-hidden group ${
-    !isLoading
-      ? `bg-gradient-to-r from-pink-600 via-pink-700 to-pink-600 bg-[length:200%_100%]
+            <button
+              onClick={handleSendOTP}
+              disabled={isLoading}
+              className={`relative w-full mt-6 py-4 rounded-xl font-bold transition-all duration-500 ease-in-out overflow-hidden group ${
+                !isLoading
+                  ? `bg-gradient-to-r from-pink-600 via-pink-700 to-pink-600 bg-[length:200%_100%]
          hover:bg-[length:100%_100%] text-white shadow-lg
          hover:shadow-2xl hover:shadow-pink-500/30 transform hover:-translate-y-0.5
          before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/0 
          before:via-white/20 before:to-white/0 before:translate-x-[-200%] 
          hover:before:translate-x-[200%] before:transition-transform before:duration-1000
          animate-gradient-x`
-      : "bg-gradient-to-r from-pink-600/50 to-pink-700/50 text-white cursor-not-allowed"
-  }`}
->
-  {/* Animated background shine effect for enabled state */}
-  {!isLoading && (
-    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-  )}
-  
-  <span className="relative flex items-center justify-center">
-    {isLoading ? (
-      <>
-        <FaSpinner className="animate-spin mr-3" />
-        Sending OTP...
-      </>
-    ) : (
-      <>
-        <FaPaperPlane className="mr-2 group-hover:animate-pulse" />
-        <span className="relative">
-          Send OTP
-          {/* Underline animation */}
-          <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
-        </span>
-        <span className="ml-2 opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300">↗</span>
-      </>
-    )}
-  </span>
-</button>
+                  : "bg-gradient-to-r from-pink-600/50 to-pink-700/50 text-white cursor-not-allowed"
+              }`}
+            >
+              {/* Animated background shine effect for enabled state */}
+              {!isLoading && (
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              )}
+
+              <span className="relative flex items-center justify-center">
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-3" />
+                    Sending OTP...
+                  </>
+                ) : (
+                  <>
+                    <FaPaperPlane className="mr-2 group-hover:animate-pulse" />
+                    <span className="relative">
+                      Send OTP
+                      {/* Underline animation */}
+                      <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
+                    </span>
+                    <span className="ml-2 opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300">
+                      ↗
+                    </span>
+                  </>
+                )}
+              </span>
+            </button>
           </div>
         );
 
@@ -457,133 +406,134 @@ const ForgotPasswordForm = () => {
 
               {/* Resend OTP */}
               <button
-  onClick={handleResendOTP}
-  disabled={!resendAvailable || isResending}
-  className={`relative w-full py-4 rounded-xl font-medium transition-all duration-700 ease-in-out overflow-hidden group ${
-    resendAvailable
-      ? `bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 bg-[length:200%_100%]
+                onClick={handleResendOTP}
+                disabled={!resendAvailable || isResending}
+                className={`relative w-full py-4 rounded-xl font-medium transition-all duration-700 ease-in-out overflow-hidden group ${
+                  resendAvailable
+                    ? `bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 bg-[length:200%_100%]
          hover:bg-[length:100%_100%] text-white font-bold shadow-lg
          hover:shadow-2xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5
          before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/0 
          before:via-white/20 before:to-white/0 before:translate-x-[-200%] 
          hover:before:translate-x-[200%] before:transition-transform before:duration-1000
          animate-gradient-x`
-      : "bg-gradient-to-r from-sky-50 to-sky-100 text-slate-400 cursor-not-allowed border border-sky-200"
-  }`}
->
-  {/* Animated background shine effect for available state */}
-  {resendAvailable && (
-    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-  )}
-  
-  <span className="relative flex items-center justify-center">
-    {isResending ? (
-      <>
-        <FaSpinner className="animate-spin mr-2" />
-        Sending new code...
-      </>
-    ) : resendAvailable ? (
-      <>
-        <FaPaperPlane className="mr-2 animate-pulse" />
-        <span className="relative">
-          Resend OTP
-          {/* Underline animation */}
-          <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white transition-all duration-300" />
-        </span>
-        
-      </>
-    ) : (
-      <>
-        <FaClock className="mr-2" />
-        Resend OTP
-      </>
-    )}
-  </span>
-</button>
+                    : "bg-gradient-to-r from-sky-50 to-sky-100 text-slate-400 cursor-not-allowed border border-sky-200"
+                }`}
+              >
+                {/* Animated background shine effect for available state */}
+                {resendAvailable && (
+                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                )}
+
+                <span className="relative flex items-center justify-center">
+                  {isResending ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-2" />
+                      Sending new code...
+                    </>
+                  ) : resendAvailable ? (
+                    <>
+                      <FaPaperPlane className="mr-2 animate-pulse" />
+                      <span className="relative">
+                        Resend OTP
+                        {/* Underline animation */}
+                        <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white transition-all duration-300" />
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <FaClock className="mr-2" />
+                      Resend OTP
+                    </>
+                  )}
+                </span>
+              </button>
 
               {/* Change Email */}
-             <button
-  onClick={() => setStep(1)}
-  className="relative w-full py-3.5 rounded-xl font-medium transition-all duration-500 ease-in-out overflow-hidden group bg-gradient-to-r from-pink-50/0 via-rose-50/0 to-pink-50/0 hover:from-pink-50/30 hover:via-rose-50/20 hover:to-pink-50/30 border border-transparent hover:border-pink-200/50"
->
-  {/* Double shimmer effect */}
-  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-pink-100/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
-  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-rose-100/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out delay-150" />
-  
-  {/* Border glow effect */}
-  <span className="absolute inset-0 rounded-xl border border-transparent group-hover:border-pink-300/30 transition-all duration-300" />
-  
-  {/* Animated dots */}
-  <span className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-pink-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300" />
-  <span className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-rose-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300 delay-100" />
-  
-  <span className="relative flex items-center justify-center text-pink-600 group-hover:text-pink-700 font-medium group-hover:font-semibold">
-    {/* Left arrow with animation */}
-    <span className="mr-2 transform group-hover:-translate-x-2 transition-transform duration-300 ease-out group-hover:scale-110">
-      <svg 
-        className="w-5 h-5 text-pink-500 group-hover:text-pink-600 transition-colors duration-300"
-        fill="none" 
-        stroke="currentColor" 
-        viewBox="0 0 24 24"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth={2} 
-          d="M10 19l-7-7m0 0l7-7m-7 7h18"
-        />
-      </svg>
-    </span>
-    
-    {/* Text with underline */}
-    <span className="relative">
-      Use different email
-      <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-r from-pink-400 to-rose-400 transition-all duration-500 ease-out rounded-full" />
-    </span>
-    
-    {/* Email icon that appears on hover */}
-    <span className="ml-2 opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all duration-300 ease-out">
-      <FaEnvelope className="w-4 h-4 text-pink-500 group-hover:animate-pulse" />
-    </span>
-  </span>
-</button>
+              <button
+                onClick={() => setStep(1)}
+                className="relative w-full py-3.5 rounded-xl font-medium transition-all duration-500 ease-in-out overflow-hidden group bg-gradient-to-r from-pink-50/0 via-rose-50/0 to-pink-50/0 hover:from-pink-50/30 hover:via-rose-50/20 hover:to-pink-50/30 border border-transparent hover:border-pink-200/50"
+              >
+                {/* Double shimmer effect */}
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-pink-100/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-rose-100/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out delay-150" />
+
+                {/* Border glow effect */}
+                <span className="absolute inset-0 rounded-xl border border-transparent group-hover:border-pink-300/30 transition-all duration-300" />
+
+                {/* Animated dots */}
+                <span className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-pink-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300" />
+                <span className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-rose-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300 delay-100" />
+
+                <span className="relative flex items-center justify-center text-pink-600 group-hover:text-pink-700 font-medium group-hover:font-semibold">
+                  {/* Left arrow with animation */}
+                  <span className="mr-2 transform group-hover:-translate-x-2 transition-transform duration-300 ease-out group-hover:scale-110">
+                    <svg
+                      className="w-5 h-5 text-pink-500 group-hover:text-pink-600 transition-colors duration-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                      />
+                    </svg>
+                  </span>
+
+                  {/* Text with underline */}
+                  <span className="relative">
+                    Use different email
+                    <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-gradient-to-r from-pink-400 to-rose-400 transition-all duration-500 ease-out rounded-full" />
+                  </span>
+
+                  {/* Email icon that appears on hover */}
+                  <span className="ml-2 opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all duration-300 ease-out">
+                    <FaEnvelope className="w-4 h-4 text-pink-500 group-hover:animate-pulse" />
+                  </span>
+                </span>
+              </button>
             </div>
 
-         <button
-  onClick={handleVerifyOTP}
-  disabled={isLoading || formData.otp.length !== 6}
-  className={`relative w-full mt-6 py-4 rounded-xl font-bold transition-all duration-500 ease-in-out overflow-hidden group ${
-    !(isLoading || formData.otp.length !== 6)
-      ? `bg-pink-600 hover:bg-pink-700 text-white shadow-lg
+            <button
+              onClick={handleVerifyOTP}
+              disabled={isLoading || formData.otp.length !== 6}
+              className={`relative w-full mt-6 py-4 rounded-xl font-bold transition-all duration-500 ease-in-out overflow-hidden group ${
+                !(isLoading || formData.otp.length !== 6)
+                  ? `bg-pink-600 hover:bg-pink-700 text-white shadow-lg
          hover:shadow-2xl hover:shadow-pink-500/30 transform hover:-translate-y-0.5`
-      : "bg-pink-600/70 text-white cursor-not-allowed opacity-70"
-  }`}
->
-  {/* White shine layer - EXACTLY like resend button */}
-  <div className="absolute inset-0 overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-  </div>
-  
-  {/* Optional: Add the before pseudo-element as a div */}
-  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000 opacity-50" />
-  
-  <span className="relative flex items-center justify-center">
-    {isLoading ? (
-      <>
-        <FaSpinner className="animate-spin mr-3" />
-        Verifying...
-      </>
-    ) : (
-      <>
-        <span className="relative">
-          Verify OTP
-          <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
-        </span>
-        <span className="ml-2 opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300">→</span>
-      </>
-    )}
-  </span>
-</button>
+                  : "bg-pink-600/70 text-white cursor-not-allowed opacity-70"
+              }`}
+            >
+              {/* White shine layer - EXACTLY like resend button */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              </div>
+
+              {/* Optional: Add the before pseudo-element as a div */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000 opacity-50" />
+
+              <span className="relative flex items-center justify-center">
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-3" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <span className="relative">
+                      Verify OTP
+                      <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-white/70 transition-all duration-300" />
+                    </span>
+                    <span className="ml-2 opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300">
+                      →
+                    </span>
+                  </>
+                )}
+              </span>
+            </button>
           </div>
         );
 
@@ -748,37 +698,37 @@ const ForgotPasswordForm = () => {
             </div>
 
             <button
-  onClick={handleResetPassword}
-  disabled={isLoading}
-  className="group relative w-full mt-6 bg-gradient-to-r from-pink-500 via-pink-600 to-pink-700 text-white py-4 rounded-xl font-bold transition-all duration-500 hover:shadow-2xl hover:shadow-pink-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 disabled:hover:shadow-none overflow-hidden"
->
-  {/* Shine Effect */}
-  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-  
-  {/* Pulse Ring */}
-  <div className="absolute inset-0 rounded-xl border-2 border-white/40 opacity-0 group-hover:opacity-100 group-hover:animate-ping"></div>
-  
-  {/* Button Content */}
-  <span className="relative z-10 flex items-center justify-center">
-    {isLoading ? (
-      <>
-        <FaSpinner className="animate-spin mr-3 text-white" />
-        <span className="relative">
-          Resetting Password
-          <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-        </span>
-      </>
-    ) : (
-      <>
-        <FaShieldAlt className="mr-3 text-white group-hover:rotate-12 transition-transform duration-300" />
-        <span className="relative">
-          Reset Password
-          <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-        </span>
-      </>
-    )}
-  </span>
-</button>
+              onClick={handleResetPassword}
+              disabled={isLoading}
+              className="group relative w-full mt-6 bg-gradient-to-r from-pink-500 via-pink-600 to-pink-700 text-white py-4 rounded-xl font-bold transition-all duration-500 hover:shadow-2xl hover:shadow-pink-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 disabled:hover:shadow-none overflow-hidden"
+            >
+              {/* Shine Effect */}
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+
+              {/* Pulse Ring */}
+              <div className="absolute inset-0 rounded-xl border-2 border-white/40 opacity-0 group-hover:opacity-100 group-hover:animate-ping"></div>
+
+              {/* Button Content */}
+              <span className="relative z-10 flex items-center justify-center">
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-3 text-white" />
+                    <span className="relative">
+                      Resetting Password
+                      <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <FaShieldAlt className="mr-3 text-white group-hover:rotate-12 transition-transform duration-300" />
+                    <span className="relative">
+                      Reset Password
+                      <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                    </span>
+                  </>
+                )}
+              </span>
+            </button>
           </div>
         );
 

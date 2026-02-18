@@ -1,33 +1,33 @@
 import HeroComponent from "../../sections/hero/hero-component";
+import TwoCtaComponent from "../../sections/two-cta/two-cta-component";
 import ThreeStepProcessComponent from "../../sections/three-step-process/three-step-process-component";
 import SideBySideComponent from "../../sections/side-by-side/side-by-side-component";
 import QuoteComponent from "../../sections/quote/quote-component";
+import CriteriaComponent from "../../sections/criteria/criteria-component";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
 import FooterComponent from "../../sections/footer/footer-component";
-import HostBloodDrive from "../../sections/form/host-blood-drive";
-import {
-  stepDetails,
-  HostBloodDrivePageDetails,
-} from "../../../data/content/camp";
+import { HomePageDetails, stepDetails } from "../../../data/content/home";
 
-const HostBloodDrivePage = () => {
+const PublicHomePage = () => {
   return (
     <>
       <HeaderComponent />
-      <HeroComponent {...HostBloodDrivePageDetails.hero} />
-      <HostBloodDrive />
+      <HeroComponent {...HomePageDetails.hero} />
+      <TwoCtaComponent />
       <ThreeStepProcessComponent
-        stepsText={HostBloodDrivePageDetails.stepsText}
+        stepsText={HomePageDetails.stepsText}
         stepDetails={stepDetails}
       />
-      <SideBySideComponent {...HostBloodDrivePageDetails.benefits_host_drive} />
-      <QuoteComponent {...HostBloodDrivePageDetails.quote} />
-      <SideBySideComponent {...HostBloodDrivePageDetails.hosting_blood_drive} />
+      <SideBySideComponent {...HomePageDetails.donate_blood} />
+      <QuoteComponent {...HomePageDetails.quote} />
+      <SideBySideComponent {...HomePageDetails.why_donate_blood} />
+      <CriteriaComponent {...HomePageDetails.eligiblity_criteria} />
       <BeforeFooterCTA />
+
       <FooterComponent />
     </>
   );
 };
 
-export default HostBloodDrivePage;
+export default PublicHomePage;

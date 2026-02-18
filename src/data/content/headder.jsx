@@ -1,5 +1,6 @@
 export const getNavigation = (user) => [
-  { name: "Home", href: "/" },
+  { name: "Home", href: user ? "/home" : "/" },
+
   { name: "Host Blood Drive", href: "/host-blood-drive" },
   { name: "Gallery", href: "/gallery" },
   { name: "Contact Us", href: "/contact" },
@@ -22,7 +23,12 @@ export const getNavigation = (user) => [
 ];
 
 export const getMobileNavigation = (user) => [
-  { name: "Home", href: "/", icon: "🏠" },
+  {
+    name: "Home",
+    href: user ? "/home" : "/",   // ✅ Conditional Home
+    icon: "🏠",
+  },
+
   { name: "Host Blood Drive", href: "/host-blood-drive", icon: "🏥" },
   { name: "Gallery", href: "/gallery", icon: "📸" },
   { name: "Contact Us", href: "/contact", icon: "📞" },
@@ -42,3 +48,4 @@ export const getMobileNavigation = (user) => [
         last: true,
       },
 ];
+

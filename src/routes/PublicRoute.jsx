@@ -7,7 +7,7 @@ const PublicRoute = ({ children }) => {
 
   // Redirect only if user is truly logged in
   if (token && donor) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return children;

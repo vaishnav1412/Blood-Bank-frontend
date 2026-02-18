@@ -6,11 +6,9 @@ const ProtectedRoute = ({ children }) => {
 
   if (!token) {
     return <Navigate to="/login" replace />;
-    
   }
   return children;
 };
-
 
 ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,

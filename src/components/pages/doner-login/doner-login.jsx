@@ -94,7 +94,7 @@ const DonateBloodPage = () => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("donor", JSON.stringify(data.donor));
 
-    navigate("/doner-profile");
+    navigate("/home");
 
     setFormData((prev) => ({ ...prev, password: "" }));
     

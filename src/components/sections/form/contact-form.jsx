@@ -13,9 +13,9 @@ import {
 import "./contact-form.scss";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
 import { contactInfo,subjects } from "../../../data/content/contact";
-import axios from "axios";
+import { sendContactMessage } from "../../../services/donorServices"; 
 import toast from "react-hot-toast";
-const API = import.meta.env.VITE_API_URL;
+
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -35,8 +35,7 @@ const ContactForm = () => {
       ...prev,
       [name]: value
     }));
-    
-    // Clear error when user starts typing
+   
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -96,8 +95,7 @@ const ContactForm = () => {
       // Replace '/api/contact' with your actual backend endpoint
  
 
-      const response = await axios.post(`${API}/doner/contact`, formData);
-      
+      const response = await sendContactMessage(formData);
       console.log("Form submitted successfully:", response.data);
       
       toast.success("Message sent successfully!", { id: toastId });
@@ -150,7 +148,7 @@ const ContactForm = () => {
 
   return (
     <WrapperSection>
-      <div className="contact-form-wrapper  bg-gradient-to-b from-white to-pink-50 md:-mt-96 -mt-[700px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+      <div className="contact-form-wrapper  bg-gradient-to-br from-pink-300 via-pink-200  to-pink-100 md:-mt-[480px] -mt-[680px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">

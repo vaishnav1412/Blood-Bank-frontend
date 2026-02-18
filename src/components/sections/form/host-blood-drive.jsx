@@ -1,25 +1,23 @@
 import { useState, useEffect } from "react";
-import { 
+import {
   FaCalendarAlt,
   FaUsers,
-  FaHospital,
   FaClock,
   FaCheckCircle,
   FaUniversity,
-  FaSchool,
-  FaUsersCog,
   FaFileAlt,
   FaPaperPlane,
   FaSpinner,
   FaCalendarCheck,
-  
-  FaChartLine
+  FaChartLine,
 } from "react-icons/fa";
 import "./host-blood-drive";
-import axios from "axios";
 import toast from "react-hot-toast";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
-const API = import.meta.env.VITE_API_URL;
+import { organizationTypes ,organizationTypeUI,statusUI} from "../../../data/content/camp";
+import { submitBloodDriveApplication,fetchAllCampRequests } from "../../../services/donorServices";
+import { getErrorMessage } from "../../../utils/getErrorMessage";
+
 
 const HostBloodDrive = () => {
   const [activeStep, setActiveStep] = useState(1);
@@ -32,7 +30,7 @@ const HostBloodDrive = () => {
     email: "",
     phone: "",
     alternatePhone: "",
-    
+
     // Step 2: Event Details
     eventDate: "",
     eventTime: "",
@@ -42,116 +40,104 @@ const HostBloodDrive = () => {
     address: "",
     city: "",
     pincode: "",
-    
+
     // Step 3: Requirements
     requiredStaff: "2",
     equipment: ["mobile-blood-bank", "snacks"],
     specialRequirements: "",
     previousExperience: "no",
-    
+
     // Step 4: Additional Info
     targetGroup: "students",
     awarenessProgram: "yes",
     publicitySupport: "yes",
-    termsAccepted: false
+    termsAccepted: false,
   });
-  
+
   const [errors, setErrors] = useState({});
+  const [camp,setCamp] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [upcomingCamps, setUpcomingCamps] = useState([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Organization types
-  const organizationTypes = [
-    { id: "school", label: "School", icon: <FaSchool />, color: "from-blue-500 to-cyan-500" },
-    { id: "college", label: "College/University", icon: <FaUniversity />, color: "from-purple-500 to-pink-500" },
-    { id: "corporate", label: "Corporate", icon: <FaUsersCog />, color: "from-green-500 to-emerald-500" },
-    { id: "ngo", label: "NGO/Club", icon: <FaUsers />, color: "from-orange-500 to-red-500" },
-    { id: "government", label: "Govt. Organization", icon: <FaHospital />, color: "from-indigo-500 to-blue-500" }
-  ];
-
-  // Sample upcoming camps for inspiration
-  const sampleCamps = [
-    {
-      id: 1,
-      organization: "ABC Engineering College",
-      date: "Mar 15, 2024",
-      status: "approved",
-      donors: "120",
-      location: "Main Campus Hall",
-      color: "bg-green-100 text-green-800"
-    },
-    {
-      id: 2,
-      organization: "XYZ High School",
-      date: "Mar 20, 2024",
-      status: "scheduled",
-      donors: "80",
-      location: "School Auditorium",
-      color: "bg-blue-100 text-blue-800"
-    },
-    {
-      id: 3,
-      organization: "TechCorp India",
-      date: "Mar 25, 2024",
-      status: "planning",
-      donors: "200",
-      location: "Corporate HQ",
-      color: "bg-yellow-100 text-yellow-800"
-    }
-  ];
+ console.log(camp);
+ 
+  
 
   useEffect(() => {
-    setUpcomingCamps(sampleCamps);
+    campDetails()
+    setUpcomingCamps(camp);
   }, []);
+
+
+ const campDetails = async () => {
+  try {
+    const data = await fetchAllCampRequests();
+
+    console.log("All Camp Requests:", data);
+
+    // ✅ Save into state
+    setCamp(data.camps); 
+  } catch (error) {
+    console.error("Error fetching camp requests:", error);
+
+    toast.error(getErrorMessage(error));
+  }
+};
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-    
+
     // Clear error for this field
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
 
   const handleEquipmentChange = (equipment) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const currentEquipment = [...prev.equipment];
       const index = currentEquipment.indexOf(equipment);
-      
+
       if (index > -1) {
         currentEquipment.splice(index, 1);
       } else {
         currentEquipment.push(equipment);
       }
-      
+
       return { ...prev, equipment: currentEquipment };
     });
   };
 
   const validateStep = (step) => {
     const newErrors = {};
-    
-    switch(step) {
+
+    switch (step) {
       case 1:
-        if (!formData.organizationType) newErrors.organizationType = "Please select organization type";
-        if (!formData.organizationName.trim()) newErrors.organizationName = "Organization name is required";
-        if (!formData.contactPerson.trim()) newErrors.contactPerson = "Contact person name is required";
+        if (!formData.organizationType)
+          newErrors.organizationType = "Please select organization type";
+        if (!formData.organizationName.trim())
+          newErrors.organizationName = "Organization name is required";
+        if (!formData.contactPerson.trim())
+          newErrors.contactPerson = "Contact person name is required";
         if (!formData.email.trim()) newErrors.email = "Email is required";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Invalid email format";
-        if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-        else if (!/^[0-9]{10}$/.test(formData.phone)) newErrors.phone = "10-digit number required";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+          newErrors.email = "Invalid email format";
+        if (!formData.phone.trim())
+          newErrors.phone = "Phone number is required";
+        else if (!/^[0-9]{10}$/.test(formData.phone))
+          newErrors.phone = "10-digit number required";
         break;
-        
+
       case 2:
         if (!formData.eventDate) newErrors.eventDate = "Please select a date";
         if (!formData.eventTime) newErrors.eventTime = "Please select time";
@@ -159,117 +145,116 @@ const HostBloodDrive = () => {
         if (!formData.address.trim()) newErrors.address = "Address is required";
         if (!formData.city.trim()) newErrors.city = "City is required";
         if (!formData.pincode.trim()) newErrors.pincode = "Pincode is required";
-        else if (!/^[0-9]{6}$/.test(formData.pincode)) newErrors.pincode = "Invalid pincode";
+        else if (!/^[0-9]{6}$/.test(formData.pincode))
+          newErrors.pincode = "Invalid pincode";
         break;
-        
+
       case 3:
-        if (formData.expectedDonors < 20) newErrors.expectedDonors = "Minimum 20 donors required";
+        if (formData.expectedDonors < 20)
+          newErrors.expectedDonors = "Minimum 20 donors required";
         break;
-        
+
       case 4:
-        if (!formData.termsAccepted) newErrors.termsAccepted = "You must accept terms & conditions";
+        if (!formData.termsAccepted)
+          newErrors.termsAccepted = "You must accept terms & conditions";
         break;
     }
-    
+
     return newErrors;
   };
 
   const nextStep = () => {
     const stepErrors = validateStep(activeStep);
-    
+
     if (Object.keys(stepErrors).length === 0) {
-      setActiveStep(prev => Math.min(prev + 1, 4));
+      setActiveStep((prev) => Math.min(prev + 1, 4));
       setErrors({});
     } else {
       setErrors(stepErrors);
       // Shake animation for errors
-      document.querySelectorAll('.form-step').forEach(el => {
-        el.classList.add('shake-animation');
-        setTimeout(() => el.classList.remove('shake-animation'), 500);
+      document.querySelectorAll(".form-step").forEach((el) => {
+        el.classList.add("shake-animation");
+        setTimeout(() => el.classList.remove("shake-animation"), 500);
       });
     }
   };
 
   const prevStep = () => {
-    setActiveStep(prev => Math.max(prev - 1, 1));
+    setActiveStep((prev) => Math.max(prev - 1, 1));
     setErrors({});
   };
 
-    const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // 1. Validate Final Step
-    const finalErrors = validateStep(4);
-    if (Object.keys(finalErrors).length > 0) {
-      setErrors(finalErrors);
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // 2. Show loading toast
-    const toastId = toast.loading("Submitting your application...");
-    
-    try {
-      // 3. API Call (Sending formData directly)
-      const response = await axios.post(`${API}/doner/applicationSubmission`, formData);
-      
-      console.log("Server Response:", response.data);
-      
-      // 4. Update toast to success
-      toast.success("Application submitted successfully!", { id: toastId });
-      
-      // 5. Show the custom Success Modal (to show the Application ID)
-      setShowSuccessModal(true);
-      setIsSubmitted(true);
-      
-      // 6. Reset Form Logic (runs in background)
-      setTimeout(() => {
-        setFormData({
-          organizationType: "",
-          organizationName: "",
-          contactPerson: "",
-          designation: "",
-          email: "",
-          phone: "",
-          alternatePhone: "",
-          eventDate: "",
-          eventTime: "",
-          duration: "4",
-          expectedDonors: "50",
-          venue: "",
-          address: "",
-          city: "",
-          pincode: "",
-          requiredStaff: "2",
-          equipment: ["mobile-blood-bank", "snacks"],
-          specialRequirements: "",
-          previousExperience: "no",
-          targetGroup: "students",
-          awarenessProgram: "yes",
-          publicitySupport: "yes",
-          termsAccepted: false
-        });
-        setActiveStep(1);
-        setIsSubmitted(false);
-        setShowSuccessModal(false); // Optional: Close modal automatically after reset
-      }, 5000);
-      
-    } catch (error) {
-      console.error("Submission error:", error);
-      
-      // 7. Update toast to error (Replaces the old alert)
-      const errorMessage = error.response?.data?.message || "Failed to submit application. Please try again.";
-      toast.error(errorMessage, { id: toastId });
-      
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const finalErrors = validateStep(4);
+  if (Object.keys(finalErrors).length > 0) {
+    setErrors(finalErrors);
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  const toastId = toast.loading("Submitting your application...");
+
+  try {
+    const data = await submitBloodDriveApplication(formData);
+    console.log("Server Response:", data);
+
+    toast.success("Application submitted successfully!", { id: toastId });
+
+    setShowSuccessModal(true);
+    setIsSubmitted(true);
+
+    setTimeout(() => {
+      setFormData({
+        organizationType: "",
+        organizationName: "",
+        contactPerson: "",
+        designation: "",
+        email: "",
+        phone: "",
+        alternatePhone: "",
+        eventDate: "",
+        eventTime: "",
+        duration: "4",
+        expectedDonors: "50",
+        venue: "",
+        address: "",
+        city: "",
+        pincode: "",
+        requiredStaff: "2",
+        equipment: ["mobile-blood-bank", "snacks"],
+        specialRequirements: "",
+        previousExperience: "no",
+        targetGroup: "students",
+        awarenessProgram: "yes",
+        publicitySupport: "yes",
+        termsAccepted: false,
+      });
+
+      setActiveStep(1);
+      setIsSubmitted(false);
+      setShowSuccessModal(false);
+    }, 5000);
+
+  } catch (error) {
+    console.error("Submission error:", error);
+
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to submit application. Please try again.",
+      { id: toastId }
+    );
+
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // Render form steps
   const renderStep = () => {
-    switch(activeStep) {
+    switch (activeStep) {
       case 1:
         return (
           <div className="form-step space-y-6 ">
@@ -277,21 +262,28 @@ const HostBloodDrive = () => {
               <FaUniversity className="mr-3 text-pink-600" />
               Organization Details
             </h3>
-            
+
             {/* Organization Type */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Type of Organization *
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                {organizationTypes.map(type => (
+                {organizationTypes.map((type) => (
                   <button
                     key={type.id}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, organizationType: type.id }))}
-                    className={`p-4 rounded-xl border-2 transition-all ${formData.organizationType === type.id 
-                      ? `border-pink-500 bg-gradient-to-br ${type.color} text-white shadow-lg` 
-                      : 'border-gray-200 bg-white hover:border-pink-300 hover:bg-pink-50'}`}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        organizationType: type.id,
+                      }))
+                    }
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      formData.organizationType === type.id
+                        ? `border-pink-500 bg-gradient-to-br ${type.color} text-white shadow-lg`
+                        : "border-gray-200 bg-white hover:border-pink-300 hover:bg-pink-50"
+                    }`}
                   >
                     <div className="text-2xl mb-2">{type.icon}</div>
                     <span className="font-medium text-sm">{type.label}</span>
@@ -299,7 +291,9 @@ const HostBloodDrive = () => {
                 ))}
               </div>
               {errors.organizationType && (
-                <p className="text-red-500 text-sm mt-2">⚠️ {errors.organizationType}</p>
+                <p className="text-red-500 text-sm mt-2">
+                  ⚠️ {errors.organizationType}
+                </p>
               )}
             </div>
 
@@ -318,10 +312,12 @@ const HostBloodDrive = () => {
                   placeholder="e.g., ABC University"
                 />
                 {errors.organizationName && (
-                  <p className="text-red-500 text-sm mt-1">⚠️ {errors.organizationName}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    ⚠️ {errors.organizationName}
+                  </p>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Contact Person *
@@ -335,7 +331,9 @@ const HostBloodDrive = () => {
                   placeholder="Person responsible"
                 />
                 {errors.contactPerson && (
-                  <p className="text-red-500 text-sm mt-1">⚠️ {errors.contactPerson}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    ⚠️ {errors.contactPerson}
+                  </p>
                 )}
               </div>
             </div>
@@ -358,7 +356,7 @@ const HostBloodDrive = () => {
                   <p className="text-red-500 text-sm mt-1">⚠️ {errors.email}</p>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Phone Number *
@@ -386,7 +384,7 @@ const HostBloodDrive = () => {
               <FaCalendarAlt className="mr-3 text-pink-600" />
               Event Details
             </h3>
-            
+
             {/* Date & Time */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -398,14 +396,16 @@ const HostBloodDrive = () => {
                   name="eventDate"
                   value={formData.eventDate}
                   onChange={handleChange}
-                  min={new Date().toISOString().split('T')[0]}
+                  min={new Date().toISOString().split("T")[0]}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 />
                 {errors.eventDate && (
-                  <p className="text-red-500 text-sm mt-1">⚠️ {errors.eventDate}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    ⚠️ {errors.eventDate}
+                  </p>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Start Time *
@@ -418,10 +418,12 @@ const HostBloodDrive = () => {
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 />
                 {errors.eventTime && (
-                  <p className="text-red-500 text-sm mt-1">⚠️ {errors.eventTime}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    ⚠️ {errors.eventTime}
+                  </p>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Duration (hours)
@@ -432,8 +434,10 @@ const HostBloodDrive = () => {
                   onChange={handleChange}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
-                  {[2, 3, 4, 5, 6, 7, 8].map(hours => (
-                    <option key={hours} value={hours}>{hours} hours</option>
+                  {[2, 3, 4, 5, 6, 7, 8].map((hours) => (
+                    <option key={hours} value={hours}>
+                      {hours} hours
+                    </option>
                   ))}
                 </select>
               </div>
@@ -493,7 +497,7 @@ const HostBloodDrive = () => {
                   <p className="text-red-500 text-sm mt-1">⚠️ {errors.city}</p>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Pincode *
@@ -507,7 +511,9 @@ const HostBloodDrive = () => {
                   placeholder="6-digit pincode"
                 />
                 {errors.pincode && (
-                  <p className="text-red-500 text-sm mt-1">⚠️ {errors.pincode}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    ⚠️ {errors.pincode}
+                  </p>
                 )}
               </div>
             </div>
@@ -521,12 +527,14 @@ const HostBloodDrive = () => {
               <FaUsers className="mr-3 text-pink-600" />
               Requirements & Expectations
             </h3>
-            
+
             {/* Expected Donors */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Expected Number of Donors *
-                <span className="ml-2 text-gray-500 font-normal">(Minimum 20)</span>
+                <span className="ml-2 text-gray-500 font-normal">
+                  (Minimum 20)
+                </span>
               </label>
               <div className="relative">
                 <input
@@ -549,11 +557,15 @@ const HostBloodDrive = () => {
                 </div>
               </div>
               <div className="mt-4 text-center">
-                <span className="text-3xl font-bold text-pink-600">{formData.expectedDonors}</span>
+                <span className="text-3xl font-bold text-pink-600">
+                  {formData.expectedDonors}
+                </span>
                 <span className="text-gray-600 ml-2">expected donors</span>
               </div>
               {errors.expectedDonors && (
-                <p className="text-red-500 text-sm mt-1">⚠️ {errors.expectedDonors}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  ⚠️ {errors.expectedDonors}
+                </p>
               )}
             </div>
 
@@ -564,20 +576,30 @@ const HostBloodDrive = () => {
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {[
-                  { id: "mobile-blood-bank", label: "Mobile Blood Bank Van", icon: "🚐" },
+                  {
+                    id: "mobile-blood-bank",
+                    label: "Mobile Blood Bank Van",
+                    icon: "🚐",
+                  },
                   { id: "beds-chairs", label: "Beds/Chairs", icon: "🛏️" },
                   { id: "medical-staff", label: "Medical Staff", icon: "👩‍⚕️" },
                   { id: "snacks", label: "Snacks & Refreshments", icon: "🥪" },
                   { id: "sound-system", label: "Sound System", icon: "🔊" },
-                  { id: "promotional-material", label: "Promotional Material", icon: "📢" }
-                ].map(item => (
+                  {
+                    id: "promotional-material",
+                    label: "Promotional Material",
+                    icon: "📢",
+                  },
+                ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => handleEquipmentChange(item.id)}
-                    className={`p-4 rounded-xl border-2 transition-all ${formData.equipment.includes(item.id) 
-                      ? 'border-pink-500 bg-pink-50 text-pink-700' 
-                      : 'border-gray-200 bg-white hover:border-pink-300'}`}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      formData.equipment.includes(item.id)
+                        ? "border-pink-500 bg-pink-50 text-pink-700"
+                        : "border-gray-200 bg-white hover:border-pink-300"
+                    }`}
                   >
                     <div className="text-2xl mb-2">{item.icon}</div>
                     <span className="font-medium text-sm">{item.label}</span>
@@ -610,7 +632,7 @@ const HostBloodDrive = () => {
               <FaFileAlt className="mr-3 text-pink-600" />
               Final Details & Confirmation
             </h3>
-            
+
             {/* Target Group */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -621,15 +643,22 @@ const HostBloodDrive = () => {
                   { id: "students", label: "Students", icon: "🎓" },
                   { id: "staff", label: "Staff", icon: "👨‍🏫" },
                   { id: "faculty", label: "Faculty", icon: "👩‍🔬" },
-                  { id: "public", label: "General Public", icon: "👥" }
-                ].map(group => (
+                  { id: "public", label: "General Public", icon: "👥" },
+                ].map((group) => (
                   <button
                     key={group.id}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, targetGroup: group.id }))}
-                    className={`p-4 rounded-xl border-2 transition-all ${formData.targetGroup === group.id 
-                      ? 'border-pink-500 bg-pink-50 text-pink-700' 
-                      : 'border-gray-200 bg-white hover:border-pink-300'}`}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        targetGroup: group.id,
+                      }))
+                    }
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      formData.targetGroup === group.id
+                        ? "border-pink-500 bg-pink-50 text-pink-700"
+                        : "border-gray-200 bg-white hover:border-pink-300"
+                    }`}
                   >
                     <div className="text-2xl mb-2">{group.icon}</div>
                     <span className="font-medium text-sm">{group.label}</span>
@@ -639,100 +668,107 @@ const HostBloodDrive = () => {
             </div>
 
             {/* Awareness Program */}
-           <div>
-  <label className="block text-sm font-semibold text-gray-700 mb-3">
-    Would you like us to conduct an awareness program?
-  </label>
-  <div className="flex space-x-4">
-    <button
-      type="button"
-      onClick={() => setFormData(prev => ({ ...prev, awarenessProgram: "yes" }))}
-      className={`relative flex-1 py-4 rounded-xl border-2 transition-all duration-500 ease-in-out overflow-hidden group ${
-        formData.awarenessProgram === "yes" 
-          ? 'border-green-500 bg-gradient-to-br from-green-50 to-green-100 text-green-700 shadow-lg shadow-green-500/20 scale-[1.02]' 
-          : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30 hover:shadow-md'
-      }`}
-    >
-      {/* Shine effect for selected state */}
-      {formData.awarenessProgram === "yes" && (
-        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-      )}
-      
-      {/* Checkmark indicator for selected state */}
-      {formData.awarenessProgram === "yes" && (
-        <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-          <FaCheckCircle className="text-white text-sm" />
-        </div>
-      )}
-      
-      <div className="flex flex-col items-center justify-center">
-        <span className="text-2xl mb-1 transform group-hover:scale-110 transition-transform duration-300">
-          ✅
-        </span>
-        <span className="font-bold flex items-center">
-          Yes, Please
-          {formData.awarenessProgram === "yes" && (
-            <FaCheckCircle className="ml-2 text-green-500 animate-pulse" />
-          )}
-        </span>
-        {formData.awarenessProgram === "yes" && (
-          <span className="text-xs mt-1 text-green-600 font-medium animate-pulse">
-            Selected
-          </span>
-        )}
-      </div>
-      
-      {/* Animated underline */}
-      {formData.awarenessProgram === "yes" && (
-        <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-green-400 to-green-500 rounded-full animate-pulse" />
-      )}
-    </button>
-    
-    <button
-      type="button"
-      onClick={() => setFormData(prev => ({ ...prev, awarenessProgram: "no" }))}
-      className={`relative flex-1 py-4 rounded-xl border-2 transition-all duration-500 ease-in-out overflow-hidden group ${
-        formData.awarenessProgram === "no" 
-          ? 'border-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 shadow-lg shadow-gray-500/20 scale-[1.02]' 
-          : 'border-gray-200 bg-white hover:border-gray-400 hover:bg-gray-50/30 hover:shadow-md'
-      }`}
-    >
-      {/* Shine effect for selected state */}
-      {formData.awarenessProgram === "no" && (
-        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-      )}
-      
-      {/* Checkmark indicator for selected state */}
-      {formData.awarenessProgram === "no" && (
-        <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-          <FaCheckCircle className="text-white text-sm" />
-        </div>
-      )}
-      
-      <div className="flex flex-col items-center justify-center">
-        <span className="text-2xl mb-1 transform group-hover:scale-110 transition-transform duration-300">
-          ❌
-        </span>
-        <span className="font-bold flex items-center">
-          Not Required
-          {formData.awarenessProgram === "no" && (
-            <FaCheckCircle className="ml-2 text-gray-500 animate-pulse" />
-          )}
-        </span>
-        {formData.awarenessProgram === "no" && (
-          <span className="text-xs mt-1 text-gray-600 font-medium animate-pulse">
-            Selected
-          </span>
-        )}
-      </div>
-      
-      {/* Animated underline */}
-      {formData.awarenessProgram === "no" && (
-        <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full animate-pulse" />
-      )}
-    </button>
-  </div>
-</div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Would you like us to conduct an awareness program?
+              </label>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      awarenessProgram: "yes",
+                    }))
+                  }
+                  className={`relative flex-1 py-4 rounded-xl border-2 transition-all duration-500 ease-in-out overflow-hidden group ${
+                    formData.awarenessProgram === "yes"
+                      ? "border-green-500 bg-gradient-to-br from-green-50 to-green-100 text-green-700 shadow-lg shadow-green-500/20 scale-[1.02]"
+                      : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30 hover:shadow-md"
+                  }`}
+                >
+                  {/* Shine effect for selected state */}
+                  {formData.awarenessProgram === "yes" && (
+                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  )}
+
+                  {/* Checkmark indicator for selected state */}
+                  {formData.awarenessProgram === "yes" && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                      <FaCheckCircle className="text-white text-sm" />
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-2xl mb-1 transform group-hover:scale-110 transition-transform duration-300">
+                      ✅
+                    </span>
+                    <span className="font-bold flex items-center">
+                      Yes, Please
+                      {formData.awarenessProgram === "yes" && (
+                        <FaCheckCircle className="ml-2 text-green-500 animate-pulse" />
+                      )}
+                    </span>
+                    {formData.awarenessProgram === "yes" && (
+                      <span className="text-xs mt-1 text-green-600 font-medium animate-pulse">
+                        Selected
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Animated underline */}
+                  {formData.awarenessProgram === "yes" && (
+                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-green-400 to-green-500 rounded-full animate-pulse" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, awarenessProgram: "no" }))
+                  }
+                  className={`relative flex-1 py-4 rounded-xl border-2 transition-all duration-500 ease-in-out overflow-hidden group ${
+                    formData.awarenessProgram === "no"
+                      ? "border-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 shadow-lg shadow-gray-500/20 scale-[1.02]"
+                      : "border-gray-200 bg-white hover:border-gray-400 hover:bg-gray-50/30 hover:shadow-md"
+                  }`}
+                >
+                  {/* Shine effect for selected state */}
+                  {formData.awarenessProgram === "no" && (
+                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  )}
+
+                  {/* Checkmark indicator for selected state */}
+                  {formData.awarenessProgram === "no" && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                      <FaCheckCircle className="text-white text-sm" />
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-2xl mb-1 transform group-hover:scale-110 transition-transform duration-300">
+                      ❌
+                    </span>
+                    <span className="font-bold flex items-center">
+                      Not Required
+                      {formData.awarenessProgram === "no" && (
+                        <FaCheckCircle className="ml-2 text-gray-500 animate-pulse" />
+                      )}
+                    </span>
+                    {formData.awarenessProgram === "no" && (
+                      <span className="text-xs mt-1 text-gray-600 font-medium animate-pulse">
+                        Selected
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Animated underline */}
+                  {formData.awarenessProgram === "no" && (
+                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full animate-pulse" />
+                  )}
+                </button>
+              </div>
+            </div>
 
             {/* Terms & Conditions */}
             <div className="bg-pink-50 border border-pink-200 rounded-xl p-4">
@@ -746,7 +782,14 @@ const HostBloodDrive = () => {
                   className="mt-1 mr-3 h-5 w-5 text-pink-600 rounded focus:ring-pink-500"
                 />
                 <label htmlFor="termsAccepted" className="text-gray-700">
-                  I agree to the <a href="#terms" className="text-pink-600 hover:underline font-medium">Terms & Conditions</a> and confirm that:
+                  I agree to the{" "}
+                  <a
+                    href="#terms"
+                    className="text-pink-600 hover:underline font-medium"
+                  >
+                    Terms & Conditions
+                  </a>{" "}
+                  and confirm that:
                   <ul className="mt-2 space-y-1 text-sm text-gray-600 list-disc list-inside">
                     <li>We will provide adequate space and basic facilities</li>
                     <li>We will promote the event among our members</li>
@@ -756,20 +799,36 @@ const HostBloodDrive = () => {
                 </label>
               </div>
               {errors.termsAccepted && (
-                <p className="text-red-500 text-sm mt-2">⚠️ {errors.termsAccepted}</p>
+                <p className="text-red-500 text-sm mt-2">
+                  ⚠️ {errors.termsAccepted}
+                </p>
               )}
             </div>
 
             {/* Review Summary */}
             <div className="bg-white border border-gray-200 rounded-xl p-4">
-              <h4 className="font-bold text-gray-800 mb-3">Application Summary</h4>
+              <h4 className="font-bold text-gray-800 mb-3">
+                Application Summary
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div><strong>Organization:</strong> {formData.organizationName}</div>
-                <div><strong>Contact:</strong> {formData.contactPerson}</div>
-                <div><strong>Date:</strong> {formData.eventDate}</div>
-                <div><strong>Time:</strong> {formData.eventTime}</div>
-                <div><strong>Venue:</strong> {formData.venue}</div>
-                <div><strong>Expected Donors:</strong> {formData.expectedDonors}</div>
+                <div>
+                  <strong>Organization:</strong> {formData.organizationName}
+                </div>
+                <div>
+                  <strong>Contact:</strong> {formData.contactPerson}
+                </div>
+                <div>
+                  <strong>Date:</strong> {formData.eventDate}
+                </div>
+                <div>
+                  <strong>Time:</strong> {formData.eventTime}
+                </div>
+                <div>
+                  <strong>Venue:</strong> {formData.venue}
+                </div>
+                <div>
+                  <strong>Expected Donors:</strong> {formData.expectedDonors}
+                </div>
               </div>
             </div>
           </div>
@@ -787,20 +846,25 @@ const HostBloodDrive = () => {
         <div className="w-20 h-20 bg-pink_dark rounded-full flex items-center justify-center mx-auto mb-6">
           <FaCheckCircle className="text-white text-3xl" />
         </div>
-        
+
         <h3 className="text-2xl font-bold text-gray-800 mb-3">
           Application Submitted!
         </h3>
-        
+
         <p className="text-gray-600 mb-6">
-          Your blood drive application has been received. Our team will review it and contact you within 48 hours.
+          Your blood drive application has been received. Our team will review
+          it and contact you within 48 hours.
         </p>
-        
+
         <div className="bg-gradient-to-r from-pink-50 to-pink-100 rounded-xl p-4 mb-6">
-          <p className="font-bold text-pink-700">Application ID: BD{Date.now().toString().slice(-6)}</p>
-          <p className="text-sm text-gray-600 mt-1">Keep this for future reference</p>
+          <p className="font-bold text-pink-700">
+            Application ID: BD{Date.now().toString().slice(-6)}
+          </p>
+          <p className="text-sm text-gray-600 mt-1">
+            Keep this for future reference
+          </p>
         </div>
-        
+
         <button
           onClick={() => setShowSuccessModal(false)}
           className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-xl font-bold transition-colors"
@@ -813,15 +877,16 @@ const HostBloodDrive = () => {
 
   return (
     <WrapperSection>
-      <div className="host-blood-drive-wrapper bg-gradient-to-b from-white to-pink-200 md:-mt-96 rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+      <div className="host-blood-drive-wrapper bg-gradient-to-br from-pink-300 via-pink-200 to-pink-100 md:-mt-[480px] -mt-[670px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">
             <span className="text-pink-600">Host a</span> Blood Drive
           </h2>
           <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
-            Schools, colleges, corporates & clubs can organize blood donation camps. 
-            Our team will coordinate everything from approval to execution.
+            Schools, colleges, corporates & clubs can organize blood donation
+            camps. Our team will coordinate everything from approval to
+            execution.
           </p>
         </div>
 
@@ -841,7 +906,7 @@ const HostBloodDrive = () => {
                   "Certificates for donors & organizers",
                   "Insurance coverage for all participants",
                   "Post-camp feedback & impact report",
-                  "Media coverage opportunities"
+                  "Media coverage opportunities",
                 ].map((benefit, index) => (
                   <li key={index} className="flex items-start">
                     <span className="text-pink-500 mr-2">✓</span>
@@ -857,24 +922,65 @@ const HostBloodDrive = () => {
                 <FaCalendarCheck className="mr-3 text-pink-600" />
                 Upcoming Blood Drives
               </h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               <div className="space-y-4">
-                {upcomingCamps.map(camp => (
-                  <div key={camp.id} className="flex items-start p-3 bg-gray-50 rounded-xl">
-                    <div className={`px-3 py-1 rounded-full ${camp.color} text-xs font-bold mr-3`}>
-                      {camp.status}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-gray-800 text-sm">{camp.organization}</h4>
-                      <div className="flex items-center text-xs text-gray-600 mt-1">
-                        <FaCalendarAlt className="mr-1" />
-                        {camp.date} • {camp.donors} donors
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">{camp.location}</div>
-                    </div>
-                  </div>
-                ))}
+                {camp.map((camp) => {
+  const orgUI = organizationTypeUI[camp.organizationType];
+
+  return (
+    <div
+      key={camp._id}
+      className="flex items-start p-3 bg-gray-50 rounded-xl"
+    >
+      {/* Status Badge */}
+      <div
+        className={`px-3 py-1 rounded-full text-xs font-bold mr-3 ${statusUI[camp.status]}`}
+      >
+        {camp.status}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1">
+        <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+          <span className={`p-1 rounded ${orgUI.badge}`}>
+            {orgUI.icon}
+          </span>
+          {camp.organizationName}
+        </h4>
+
+        <div className="flex items-center text-xs text-gray-600 mt-1">
+          <FaCalendarAlt className="mr-1" />
+          {new Date(camp.eventDate).toLocaleDateString()} •{" "}
+          {camp.expectedDonors} donors
+        </div>
+
+        <div className="text-xs text-gray-500 mt-1">
+          {camp.venue}
+        </div>
+      </div>
+    </div>
+  );
+})}
               </div>
-              
+
               <div className="mt-6 text-center">
                 <button className="text-pink-600 hover:text-pink-700 font-medium flex items-center justify-center mx-auto">
                   <FaChartLine className="mr-2" />
@@ -901,24 +1007,28 @@ const HostBloodDrive = () => {
             {/* Progress Steps */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                {[1, 2, 3, 4].map(step => (
+                {[1, 2, 3, 4].map((step) => (
                   <div key={step} className="flex flex-col items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${activeStep >= step 
-                      ? 'bg-pink-600 text-white shadow-lg' 
-                      : 'bg-gray-200 text-gray-500'}`}>
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
+                        activeStep >= step
+                          ? "bg-pink-600 text-white shadow-lg"
+                          : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
                       {step}
                     </div>
                     <span className="text-xs mt-2 text-gray-600 hidden sm:block">
-                      {step === 1 && 'Organization'}
-                      {step === 2 && 'Event Details'}
-                      {step === 3 && 'Requirements'}
-                      {step === 4 && 'Confirmation'}
+                      {step === 1 && "Organization"}
+                      {step === 2 && "Event Details"}
+                      {step === 3 && "Requirements"}
+                      {step === 4 && "Confirmation"}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-pink-500 to-pink-600 transition-all duration-500"
                   style={{ width: `${((activeStep - 1) / 3) * 100}%` }}
                 />
@@ -926,7 +1036,10 @@ const HostBloodDrive = () => {
             </div>
 
             {/* Form Content */}
-            <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6"
+            >
               {renderStep()}
 
               {/* Navigation Buttons */}
@@ -939,7 +1052,7 @@ const HostBloodDrive = () => {
                 >
                   ← Previous
                 </button>
-                
+
                 {activeStep < 4 ? (
                   <button
                     type="button"
@@ -968,7 +1081,7 @@ const HostBloodDrive = () => {
                   </button>
                 )}
               </div>
-              
+
               {/* Step Indicator */}
               <div className="text-center mt-4 text-sm text-gray-500">
                 Step {activeStep} of 4
@@ -989,13 +1102,17 @@ const HostBloodDrive = () => {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl mb-1">2️⃣</div>
-                  <div className="text-sm font-medium">Site Visit & Planning</div>
+                  <div className="text-sm font-medium">
+                    Site Visit & Planning
+                  </div>
                   <div className="text-xs text-gray-600">Coordination call</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl mb-1">3️⃣</div>
                   <div className="text-sm font-medium">Camp Execution</div>
-                  <div className="text-xs text-gray-600">Full support provided</div>
+                  <div className="text-xs text-gray-600">
+                    Full support provided
+                  </div>
                 </div>
               </div>
             </div>
