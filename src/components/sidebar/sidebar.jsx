@@ -44,7 +44,7 @@ export default function Sidebar() {
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminData");
-    navigate("/admin/login");
+    navigate("/admin-login");
   };
 
   const donorMenus = [

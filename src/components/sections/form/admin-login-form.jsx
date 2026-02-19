@@ -15,8 +15,8 @@ import {
   FiArrowRight,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
-import axios from "axios";
 import "./admin-login-forms.scss";
+import { loginAdmin ,fetchCount } from "../../../services/adminServices";
 
 const AdminLoginForm = () => {
   const [formData, setFormData] = useState({
@@ -27,11 +27,40 @@ const AdminLoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [mounted, setMounted] = useState(false);
+  const [count,setCount] = useState({})
+  const [loading,setLoading] = useState(false)
+
+  console.log(count);
+  
+ const loadCountData = async () => {
+
+  setLoading(true);
+  try {
+    const response = await fetchCount();
+    if (response?.success) {
+      setCount(response.stats); 
+    } else {
+      console.warn("Count API returned unexpected response:", response);
+    }
+  } catch (error) {
+    console.error("Sidebar Count Fetch Error:", error);
+    toast.error(
+      error.response?.data?.message || "Failed to load dashboard counts"
+    );
+  } finally {
+    setLoading(false); 
+  }
+  
+};
+
 
   useEffect(() => {
+    loadCountData()
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+ 
 
   const validateForm = () => {
     const newErrors = {};
@@ -63,7 +92,7 @@ const AdminLoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
       return;
@@ -72,32 +101,21 @@ const AdminLoginForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/admin/login",
-        {
-          email: formData.email,
-          password: formData.password,
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const data = await loginAdmin(formData.email, formData.password);
 
-      const { token, admin } = response.data;
-
+      const { adminToken, admin } = data;
       // Store in both for flexibility
-      localStorage.setItem("adminToken", token);
+      localStorage.setItem("adminToken", adminToken);
       localStorage.setItem("adminData", JSON.stringify(admin));
-      
       toast.success("Login successful! Redirecting...");
-      
       setTimeout(() => {
         window.location.href = "/admin";
       }, 1500);
+
     } catch (error) {
       const message = error.response?.data?.message || "Invalid credentials";
       toast.error(message);
-      
+
       // Shake animation on error
       const form = document.querySelector(".login-card");
       form.classList.add("shake");
@@ -127,12 +145,15 @@ const AdminLoginForm = () => {
                 </div>
                 <span className="logo-text">BloodCare</span>
               </div>
-              <div className="badge">Admin Portal</div>
+              
             </div>
 
             <div className="welcome-text">
               <h1>Welcome back, Admin</h1>
-              <p>Manage your blood donation platform with powerful tools and insights</p>
+              <p>
+                Manage your blood donation platform with powerful tools and
+                insights
+              </p>
             </div>
 
             {/* Stats Cards */}
@@ -142,7 +163,7 @@ const AdminLoginForm = () => {
                   <FiUsers />
                 </div>
                 <div className="stat-info">
-                  <span className="stat-value">2,847</span>
+                  <span className="stat-value">{count.activeDoners}</span>
                   <span className="stat-label">Active Donors</span>
                 </div>
               </div>
@@ -152,7 +173,7 @@ const AdminLoginForm = () => {
                   <FiDroplet />
                 </div>
                 <div className="stat-info">
-                  <span className="stat-value">1,234</span>
+                  <span className="stat-value">{count.numberOfDonations}</span>
                   <span className="stat-label">Donations</span>
                 </div>
               </div>
@@ -162,7 +183,7 @@ const AdminLoginForm = () => {
                   <FiCalendar />
                 </div>
                 <div className="stat-info">
-                  <span className="stat-value">24</span>
+                  <span className="stat-value">{count.conductedCampCount}</span>
                   <span className="stat-label">Camps</span>
                 </div>
               </div>
@@ -172,7 +193,7 @@ const AdminLoginForm = () => {
                   <FiActivity />
                 </div>
                 <div className="stat-info">
-                  <span className="stat-value">89%</span>
+                  <span className="stat-value">{count.responseRate}</span>
                   <span className="stat-label">Response Rate</span>
                 </div>
               </div>
@@ -276,10 +297,8 @@ const AdminLoginForm = () => {
                   <span className="checkbox-custom"></span>
                   <span className="checkbox-text">Remember me</span>
                 </label>
+
                 
-                <button type="button" className="forgot-link">
-                  Forgot password?
-                </button>
               </div>
 
               {/* Submit Button */}
@@ -309,7 +328,6 @@ const AdminLoginForm = () => {
             </div>
 
             {/* Quick Access */}
-           
           </div>
 
           {/* Footer */}

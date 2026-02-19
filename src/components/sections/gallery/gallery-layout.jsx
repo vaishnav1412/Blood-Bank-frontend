@@ -446,7 +446,7 @@ const DonationGallery = () => {
 
   return (
     <WrapperSection>
-      <div className="donation-gallery bg-gradient-to-b from-pink-200 to-pink-100 md:-mt-80 -mt-[700px] rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-6 lg:p-8 xl:p-12 shadow-lg shadow-pink-500/20">
+      <div className="donation-gallery bg-gradient-to-b from-pink-200 to-pink-100 md:-mt-[480px] -mt-[700px] rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-6 lg:p-8 xl:p-12 shadow-lg shadow-pink-500/20">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">

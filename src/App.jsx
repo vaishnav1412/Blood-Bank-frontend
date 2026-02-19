@@ -20,7 +20,7 @@ import Admin from "./components/layouts/admin";
 //admin part
 import AdminLogin from "./components/pages/admin-login/admin-login";
 
-
+import ChatBot from "./components/pages/chat-bot/chat-bot";
 
 
 import { Toaster } from "react-hot-toast";
@@ -34,7 +34,7 @@ export default function App() {
   gutter={12}
   toastOptions={toastOptions}
 />
-
+<ChatBot/>
       <Routes>
       
         
@@ -55,6 +55,7 @@ export default function App() {
 
         <Route path="/admin-login" element={<AdminLogin/>}/>
         <Route path="/admin/*" element={<Admin />} />
+       
           
        
       </Routes>
