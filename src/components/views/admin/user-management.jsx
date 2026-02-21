@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { 
-  FiUsers, 
-  FiSearch, 
+import { useState, useCallback, useMemo } from "react";
+import {
+  FiUsers,
+  FiSearch,
   FiFilter,
   FiMoreVertical,
   FiCheckCircle,
@@ -12,306 +12,306 @@ import {
   FiEye,
   FiDownload,
   FiAward,
-  FiMail,
   FiPhone,
   FiCalendar,
   FiMapPin,
-  FiDroplet,
   FiShield,
-  FiAlertCircle,
-  FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
   FiPlus,
-  FiUpload,
   FiFileText,
-  FiPrinter
+  FiRefreshCw,
 } from "react-icons/fi";
-import { FaTint, FaRegCheckCircle, FaRegTimesCircle } from "react-icons/fa";
+import { FaTint } from "react-icons/fa";
 import "./user-management.scss";
+
+import { fetchAllUsers ,blockUser,unblockUser} from "../../../services/adminServices";
+import { useEffect } from "react";
+import AddDonorModal from "../../sections/add-doner-modal/add-doner-modal";
+
+// Loading Skeleton Component
+const UserCardSkeleton = () => (
+  <div className="user-card skeleton">
+    <div className="card-header">
+      <div className="user-avatar skeleton-box" />
+      <div className="user-basic-info">
+        <div className="skeleton-text" style={{ width: "120px" }} />
+        <div className="skeleton-text" style={{ width: "160px" }} />
+      </div>
+      <div className="skeleton-icon" />
+    </div>
+    <div className="user-details">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="detail-row">
+          <div className="skeleton-icon-small" />
+          <div className="skeleton-text" style={{ width: "150px" }} />
+        </div>
+      ))}
+    </div>
+    <div className="user-stats">
+      <div className="skeleton-badge" />
+      <div className="skeleton-text" style={{ width: "100px" }} />
+    </div>
+    <div className="verification-status">
+      <div className="skeleton-badge" />
+    </div>
+    <div className="user-actions">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="skeleton-button" />
+      ))}
+    </div>
+  </div>
+);
+
+// Toast Notification Component
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={`toast-notification ${type}`}>
+      {type === 'success' && <FiCheckCircle />}
+      {type === 'error' && <FiXCircle />}
+      {type === 'info' && <FiClock />}
+      <span>{message}</span>
+    </div>
+  );
+};
 
 export default function UserManagement() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [verificationProof, setVerificationProof] = useState(null);
-
-  // Mock Users Data
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      email: "rahul.sharma@email.com",
-      phone: "+91 98765 43210",
-      bloodGroup: "A+",
-      location: "Bangalore",
-      registeredDate: "2024-01-15",
-      lastDonation: "2024-02-10",
-      totalDonations: 7,
-      status: "active",
-      verified: true,
-      verificationStatus: "verified",
-      donationProof: null,
-      isBlocked: false,
-      avatar: "https://ui-avatars.com/api/?name=Rahul+Sharma&background=ef4444&color=fff"
-    },
-    {
-      id: 2,
-      name: "Priya Patel",
-      email: "priya.patel@email.com",
-      phone: "+91 98765 43211",
-      bloodGroup: "B+",
-      location: "Mumbai",
-      registeredDate: "2024-02-20",
-      lastDonation: "2024-03-05",
-      totalDonations: 3,
-      status: "active",
-      verified: true,
-      verificationStatus: "verified",
-      donationProof: null,
-      isBlocked: false,
-      avatar: "https://ui-avatars.com/api/?name=Priya+Patel&background=ef4444&color=fff"
-    },
-    {
-      id: 3,
-      name: "Amit Kumar",
-      email: "amit.kumar@email.com",
-      phone: "+91 98765 43212",
-      bloodGroup: "O+",
-      location: "Delhi",
-      registeredDate: "2024-03-01",
-      lastDonation: "2024-02-28",
-      totalDonations: 5,
-      status: "active",
-      verified: true,
-      verificationStatus: "verified",
-      donationProof: null,
-      isBlocked: false,
-      avatar: "https://ui-avatars.com/api/?name=Amit+Kumar&background=ef4444&color=fff"
-    },
-    {
-      id: 4,
-      name: "Neha Singh",
-      email: "neha.singh@email.com",
-      phone: "+91 98765 43213",
-      bloodGroup: "AB+",
-      location: "Pune",
-      registeredDate: "2024-03-10",
-      lastDonation: null,
-      totalDonations: 0,
-      status: "pending",
-      verified: false,
-      verificationStatus: "pending",
-      donationProof: {
-        id: "PROOF001",
-        date: "2024-03-15",
-        center: "City Blood Bank",
-        document: "certificate.pdf",
-        image: "proof-image.jpg"
-      },
-      isBlocked: false,
-      avatar: "https://ui-avatars.com/api/?name=Neha+Singh&background=ef4444&color=fff"
-    },
-    {
-      id: 5,
-      name: "Vikram Mehta",
-      email: "vikram.mehta@email.com",
-      phone: "+91 98765 43214",
-      bloodGroup: "B-",
-      location: "Chennai",
-      registeredDate: "2024-02-05",
-      lastDonation: "2024-01-20",
-      totalDonations: 2,
-      status: "blocked",
-      verified: true,
-      verificationStatus: "verified",
-      donationProof: null,
-      isBlocked: true,
-      blockReason: "Multiple no-shows",
-      avatar: "https://ui-avatars.com/api/?name=Vikram+Mehta&background=ef4444&color=fff"
-    },
-    {
-      id: 6,
-      name: "Anjali Desai",
-      email: "anjali.desai@email.com",
-      phone: "+91 98765 43215",
-      bloodGroup: "A-",
-      location: "Ahmedabad",
-      registeredDate: "2024-03-18",
-      lastDonation: null,
-      totalDonations: 0,
-      status: "pending",
-      verified: false,
-      verificationStatus: "pending",
-      donationProof: {
-        id: "PROOF002",
-        date: "2024-03-20",
-        center: "General Hospital",
-        document: "certificate.pdf",
-        image: "proof-image.jpg"
-      },
-      isBlocked: false,
-      avatar: "https://ui-avatars.com/api/?name=Anjali+Desai&background=ef4444&color=fff"
-    },
-    {
-      id: 7,
-      name: "Rajesh Nair",
-      email: "rajesh.nair@email.com",
-      phone: "+91 98765 43216",
-      bloodGroup: "O-",
-      location: "Kochi",
-      registeredDate: "2024-01-28",
-      lastDonation: "2024-03-12",
-      totalDonations: 4,
-      status: "active",
-      verified: true,
-      verificationStatus: "verified",
-      donationProof: null,
-      isBlocked: false,
-      avatar: "https://ui-avatars.com/api/?name=Rajesh+Nair&background=ef4444&color=fff"
-    },
-    {
-      id: 8,
-      name: "Kavita Reddy",
-      email: "kavita.reddy@email.com",
-      phone: "+91 98765 43217",
-      bloodGroup: "AB-",
-      location: "Hyderabad",
-      registeredDate: "2024-03-05",
-      lastDonation: null,
-      totalDonations: 0,
-      status: "pending",
-      verified: false,
-      verificationStatus: "pending",
-      donationProof: {
-        id: "PROOF003",
-        date: "2024-03-22",
-        center: "Blood Bank Center",
-        document: "certificate.pdf",
-        image: "proof-image.jpg"
-      },
-      isBlocked: false,
-      avatar: "https://ui-avatars.com/api/?name=Kavita+Reddy&background=ef4444&color=fff"
-    }
-  ]);
-
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [toast, setToast] = useState(null);
+  const [showAddDonorModal, setShowAddDonorModal] = useState(false);
   // Filter states
   const [filters, setFilters] = useState({
     bloodGroup: "",
     location: "",
     verificationStatus: "",
-    dateRange: ""
+    dateRange: "",
   });
 
-  // Stats
-  const stats = {
+  // Memoized stats for better performance
+  const stats = useMemo(() => ({
     totalUsers: users.length,
-    activeUsers: users.filter(u => u.status === "active").length,
-    pendingVerification: users.filter(u => u.verificationStatus === "pending").length,
-    blockedUsers: users.filter(u => u.status === "blocked").length,
-    totalDonations: users.reduce((acc, u) => acc + u.totalDonations, 0)
+    activeUsers: users.filter((u) => u.status === "active").length,
+    pendingVerification: users.filter((u) => u.verificationStatus === "pending").length,
+    blockedUsers: users.filter((u) => u.status === "blocked").length,
+    totalDonations: users.reduce((acc, u) => acc + u.totalDonations, 0),
+  }), [users]);
+
+
+const handleDonorAdded = () => {
+  showToast('Donor added successfully', 'success');
+  // Refresh the user list
+  loadUsers(searchQuery, activeTab, currentPage);
+};
+
+
+
+
+
+  // Show toast message
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
   };
 
-  // Filter users based on active tab and search
-  const filteredUsers = users.filter(user => {
-    // Tab filter
-    if (activeTab === "active" && user.status !== "active") return false;
-    if (activeTab === "pending" && user.verificationStatus !== "pending") return false;
-    if (activeTab === "blocked" && user.status !== "blocked") return false;
-    if (activeTab === "verified" && !user.verified) return false;
-    
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.phone.includes(query) ||
-        user.bloodGroup.toLowerCase().includes(query)
-      );
-    }
-    return true;
-  });
+  // Handle block/unblock with optimistic updates
+  const handleBlockUser = async (userId) => {
+  // Save previous state for rollback
+  const previousUsers = [...users];
 
-  // Pagination
-  const itemsPerPage = 6;
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  // 🔥 Optimistic UI Update
+  setUsers((prevUsers) =>
+    prevUsers.map((user) =>
+      user.id === userId
+        ? {
+            ...user,
+            status: "blocked",
+            isBlocked: true,
+            blockReason: "Admin action",
+          }
+        : user
+    )
   );
 
-  // Handle block/unblock
-  const handleBlockUser = (userId) => {
-    setUsers(users.map(user => 
-      user.id === userId 
-        ? { ...user, status: "blocked", isBlocked: true, blockReason: "Admin action" }
-        : user
-    ));
-  };
+  try {
+    await blockUser(userId, "Admin action");
 
-  const handleUnblockUser = (userId) => {
-    setUsers(users.map(user => 
-      user.id === userId 
-        ? { ...user, status: "active", isBlocked: false, blockReason: null }
-        : user
-    ));
-  };
+    showToast("User blocked successfully", "success");
 
-  // Handle verification
-  const handleVerifyDonation = (userId) => {
-    setUsers(users.map(user => 
-      user.id === userId 
-        ? { 
-            ...user, 
-            verificationStatus: "verified",
-            verified: true,
+  } catch (error) {
+    console.error("Block error:", error);
+
+    // 🔄 Rollback if failed
+    setUsers(previousUsers);
+
+    showToast("Failed to block user", "error");
+  }
+};
+
+  const handleUnblockUser = async (userId) => {
+  const previousUsers = [...users];
+
+  // Optimistic update
+  setUsers((prevUsers) =>
+    prevUsers.map((user) =>
+      user.id === userId
+        ? {
+            ...user,
             status: "active",
-            totalDonations: user.totalDonations + 1,
-            lastDonation: new Date().toISOString().split('T')[0]
+            isBlocked: false,
+            blockReason: null,
           }
         : user
-    ));
-    setShowVerifyModal(false);
-  };
+    )
+  );
 
+  try {
+    await unblockUser(userId);
+
+    showToast("User unblocked successfully", "success");
+
+  } catch (error) {
+    console.error("Unblock error:", error);
+
+    setUsers(previousUsers);
+
+    showToast("Failed to unblock user", "error");
+  }
+};
   const handleRejectDonation = (userId) => {
-    setUsers(users.map(user => 
-      user.id === userId 
-        ? { 
-            ...user, 
-            verificationStatus: "rejected",
-            donationProof: null
-          }
-        : user
-    ));
+    setUsers(prevUsers =>
+      prevUsers.map((user) =>
+        user.id === userId
+          ? {
+              ...user,
+              verificationStatus: "rejected",
+            }
+          : user,
+      ),
+    );
     setShowVerifyModal(false);
+    showToast('Donation proof rejected', 'info');
   };
 
   // Handle certificate generation
   const handleGenerateCertificate = (userId) => {
-    const user = users.find(u => u.id === userId);
-    // In real app, this would generate PDF
-    alert(`Certificate generated for ${user.name}`);
+    const user = users.find((u) => u.id === userId);
+    showToast(`Certificate generated for ${user.name}`, 'success');
     setShowCertificateModal(false);
   };
 
-  // Verification Modal
-  const VerificationModal = ({ user, onClose }) => {
-    if (!user) return null;
+  // Load users with loading states
+  const loadUsers = useCallback(async (search = "", tab = "all", page = 1, showRefresh = false) => {
+    try {
+      if (showRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      const data = await fetchAllUsers({
+        search,
+        tab,
+        page,
+        limit: itemsPerPage,
+        ...filters, // Include filters in API call
+      });
+      
+      const usersData = data.users || data;
+      const total = data.totalPages || Math.ceil((data.totalUsers || usersData.length) / itemsPerPage);
+      
+      setTotalPages(total);
+      
+      const formattedUsers = usersData.map((user) => ({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.mobile,
+        bloodGroup: user.bloodGroup,
+        location: `${user.district || ''}, ${user.taluk || ''}`,
+        registeredDate: user.createdAt?.split("T")[0],
+        lastDonation: user.latestDonatedDate
+          ? user.latestDonatedDate.split("T")[0]
+          : null,
+        totalDonations: user.donationCount || 0,
+        status: user.isBlocked
+          ? "blocked"
+          : user.isVerified
+          ? "active"
+          : "pending",
+        verified: user.isVerified,
+        verificationStatus: user.isVerified ? "verified" : "pending",
+        isBlocked: user.isBlocked || false,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=ef4444&color=fff`,
+        donationProof: user.donationProof || {
+          date: user.latestDonatedDate?.split("T")[0] || new Date().toISOString().split("T")[0],
+          center: user.donationCenter || "City Blood Bank",
+          document: user.documentName || "donation_certificate.pdf"
+        }
+      }));
+      
+      setUsers(formattedUsers);
+      
+      if (showRefresh) {
+        showToast('Data refreshed successfully', 'success');
+      }
+    } catch (error) {
+      console.error("User fetch error:", error);
+      showToast('Failed to load users', 'error');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [itemsPerPage, filters]);
+
+  // Debounced search with cleanup
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      loadUsers(searchQuery, activeTab, currentPage);
+    }, 300); // Reduced to 300ms for better responsiveness
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery, activeTab, currentPage, loadUsers]);
+
+  // Refresh handler
+  const handleRefresh = () => {
+    loadUsers(searchQuery, activeTab, currentPage, true);
+  };
+
+  // Filter Modal Component
+  const FilterModal = ({ onClose }) => {
+    const [localFilters, setLocalFilters] = useState(filters);
+
+    const handleApply = () => {
+      setFilters(localFilters);
+      setCurrentPage(1);
+      onClose();
+    };
 
     return (
       <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content verification-modal" onClick={e => e.stopPropagation()}>
+        <div
+          className="modal-content filter-modal"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="modal-header">
             <h3>
-              <FiShield className="modal-icon" />
-              Verify Donation Proof
+              <FiFilter className="modal-icon" />
+              Filter Users
             </h3>
             <button className="close-btn" onClick={onClose}>
               <FiXCircle />
@@ -319,7 +319,132 @@ export default function UserManagement() {
           </div>
 
           <div className="modal-body">
-            {/* User Info */}
+            <div className="filter-group">
+              <label>Blood Group</label>
+              <select
+                value={localFilters.bloodGroup}
+                onChange={(e) =>
+                  setLocalFilters({ ...localFilters, bloodGroup: e.target.value })
+                }
+              >
+                <option value="">All Blood Groups</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label>Location</label>
+              <input
+                type="text"
+                placeholder="Enter district or taluk"
+                value={localFilters.location}
+                onChange={(e) =>
+                  setLocalFilters({ ...localFilters, location: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="filter-group">
+              <label>Verification Status</label>
+              <select
+                value={localFilters.verificationStatus}
+                onChange={(e) =>
+                  setLocalFilters({ ...localFilters, verificationStatus: e.target.value })
+                }
+              >
+                <option value="">All</option>
+                <option value="verified">Verified</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label>Date Range</label>
+              <select
+                value={localFilters.dateRange}
+                onChange={(e) =>
+                  setLocalFilters({ ...localFilters, dateRange: e.target.value })
+                }
+              >
+                <option value="">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="modal-footer">
+            <button
+              className="clear-btn"
+              onClick={() =>
+                setLocalFilters({
+                  bloodGroup: "",
+                  location: "",
+                  verificationStatus: "",
+                  dateRange: "",
+                })
+              }
+            >
+              Clear All
+            </button>
+            <button className="apply-btn" onClick={handleApply}>
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Verification Modal
+  const VerificationModal = ({ user, onClose }) => {
+    const [isVerifying, setIsVerifying] = useState(false);
+
+    if (!user) return null;
+
+    const handleVerify = async () => {
+      setIsVerifying(true);
+      // Simulate async operation
+      await new Promise(resolve => setTimeout(resolve, 500));
+      handleVerifyDonation(user.id);
+      setIsVerifying(false);
+    };
+
+    const handleReject = async () => {
+      setIsVerifying(true);
+      // Simulate async operation
+      await new Promise(resolve => setTimeout(resolve, 500));
+      handleRejectDonation(user.id);
+      setIsVerifying(false);
+    };
+
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div
+          className="modal-content verification-modal"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="modal-header">
+            <h3>
+              <FiShield className="modal-icon" />
+              Verify Donation Proof
+            </h3>
+            <button className="close-btn" onClick={onClose} disabled={isVerifying}>
+              <FiXCircle />
+            </button>
+          </div>
+
+          <div className="modal-body">
             <div className="user-info-summary">
               <img src={user.avatar} alt={user.name} className="user-avatar" />
               <div>
@@ -329,7 +454,6 @@ export default function UserManagement() {
               </div>
             </div>
 
-            {/* Proof Details */}
             <div className="proof-section">
               <h5>Donation Proof Details</h5>
               <div className="proof-details">
@@ -348,38 +472,46 @@ export default function UserManagement() {
               </div>
             </div>
 
-            {/* Proof Image Preview */}
             <div className="proof-image-preview">
-              <img 
-                src="https://via.placeholder.com/400x300" 
+              <img
+                src="https://via.placeholder.com/400x300"
                 alt="Proof Document"
                 className="proof-image"
               />
               <div className="image-actions">
-                <button className="image-action-btn">
+                <button className="image-action-btn" disabled={isVerifying}>
                   <FiEye /> View Full
                 </button>
-                <button className="image-action-btn">
+                <button className="image-action-btn" disabled={isVerifying}>
                   <FiDownload /> Download
                 </button>
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="verification-actions">
-              <button 
+              <button
                 className="verify-btn"
-                onClick={() => handleVerifyDonation(user.id)}
+                onClick={handleVerify}
+                disabled={isVerifying}
               >
-                <FiCheckCircle />
-                Verify & Mark as Donated
+                {isVerifying ? (
+                  <FiRefreshCw className="spinning" />
+                ) : (
+                  <FiCheckCircle />
+                )}
+                {isVerifying ? 'Verifying...' : 'Verify & Mark as Donated'}
               </button>
-              <button 
+              <button
                 className="reject-btn"
-                onClick={() => handleRejectDonation(user.id)}
+                onClick={handleReject}
+                disabled={isVerifying}
               >
-                <FiXCircle />
-                Reject
+                {isVerifying ? (
+                  <FiRefreshCw className="spinning" />
+                ) : (
+                  <FiXCircle />
+                )}
+                {isVerifying ? 'Rejecting...' : 'Reject'}
               </button>
             </div>
           </div>
@@ -390,17 +522,30 @@ export default function UserManagement() {
 
   // Certificate Modal
   const CertificateModal = ({ user, onClose }) => {
+    const [isGenerating, setIsGenerating] = useState(false);
+
     if (!user) return null;
+
+    const handleGenerate = async () => {
+      setIsGenerating(true);
+      // Simulate async operation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      handleGenerateCertificate(user.id);
+      setIsGenerating(false);
+    };
 
     return (
       <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content certificate-modal" onClick={e => e.stopPropagation()}>
+        <div
+          className="modal-content certificate-modal"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="modal-header">
             <h3>
               <FiAward className="modal-icon" />
               Generate Certificate
             </h3>
-            <button className="close-btn" onClick={onClose}>
+            <button className="close-btn" onClick={onClose} disabled={isGenerating}>
               <FiXCircle />
             </button>
           </div>
@@ -415,7 +560,9 @@ export default function UserManagement() {
                 <div className="certificate-name">{user.name}</div>
                 <div className="certificate-details">
                   <p>For their noble contribution of blood donation</p>
-                  <p className="certificate-date">{new Date().toLocaleDateString()}</p>
+                  <p className="certificate-date">
+                    {new Date().toLocaleDateString()}
+                  </p>
                   <div className="certificate-blood">{user.bloodGroup}</div>
                 </div>
               </div>
@@ -423,25 +570,33 @@ export default function UserManagement() {
 
             <div className="certificate-options">
               <label className="option-label">
-                <input type="checkbox" defaultChecked /> Include Donation Details
+                <input type="checkbox" defaultChecked disabled={isGenerating} /> 
+                Include Donation Details
               </label>
               <label className="option-label">
-                <input type="checkbox" defaultChecked /> Add QR Code
+                <input type="checkbox" defaultChecked disabled={isGenerating} /> 
+                Add QR Code
               </label>
               <label className="option-label">
-                <input type="checkbox" /> Send via Email
+                <input type="checkbox" disabled={isGenerating} /> 
+                Send via Email
               </label>
             </div>
 
             <div className="certificate-actions">
-              <button 
+              <button
                 className="generate-btn"
-                onClick={() => handleGenerateCertificate(user.id)}
+                onClick={handleGenerate}
+                disabled={isGenerating}
               >
-                <FiAward />
-                Generate Certificate
+                {isGenerating ? (
+                  <FiRefreshCw className="spinning" />
+                ) : (
+                  <FiAward />
+                )}
+                {isGenerating ? 'Generating...' : 'Generate Certificate'}
               </button>
-              <button className="preview-btn">
+              <button className="preview-btn" disabled={isGenerating}>
                 <FiEye />
                 Preview
               </button>
@@ -452,22 +607,81 @@ export default function UserManagement() {
     );
   };
 
+  // Show loading skeletons
+  if (isLoading) {
+    return (
+      <div className="user-management">
+        <div className="header-section">
+          <div>
+            <h1 className="page-title">
+              <FiUsers className="title-icon" />
+              User Management
+            </h1>
+            <p className="page-subtitle">
+              Manage donors, verify donations, and issue certificates
+            </p>
+          </div>
+        </div>
+        <div className="stats-grid">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="stat-card skeleton">
+              <div className="skeleton-icon" />
+              <div className="stat-info">
+                <div className="skeleton-text" />
+                <div className="skeleton-text" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="users-grid">
+          {[1, 2, 3, 4].map((i) => (
+            <UserCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="user-management">
-      {/* Header */}
-      <div className="header-section">
-        <div>
-          <h1 className="page-title">
-            <FiUsers className="title-icon" />
-            User Management
-          </h1>
-          <p className="page-subtitle">Manage donors, verify donations, and issue certificates</p>
-        </div>
-        <button className="add-user-btn">
-          <FiPlus />
-          Add New User
-        </button>
-      </div>
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Header with Refresh Button */}
+     <div className="header-section">
+  <div>
+    <h1 className="page-title">
+      <FiUsers className="title-icon" />
+      User Management
+    </h1>
+    <p className="page-subtitle">
+      Manage donors, verify donations, and issue certificates
+    </p>
+  </div>
+  <div className="header-actions">
+    <button 
+      className="refresh-btn" 
+      onClick={handleRefresh}
+      disabled={isRefreshing}
+    >
+      <FiRefreshCw className={isRefreshing ? "spinning" : ""} />
+      {isRefreshing ? 'Refreshing...' : 'Refresh'}
+    </button>
+    <button 
+      className="add-user-btn"
+      onClick={() => setShowAddDonorModal(true)}
+    >
+      <FiPlus />
+      Add New Donor
+    </button>
+  </div>
+</div>
 
       {/* Stats Cards */}
       <div className="stats-grid">
@@ -521,36 +735,51 @@ export default function UserManagement() {
       {/* Tabs */}
       <div className="tabs-container">
         <div className="tabs">
-          <button 
+          <button
             className={`tab ${activeTab === "all" ? "active" : ""}`}
-            onClick={() => setActiveTab("all")}
+            onClick={() => {
+              setActiveTab("all");
+              setCurrentPage(1);
+            }}
           >
             All Users
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === "active" ? "active" : ""}`}
-            onClick={() => setActiveTab("active")}
+            onClick={() => {
+              setActiveTab("active");
+              setCurrentPage(1);
+            }}
           >
             Active
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === "pending" ? "active" : ""}`}
-            onClick={() => setActiveTab("pending")}
+            onClick={() => {
+              setActiveTab("pending");
+              setCurrentPage(1);
+            }}
           >
             Pending Verification
             {stats.pendingVerification > 0 && (
               <span className="tab-badge">{stats.pendingVerification}</span>
             )}
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === "verified" ? "active" : ""}`}
-            onClick={() => setActiveTab("verified")}
+            onClick={() => {
+              setActiveTab("verified");
+              setCurrentPage(1);
+            }}
           >
             Verified
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === "blocked" ? "active" : ""}`}
-            onClick={() => setActiveTab("blocked")}
+            onClick={() => {
+              setActiveTab("blocked");
+              setCurrentPage(1);
+            }}
           >
             Blocked
           </button>
@@ -566,170 +795,199 @@ export default function UserManagement() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button 
+                className="clear-search"
+                onClick={() => setSearchQuery("")}
+              >
+                <FiXCircle />
+              </button>
+            )}
           </div>
-          <button 
-            className="filter-btn"
+          <button
+            className={`filter-btn ${Object.values(filters).some(v => v) ? 'active' : ''}`}
             onClick={() => setShowFilterModal(true)}
           >
             <FiFilter />
             Filter
+            {Object.values(filters).some(v => v) && (
+              <span className="filter-badge" />
+            )}
           </button>
         </div>
       </div>
 
-      {/* Users Table/Grid */}
-      <div className="users-grid">
-        {paginatedUsers.map(user => (
-          <div key={user.id} className={`user-card ${user.status}`}>
-            {/* Card Header */}
-            <div className="card-header">
-              <div className="user-avatar">
-                <img src={user.avatar} alt={user.name} />
-                <div className={`status-indicator ${user.status}`} />
-              </div>
-              <div className="user-basic-info">
-                <h3>{user.name}</h3>
-                <p>{user.email}</p>
-              </div>
-              <button className="more-options">
-                <FiMoreVertical />
-              </button>
-            </div>
-
-            {/* User Details */}
-            <div className="user-details">
-              <div className="detail-row">
-                <FiPhone className="detail-icon" />
-                <span>{user.phone}</span>
-              </div>
-              <div className="detail-row">
-                <FiMapPin className="detail-icon" />
-                <span>{user.location}</span>
-              </div>
-              <div className="detail-row">
-                <FiCalendar className="detail-icon" />
-                <span>Registered: {user.registeredDate}</span>
-              </div>
-              {user.lastDonation && (
-                <div className="detail-row">
-                  <FaTint className="detail-icon" />
-                  <span>Last Donation: {user.lastDonation}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Blood Group & Donations */}
-            <div className="user-stats">
-              <div className="blood-group">{user.bloodGroup}</div>
-              <div className="donation-count">
-                <FaTint className="blood-icon" />
-                <span>{user.totalDonations} donations</span>
-              </div>
-            </div>
-
-            {/* Verification Status */}
-            <div className="verification-status">
-              {user.verificationStatus === "verified" ? (
-                <span className="status-badge verified">
-                  <FiCheckCircle /> Verified
-                </span>
-              ) : user.verificationStatus === "pending" ? (
-                <span className="status-badge pending">
-                  <FiClock /> Pending Verification
-                </span>
-              ) : (
-                <span className="status-badge rejected">
-                  <FiXCircle /> Rejected
-                </span>
-              )}
-
-              {user.isBlocked && (
-                <span className="status-badge blocked">
-                  <FiUserX /> Blocked
-                </span>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="user-actions">
-              {user.verificationStatus === "pending" && (
-                <button 
-                  className="action-btn verify"
-                  onClick={() => {
-                    setSelectedUser(user);
-                    setShowVerifyModal(true);
-                  }}
-                >
-                  <FiShield />
-                  Verify Donation
-                </button>
-              )}
-
-              {user.verified && user.totalDonations > 0 && (
-                <button 
-                  className="action-btn certificate"
-                  onClick={() => {
-                    setSelectedUser(user);
-                    setShowCertificateModal(true);
-                  }}
-                >
-                  <FiAward />
-                  Certificate
-                </button>
-              )}
-
-              {!user.isBlocked ? (
-                <button 
-                  className="action-btn block"
-                  onClick={() => handleBlockUser(user.id)}
-                >
-                  <FiUserX />
-                  Block
-                </button>
-              ) : (
-                <button 
-                  className="action-btn unblock"
-                  onClick={() => handleUnblockUser(user.id)}
-                >
-                  <FiUserCheck />
-                  Unblock
-                </button>
-              )}
-
-              <button className="action-btn view">
-                <FiEye />
-                View
-              </button>
-            </div>
+      {/* Users Grid with Refresh Overlay */}
+      <div className="users-grid-container">
+        {isRefreshing && (
+          <div className="refresh-overlay">
+            <FiRefreshCw className="spinning" />
+            <span>Refreshing data...</span>
           </div>
-        ))}
+        )}
+        
+        <div className={`users-grid ${isRefreshing ? 'refreshing' : ''}`}>
+          {users.length === 0 ? (
+            <div className="no-users">
+              <FiUsers size={48} />
+              <h3>No users found</h3>
+              <p>Try adjusting your search or filters</p>
+            </div>
+          ) : (
+            users.map((user) => (
+              <div key={user.id} className={`user-card ${user.status}`}>
+                {/* Card Header */}
+                <div className="card-header">
+                  <div className="user-avatar">
+                    <img src={user.avatar} alt={user.name} />
+                    <div className={`status-indicator ${user.status}`} />
+                  </div>
+                  <div className="user-basic-info">
+                    <h3>{user.name}</h3>
+                    <p>{user.email}</p>
+                  </div>
+                  <button className="more-options">
+                    <FiMoreVertical />
+                  </button>
+                </div>
+
+                {/* User Details */}
+                <div className="user-details">
+                  <div className="detail-row">
+                    <FiPhone className="detail-icon" />
+                    <span>{user.phone}</span>
+                  </div>
+                  <div className="detail-row">
+                    <FiMapPin className="detail-icon" />
+                    <span>{user.location}</span>
+                  </div>
+                  <div className="detail-row">
+                    <FiCalendar className="detail-icon" />
+                    <span>Registered: {user.registeredDate}</span>
+                  </div>
+                  {user.lastDonation && (
+                    <div className="detail-row">
+                      <FaTint className="detail-icon" />
+                      <span>Last Donation: {user.lastDonation}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Blood Group & Donations */}
+                <div className="user-stats">
+                  <div className="blood-group">{user.bloodGroup}</div>
+                  <div className="donation-count">
+                    <FaTint className="blood-icon" />
+                    <span>{user.totalDonations} donations</span>
+                  </div>
+                </div>
+
+                {/* Verification Status */}
+                <div className="verification-status">
+                  {user.verificationStatus === "verified" ? (
+                    <span className="status-badge verified">
+                      <FiCheckCircle /> Verified
+                    </span>
+                  ) : user.verificationStatus === "pending" ? (
+                    <span className="status-badge pending">
+                      <FiClock /> Pending Verification
+                    </span>
+                  ) : (
+                    <span className="status-badge rejected">
+                      <FiXCircle /> Rejected
+                    </span>
+                  )}
+
+                  {user.isBlocked && (
+                    <span className="status-badge blocked">
+                      <FiUserX /> Blocked
+                    </span>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="user-actions">
+                  {user.verificationStatus === "pending" && (
+                    <button
+                      className="action-btn verify"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setShowVerifyModal(true);
+                      }}
+                    >
+                      <FiShield />
+                      Verify Donation
+                    </button>
+                  )}
+
+                  {user.verified && user.totalDonations > 0 && (
+                    <button
+                      className="action-btn certificate"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setShowCertificateModal(true);
+                      }}
+                    >
+                      <FiAward />
+                      Certificate
+                    </button>
+                  )}
+
+                  {!user.isBlocked ? (
+                    <button
+                      className="action-btn block"
+                      onClick={() => handleBlockUser(user.id)}
+                    >
+                      <FiUserX />
+                      Block
+                    </button>
+                  ) : (
+                    <button
+                      className="action-btn unblock"
+                      onClick={() => handleUnblockUser(user.id)}
+                    >
+                      <FiUserCheck />
+                      Unblock
+                    </button>
+                  )}
+
+                  <button className="action-btn view">
+                    <FiEye />
+                    View
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="pagination">
-          <button 
+          <button
             className="page-nav"
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1 || isRefreshing}
           >
             <FiChevronLeft />
           </button>
-          
+
           {[...Array(totalPages)].map((_, i) => (
             <button
               key={i}
               className={`page-btn ${currentPage === i + 1 ? "active" : ""}`}
               onClick={() => setCurrentPage(i + 1)}
+              disabled={isRefreshing}
             >
               {i + 1}
             </button>
           ))}
 
-          <button 
+          <button
             className="page-nav"
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages || isRefreshing}
           >
             <FiChevronRight />
           </button>
@@ -737,19 +995,29 @@ export default function UserManagement() {
       )}
 
       {/* Modals */}
+      {showFilterModal && (
+        <FilterModal onClose={() => setShowFilterModal(false)} />
+      )}
+
       {showVerifyModal && (
-        <VerificationModal 
-          user={selectedUser} 
-          onClose={() => setShowVerifyModal(false)} 
+        <VerificationModal
+          user={selectedUser}
+          onClose={() => setShowVerifyModal(false)}
         />
       )}
 
       {showCertificateModal && (
-        <CertificateModal 
-          user={selectedUser} 
-          onClose={() => setShowCertificateModal(false)} 
+        <CertificateModal
+          user={selectedUser}
+          onClose={() => setShowCertificateModal(false)}
         />
       )}
+      {showAddDonorModal && (
+  <AddDonorModal
+    onClose={() => setShowAddDonorModal(false)}
+    onSuccess={handleDonorAdded}
+  />
+)}
     </div>
   );
 }
