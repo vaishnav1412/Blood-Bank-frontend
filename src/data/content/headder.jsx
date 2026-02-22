@@ -3,7 +3,7 @@ export const getNavigation = (user) => [
 
   { name: "Host Blood Drive", href: "/host-blood-drive" },
   { name: "Gallery", href: "/gallery" },
-  { name: "Contact Us", href: "/contact" },
+  { name: "Contact Us", href: user ? "/contact-private" :"/contact", icon: "📞" },
   { name: "Need Blood", href: "/need-blood", secondLast: true },
 
   user
@@ -31,7 +31,7 @@ export const getMobileNavigation = (user) => [
 
   { name: "Host Blood Drive", href: "/host-blood-drive", icon: "🏥" },
   { name: "Gallery", href: "/gallery", icon: "📸" },
-  { name: "Contact Us", href: "/contact", icon: "📞" },
+  { name: "Contact Us", href: user ? "/contact-private" :"/contact", icon: "📞" },
   { name: "Need Blood", href: "/need-blood", icon: "🩸", highlight: true },
 
   user

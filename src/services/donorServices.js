@@ -91,6 +91,12 @@ export const sendContactMessage = (data) => {
   return publicAxios.post("/doner/contact", data);
 };
 
+export const sendContactMessagePrivate = (data) => {
+  return axiosInstance.post("/doner/contact-private", data);
+};
+
+
+
 export const searchDonors = async (filters = {}) => {
   const response = await publicAxios.get("/doner/search-user", {
     params: filters,

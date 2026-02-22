@@ -15,6 +15,7 @@ import NeedBloodPage from "./components/pages/need-blood/need-blood-page";
 import BloodDonerProfile from "./components/pages/blood-doner-profile/bloodDonerProfile";
 import Gallery from "./components/pages/gallery/gallery";
 import ContactPage from "./components/pages/contact/contact-page";
+import ContactPagePrivate from "./components/pages/contact/contact-page-private";
 import RegisterOtpPage from "./components/pages/register-otp/register-otp";
 import Admin from "./components/layouts/admin";
 //admin part
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/register-otp" element={<RegisterOtpPage />} />
         <Route path="/need-blood" element={<NeedBloodPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/contact-private" element={<ContactPagePrivate/>}/>
         <Route path="/host-blood-drive" element={<HostBloodDrivePage />} />
         <Route path="/forgot-password" element={<ForgotEmailPage />} />
         

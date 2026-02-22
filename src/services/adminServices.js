@@ -81,3 +81,47 @@ export const uploadGalleryMedia = async (data) => {
 
   return response.data;
 };
+
+
+export const getGalleryItems = async () => {
+  const response = await adminPublicAxios.get("/admin/gallery-items");
+  return response.data;
+};
+
+
+export const updateGalleryMedia = async (id, formData) => {
+  console.log("its okay",id,formData);
+  
+  const response = await adminPublicAxios.put(
+    `/admin/update-gallery/${id}`,
+    formData
+  );
+
+  return response.data;
+};
+
+export const deleteGalleryMedia = async (id) => {
+  const response = await adminPublicAxios.delete(
+    `/admin/delete-gallery/${id}`
+  );
+
+  return response.data;
+};
+
+
+export const getContactMessages = async () => {
+  const response = await adminPublicAxios.get("/admin/contact-messages");
+  return response.data;
+};
+
+
+export const deleteContactMessages = async (ids) => {
+  const response = await adminPublicAxios.delete(
+    "/admin/delete-contacts",
+    {
+      data: { ids }, // IMPORTANT: send body in DELETE like this
+    }
+  );
+
+  return response.data;
+};
