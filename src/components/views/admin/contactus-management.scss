@@ -1289,3 +1289,72 @@ $purple: #8b5cf6;
     transform: scale(1);
   }
 }
+
+.success-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: $success;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1100;
+  animation: slideInRight 0.3s ease;
+  max-width: 350px;
+
+  svg:first-child {
+    font-size: 1.5rem;
+  }
+
+  div {
+    flex: 1;
+
+    strong {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+  }
+
+  button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// Add this near the .loading-state or keyframes section
+.spin {
+  animation: spin 1s linear infinite;
+}

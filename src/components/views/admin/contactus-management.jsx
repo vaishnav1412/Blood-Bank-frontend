@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   FiMail,
   FiPhone,
@@ -48,6 +48,7 @@ export default function ContactManagement() {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const itemsPerPage = 10;
 
@@ -146,15 +147,15 @@ export default function ContactManagement() {
   ];
 
   // Statistics
-  const stats = {
-    total: messages.length,
-    unread: messages.filter((m) => m.status === "unread").length,
-    read: messages.filter((m) => m.status === "read").length,
-    replied: messages.filter((m) => m.replies && m.replies.length > 0).length,
-    urgent: messages.filter((m) => m.priority === "urgent").length,
-    registered: messages.filter((m) => m.userId).length,
-    guest: messages.filter((m) => !m.userId).length,
-  };
+  const stats = useMemo(() => ({
+  total: messages.length,
+  unread: messages.filter((m) => m.status === "unread").length,
+  read: messages.filter((m) => m.status === "read").length,
+  replied: messages.filter((m) => m.replies && m.replies.length > 0).length,
+  urgent: messages.filter((m) => m.priority === "urgent").length,
+  registered: messages.filter((m) => m.userId).length,
+  guest: messages.filter((m) => !m.userId).length,
+}), [messages]);
 
   // Categories based on subject analysis
   const getCategoryFromSubject = (subject) => {
@@ -169,7 +170,7 @@ export default function ContactManagement() {
     return "other";
   };
 
-  const categories = [
+  const categories = useMemo(()=>[
     { id: "all", label: "All", icon: <FiInbox />, count: messages.length },
     {
       id: "donation",
@@ -211,27 +212,19 @@ export default function ContactManagement() {
         (m) => getCategoryFromSubject(m.subject) === "camp",
       ).length,
     },
-  ];
+  ],[messages]);
 
   // Filter logic
-  const filteredMessages = messages.filter((message) => {
+  const filteredMessages = useMemo(() => {
+  return messages.filter((message) => {
     // Category filter
-    if (
-      activeTab !== "all" &&
-      getCategoryFromSubject(message.subject) !== activeTab
-    )
-      return false;
+    if (activeTab !== "all" && getCategoryFromSubject(message.subject) !== activeTab) return false;
 
     // Status filter
     if (statusFilter !== "all") {
-      if (statusFilter === "unread" && message.status !== "unread")
-        return false;
+      if (statusFilter === "unread" && message.status !== "unread") return false;
       if (statusFilter === "read" && message.status !== "read") return false;
-      if (
-        statusFilter === "replied" &&
-        (!message.replies || message.replies.length === 0)
-      )
-        return false;
+      if (statusFilter === "replied" && (!message.replies || message.replies.length === 0)) return false;
     }
 
     // Search query
@@ -247,6 +240,7 @@ export default function ContactManagement() {
     }
     return true;
   });
+}, [messages, activeTab, statusFilter, searchQuery]); // dependencies
 
   // Pagination
   const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
@@ -274,7 +268,7 @@ export default function ContactManagement() {
 
   const handleExport = () => {
     // Prepare the data to be exported
-    const dataToExport = messages.map((message) => ({
+    const dataToExport = filteredMessages.map((message) => ({
       "Sender Name": message.name,
       Email: message.email,
       Phone: message.phone,
@@ -401,6 +395,15 @@ export default function ContactManagement() {
             : msg
         )
       );
+
+      // Show success toast
+      setSuccessMessage({
+        message: "Reply sent successfully!",
+        email: selectedMessage.email
+      });
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000);
 
       setShowReplyModal(false);
       setReplyText("");
@@ -646,6 +649,18 @@ export default function ContactManagement() {
           <FiAlertCircle />
           <span>{error}</span>
           <button onClick={() => setError(null)}>
+            <FiX />
+          </button>
+        </div>
+      )}
+        {successMessage && (
+        <div className="success-toast">
+          <FiCheckCircle />
+          <div>
+            <strong>{successMessage.message}</strong>
+            <p>Your reply has been sent to {successMessage.email}</p>
+          </div>
+          <button onClick={() => setSuccessMessage(null)}>
             <FiX />
           </button>
         </div>
@@ -1031,9 +1046,7 @@ const ReplyModal = ({ message,
   isSubmitting,
   quickResponses,
   onClose}) => {
-    useEffect(() => {
-      if (!message) return;
-    }, [message]);
+    
 
     return (
       <div className="modal-overlay" onClick={onClose}>
