@@ -125,3 +125,12 @@ export const deleteContactMessages = async (ids) => {
 
   return response.data;
 };
+
+export const updateContactStatus = async (id, status) => {
+  const response = await adminPublicAxios.patch(
+    `/admin/update-contact-status/${id}`,
+    { status }
+  );
+
+  return response.data;
+};

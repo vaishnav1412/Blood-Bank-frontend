@@ -28,7 +28,8 @@ import { FaReply } from "react-icons/fa";
 import "./contactus-management.scss";
 import { 
   deleteContactMessages,
-  getContactMessages, 
+  getContactMessages,
+  updateContactStatus, 
   
 } from "../../../services/adminServices";
 
@@ -239,12 +240,38 @@ export default function ContactManagement() {
   };
 
   const handleMarkAsRead = async (id) => {
-   
-  };
+  try {
+    const response = await updateContactStatus(id, "read");
 
-  const handleMarkAsUnread = async (id) => {
-   
-  };
+    if (response.success) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === id ? { ...msg, status: "read" } : msg
+        )
+      );
+    }
+  } catch (err) {
+    console.error("Mark as read error:", err);
+    setError("Failed to mark as read");
+  }
+};
+
+ const handleMarkAsUnread = async (id) => {
+  try {
+    const response = await updateContactStatus(id, "unread");
+
+    if (response.success) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === id ? { ...msg, status: "unread" } : msg
+        )
+      );
+    }
+  } catch (err) {
+    console.error("Mark as unread error:", err);
+    setError("Failed to mark as unread");
+  }
+};
 
   const handleDelete = async () => {
   if (selectedMessages.length === 0) return;
