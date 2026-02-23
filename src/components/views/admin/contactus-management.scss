@@ -17,7 +17,7 @@ $purple: #8b5cf6;
   min-height: 100vh;
   padding: 1rem;
   color: $text-main;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 
   @media (min-width: 768px) {
     padding: 2rem;
@@ -43,7 +43,9 @@ $purple: #8b5cf6;
       color: $text-main;
       margin: 0 0 0.25rem 0;
 
-      svg { color: $primary; }
+      svg {
+        color: $primary;
+      }
     }
     .page-subtitle {
       font-size: 0.8rem;
@@ -55,7 +57,7 @@ $purple: #8b5cf6;
   .header-actions {
     display: flex;
     gap: 0.5rem;
-    
+
     button {
       display: flex;
       align-items: center;
@@ -70,7 +72,7 @@ $purple: #8b5cf6;
 
       &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
     }
 
@@ -111,7 +113,7 @@ $purple: #8b5cf6;
     background: $card-bg;
     padding: 1rem;
     border-radius: 0.75rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     border-left: 4px solid #cbd5e1;
@@ -119,13 +121,21 @@ $purple: #8b5cf6;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
 
-    &.total { border-left-color: $text-muted; }
-    &.unread { border-left-color: $primary; }
-    &.replied { border-left-color: $success; }
-    &.urgent { border-left-color: $warning; }
+    &.total {
+      border-left-color: $text-muted;
+    }
+    &.unread {
+      border-left-color: $primary;
+    }
+    &.replied {
+      border-left-color: $success;
+    }
+    &.urgent {
+      border-left-color: $warning;
+    }
 
     .stat-value {
       font-size: 1.25rem;
@@ -168,8 +178,8 @@ $purple: #8b5cf6;
     font-size: 0.875rem;
     transition: all 0.2s;
 
-    &:focus { 
-      outline: none; 
+    &:focus {
+      outline: none;
       border-color: $primary;
       box-shadow: 0 0 0 3px rgba($primary, 0.1);
     }
@@ -232,7 +242,7 @@ $purple: #8b5cf6;
   overflow-x: auto;
   padding-bottom: 0.5rem;
   -webkit-overflow-scrolling: touch;
-  
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -255,7 +265,7 @@ $purple: #8b5cf6;
       font-size: 0.875rem;
     }
 
-    b { 
+    b {
       font-weight: 600;
       background: rgba($primary, 0.1);
       padding: 0.15rem 0.4rem;
@@ -274,7 +284,7 @@ $purple: #8b5cf6;
       border-color: $primary;
 
       b {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255, 255, 255, 0.2);
         color: white;
       }
     }
@@ -297,9 +307,9 @@ $purple: #8b5cf6;
   .actions {
     display: flex;
     gap: 0.5rem;
-    
+
     button {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       border: none;
       color: white;
       padding: 0.25rem 0.5rem;
@@ -308,7 +318,7 @@ $purple: #8b5cf6;
       transition: all 0.2s;
 
       &:hover {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255, 255, 255, 0.2);
         transform: scale(1.05);
       }
 
@@ -336,7 +346,7 @@ $purple: #8b5cf6;
   background: $card-bg;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   @media (min-width: 1024px) {
     display: block;
@@ -345,8 +355,9 @@ $purple: #8b5cf6;
   .data-table {
     width: 100%;
     border-collapse: collapse;
-    
-    th, td {
+
+    th,
+    td {
       padding: 1rem;
       text-align: left;
       border-bottom: 1px solid $border-color;
@@ -367,8 +378,8 @@ $purple: #8b5cf6;
 
     .unread-row {
       background: #fffbeb;
-      
-      td { 
+
+      td {
         font-weight: 500;
       }
     }
@@ -404,9 +415,15 @@ $purple: #8b5cf6;
 }
 
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .contact-cell {
@@ -414,7 +431,8 @@ $purple: #8b5cf6;
   flex-direction: column;
   gap: 0.15rem;
 
-  .contact-email, .contact-phone {
+  .contact-email,
+  .contact-phone {
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -429,12 +447,12 @@ $purple: #8b5cf6;
 
 .subject-cell {
   font-weight: 500;
-  
-  .preview { 
-    display: block; 
-    font-size: 0.7rem; 
-    color: $text-muted; 
-    font-weight: 400; 
+
+  .preview {
+    display: block;
+    font-size: 0.7rem;
+    color: $text-muted;
+    font-weight: 400;
     margin-top: 0.25rem;
     white-space: nowrap;
     overflow: hidden;
@@ -466,7 +484,7 @@ $purple: #8b5cf6;
 .row-actions {
   display: flex;
   gap: 0.5rem;
-  
+
   button {
     background: none;
     border: 1px solid $border-color;
@@ -480,8 +498,8 @@ $purple: #8b5cf6;
     color: $text-muted;
     transition: all 0.2s;
 
-    &:hover:not(:disabled) { 
-      border-color: $primary; 
+    &:hover:not(:disabled) {
+      border-color: $primary;
       color: $primary;
       background: rgba($primary, 0.05);
     }
@@ -510,21 +528,21 @@ $purple: #8b5cf6;
   align-items: center;
   gap: 0.25rem;
 
-  &.urgent { 
-    background: #fee2e2; 
-    color: #991b1b; 
+  &.urgent {
+    background: #fee2e2;
+    color: #991b1b;
   }
-  &.high { 
-    background: #fef3c7; 
-    color: #92400e; 
+  &.high {
+    background: #fef3c7;
+    color: #92400e;
   }
-  &.medium { 
-    background: #dbeafe; 
-    color: #1e40af; 
+  &.medium {
+    background: #dbeafe;
+    color: #1e40af;
   }
-  &.low { 
-    background: #f1f5f9; 
-    color: #475569; 
+  &.low {
+    background: #f1f5f9;
+    color: #475569;
   }
 }
 
@@ -562,14 +580,14 @@ $purple: #8b5cf6;
     background: $card-bg;
     border-radius: 0.75rem;
     padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border-left: 4px solid transparent;
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
 
     &:active {
@@ -602,21 +620,21 @@ $purple: #8b5cf6;
 
       .meta {
         flex: 1;
-        
-        h4 { 
-          font-size: 0.875rem; 
+
+        h4 {
+          font-size: 0.875rem;
           margin-bottom: 0.2rem;
           font-weight: 600;
         }
-        
+
         .meta-row {
           display: flex;
           align-items: center;
           gap: 0.5rem;
           flex-wrap: wrap;
 
-          .time { 
-            font-size: 0.7rem; 
+          .time {
+            font-size: 0.7rem;
             color: $text-muted;
             display: flex;
             align-items: center;
@@ -632,16 +650,16 @@ $purple: #8b5cf6;
     }
 
     .card-body {
-      h5 { 
-        font-size: 0.9rem; 
+      h5 {
+        font-size: 0.9rem;
         margin-bottom: 0.25rem;
         font-weight: 600;
         color: $text-main;
       }
-      
-      p { 
-        font-size: 0.8rem; 
-        color: $text-muted; 
+
+      p {
+        font-size: 0.8rem;
+        color: $text-muted;
         margin: 0 0 0.5rem 0;
         line-height: 1.4;
       }
@@ -715,7 +733,7 @@ $purple: #8b5cf6;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: flex;
   align-items: flex-end;
@@ -734,7 +752,7 @@ $purple: #8b5cf6;
   border-radius: 1.5rem 1.5rem 0 0;
   overflow-y: auto;
   animation: slideUp 0.3s ease-out forwards;
-  
+
   @media (min-width: 768px) {
     max-width: 600px;
     border-radius: 1rem;
@@ -747,9 +765,9 @@ $purple: #8b5cf6;
     background: $border-color;
     border-radius: 2px;
     margin: 0.75rem auto;
-    
-    @media (min-width: 768px) { 
-      display: none; 
+
+    @media (min-width: 768px) {
+      display: none;
     }
   }
 
@@ -760,13 +778,13 @@ $purple: #8b5cf6;
     align-items: center;
     border-bottom: 1px solid $border-color;
 
-    h3 { 
+    h3 {
       font-size: 1.125rem;
       font-weight: 600;
       color: $text-main;
       margin: 0;
     }
-    
+
     .close-btn {
       background: none;
       border: 1px solid $border-color;
@@ -790,26 +808,26 @@ $purple: #8b5cf6;
 
   .modal-body {
     padding: 1.5rem;
-    
-    .sender-info { 
-      display: flex; 
-      gap: 1rem; 
-      margin-bottom: 1.5rem; 
+
+    .sender-info {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
       align-items: center;
-      
+
       .sender-avatar {
-        width: 48px; 
-        height: 48px; 
-        background: linear-gradient(135deg, $primary, $primary-dark); 
-        color: white; 
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, $primary, $primary-dark);
+        color: white;
         border-radius: 50%;
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-weight: 600;
         font-size: 1.25rem;
       }
-      
+
       .sender-details {
         h4 {
           font-size: 1rem;
@@ -817,7 +835,8 @@ $purple: #8b5cf6;
           margin: 0 0 0.25rem 0;
         }
 
-        .sender-email, .sender-phone {
+        .sender-email,
+        .sender-phone {
           display: flex;
           align-items: center;
           gap: 0.5rem;
@@ -900,7 +919,7 @@ $purple: #8b5cf6;
       font-size: 0.7rem;
       color: $text-muted;
     }
-    
+
     .message-content {
       background: darken($card-bg, 2%);
       padding: 1.25rem;
@@ -916,21 +935,21 @@ $purple: #8b5cf6;
       }
     }
 
-    .meta-tags { 
-      display: flex; 
-      gap: 1rem; 
+    .meta-tags {
+      display: flex;
+      gap: 1rem;
       align-items: center;
       flex-wrap: wrap;
     }
-    
-    .time { 
-      font-size: 0.75rem; 
-      color: $text-muted; 
-      display: flex; 
-      align-items: center; 
-      gap: 0.25rem; 
+
+    .time {
+      font-size: 0.75rem;
+      color: $text-muted;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
     }
-    
+
     textarea {
       width: 100%;
       padding: 0.75rem;
@@ -953,7 +972,7 @@ $purple: #8b5cf6;
     border-top: 1px solid $border-color;
     display: flex;
     gap: 0.75rem;
-    
+
     button {
       flex: 1;
       padding: 0.75rem;
@@ -969,7 +988,7 @@ $purple: #8b5cf6;
 
       &:hover:not(:disabled) {
         transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       &:active:not(:disabled) {
@@ -981,29 +1000,30 @@ $purple: #8b5cf6;
         cursor: not-allowed;
       }
     }
-    
-    .btn-cancel { 
-      background: #f1f5f9; 
+
+    .btn-cancel {
+      background: #f1f5f9;
       color: $text-main;
-      
+
       &:hover:not(:disabled) {
         background: darken(#f1f5f9, 5%);
       }
     }
-    
-    .btn-send, .btn-save { 
-      background: $primary; 
+
+    .btn-send,
+    .btn-save {
+      background: $primary;
       color: white;
-      
+
       &:hover:not(:disabled) {
         background: $primary-dark;
       }
     }
-    
-    .btn-delete { 
-      background: $danger; 
+
+    .btn-delete {
+      background: $danger;
       color: white;
-      
+
       &:hover:not(:disabled) {
         background: darken($danger, 5%);
       }
@@ -1086,7 +1106,8 @@ $purple: #8b5cf6;
         margin-bottom: 0.25rem;
       }
 
-      input, textarea {
+      input,
+      textarea {
         width: 100%;
         padding: 0.6rem;
         border: 1px solid $border-color;
@@ -1120,17 +1141,17 @@ $purple: #8b5cf6;
 .delete-modal {
   text-align: center;
   padding-bottom: 2rem;
-  
+
   .delete-icon {
-    width: 56px; 
-    height: 56px; 
-    background: #fee2e2; 
+    width: 56px;
+    height: 56px;
+    background: #fee2e2;
     color: $danger;
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    margin: 1rem auto 1rem; 
+    margin: 1rem auto 1rem;
     font-size: 2rem;
   }
 
@@ -1156,7 +1177,7 @@ $purple: #8b5cf6;
 .no-results {
   text-align: center;
   padding: 3rem 1rem;
-  
+
   svg {
     color: $text-muted;
     margin-bottom: 1rem;
@@ -1221,7 +1242,7 @@ $purple: #8b5cf6;
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  
+
   .spinner {
     width: 40px;
     height: 40px;
@@ -1239,28 +1260,32 @@ $purple: #8b5cf6;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes slideUp {
-  from { 
-    transform: translateY(100%); 
+  from {
+    transform: translateY(100%);
     opacity: 0;
   }
-  to { 
-    transform: translateY(0); 
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }
 
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: scale(0.95); 
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
-  to { 
-    opacity: 1; 
-    transform: scale(1); 
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

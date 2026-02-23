@@ -134,3 +134,12 @@ export const updateContactStatus = async (id, status) => {
 
   return response.data;
 };
+
+export const replyToContact = async (id, replyMessage) => {
+  const response = await adminAxiosInstance.put(
+    `/admin/contact-reply/${id}`,
+    { replyMessage }
+  );
+
+  return response.data;
+};
