@@ -14,6 +14,7 @@ import "./contact-form.scss";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
 import { contactInfo, subjects } from "../../../data/content/contact";
 import { sendContactMessagePrivate } from "../../../services/donorServices";
+import ContactChat from "../contact-chat-ui/contact-chat";
 import toast from "react-hot-toast";
 
 const ContactFormPrivate = () => {
@@ -143,7 +144,7 @@ const ContactFormPrivate = () => {
 
   return (
     <WrapperSection>
-      <div className="contact-form-wrapper  bg-gradient-to-br from-pink-300 via-pink-200  to-pink-100 md:-mt-[480px] -mt-[680px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+      <div className="contact-form-wrapper  bg-gradient-to-br from-pink-300 via-pink-200  to-pink-100 md:-mt-[480px] -mt-[480px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">
@@ -153,6 +154,10 @@ const ContactFormPrivate = () => {
             Have questions or need assistance? We're here to help with all your
             blood donation queries.
           </p>
+        </div>
+
+         <div className="mt-8">
+          <ContactChat />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">

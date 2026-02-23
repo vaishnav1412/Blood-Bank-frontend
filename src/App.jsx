@@ -22,7 +22,7 @@ import Admin from "./components/layouts/admin";
 import AdminLogin from "./components/pages/admin-login/admin-login";
 
 import ChatBot from "./components/pages/chat-bot/chat-bot";
-
+import ContactChat from "./components/sections/contact-chat-ui/contact-chat";
 
 import { Toaster } from "react-hot-toast";
 
@@ -54,7 +54,7 @@ export default function App() {
         
         <Route exact path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path="/doner-profile" element={<ProtectedRoute><BloodDonerProfile /></ProtectedRoute>} />
-
+        <Route path="/contact-chat" element={<ContactChat />} />
         <Route path="/admin-login" element={<AdminLogin/>}/>
         <Route path="/admin/*" element={<Admin />} />
        

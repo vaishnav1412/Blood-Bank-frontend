@@ -28,7 +28,7 @@ import {
   deleteContactMessages,
   getContactMessages,
   updateContactStatus,
-  replyToContact
+  replyToContact,
 } from "../../../services/adminServices";
 
 export default function ContactManagement() {
@@ -105,13 +105,13 @@ export default function ContactManagement() {
     }
   };
 
- const handleRefresh = async () => {
-  setIsRefreshing(true); 
-  setTimeout(async () => {
-    await fetchMessages();
-    setIsRefreshing(false);
-  }, 2000); 
-};
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setTimeout(async () => {
+      await fetchMessages();
+      setIsRefreshing(false);
+    }, 2000);
+  };
 
   const quickResponses = [
     {
@@ -147,15 +147,18 @@ export default function ContactManagement() {
   ];
 
   // Statistics
-  const stats = useMemo(() => ({
-  total: messages.length,
-  unread: messages.filter((m) => m.status === "unread").length,
-  read: messages.filter((m) => m.status === "read").length,
-  replied: messages.filter((m) => m.replies && m.replies.length > 0).length,
-  urgent: messages.filter((m) => m.priority === "urgent").length,
-  registered: messages.filter((m) => m.userId).length,
-  guest: messages.filter((m) => !m.userId).length,
-}), [messages]);
+  const stats = useMemo(
+    () => ({
+      total: messages.length,
+      unread: messages.filter((m) => m.status === "unread").length,
+      read: messages.filter((m) => m.status === "read").length,
+      replied: messages.filter((m) => m.replies && m.replies.length > 0).length,
+      urgent: messages.filter((m) => m.priority === "urgent").length,
+      registered: messages.filter((m) => m.userId).length,
+      guest: messages.filter((m) => !m.userId).length,
+    }),
+    [messages],
+  );
 
   // Categories based on subject analysis
   const getCategoryFromSubject = (subject) => {
@@ -170,77 +173,89 @@ export default function ContactManagement() {
     return "other";
   };
 
-  const categories = useMemo(()=>[
-    { id: "all", label: "All", icon: <FiInbox />, count: messages.length },
-    {
-      id: "donation",
-      label: "Donation",
-      icon: <FiMessageSquare />,
-      count: messages.filter(
-        (m) => getCategoryFromSubject(m.subject) === "donation",
-      ).length,
-    },
-    {
-      id: "emergency",
-      label: "Emergency",
-      icon: <FiAlertCircle />,
-      count: messages.filter(
-        (m) => getCategoryFromSubject(m.subject) === "emergency",
-      ).length,
-    },
-    {
-      id: "support",
-      label: "Support",
-      icon: <FiPhone />,
-      count: messages.filter(
-        (m) => getCategoryFromSubject(m.subject) === "support",
-      ).length,
-    },
-    {
-      id: "donor",
-      label: "Donor",
-      icon: <FiUserCheck />,
-      count: messages.filter(
-        (m) => getCategoryFromSubject(m.subject) === "donor",
-      ).length,
-    },
-    {
-      id: "camp",
-      label: "Camp",
-      icon: <FiCalendar />,
-      count: messages.filter(
-        (m) => getCategoryFromSubject(m.subject) === "camp",
-      ).length,
-    },
-  ],[messages]);
+  const categories = useMemo(
+    () => [
+      { id: "all", label: "All", icon: <FiInbox />, count: messages.length },
+      {
+        id: "donation",
+        label: "Donation",
+        icon: <FiMessageSquare />,
+        count: messages.filter(
+          (m) => getCategoryFromSubject(m.subject) === "donation",
+        ).length,
+      },
+      {
+        id: "emergency",
+        label: "Emergency",
+        icon: <FiAlertCircle />,
+        count: messages.filter(
+          (m) => getCategoryFromSubject(m.subject) === "emergency",
+        ).length,
+      },
+      {
+        id: "support",
+        label: "Support",
+        icon: <FiPhone />,
+        count: messages.filter(
+          (m) => getCategoryFromSubject(m.subject) === "support",
+        ).length,
+      },
+      {
+        id: "donor",
+        label: "Donor",
+        icon: <FiUserCheck />,
+        count: messages.filter(
+          (m) => getCategoryFromSubject(m.subject) === "donor",
+        ).length,
+      },
+      {
+        id: "camp",
+        label: "Camp",
+        icon: <FiCalendar />,
+        count: messages.filter(
+          (m) => getCategoryFromSubject(m.subject) === "camp",
+        ).length,
+      },
+    ],
+    [messages],
+  );
 
   // Filter logic
   const filteredMessages = useMemo(() => {
-  return messages.filter((message) => {
-    // Category filter
-    if (activeTab !== "all" && getCategoryFromSubject(message.subject) !== activeTab) return false;
+    return messages.filter((message) => {
+      // Category filter
+      if (
+        activeTab !== "all" &&
+        getCategoryFromSubject(message.subject) !== activeTab
+      )
+        return false;
 
-    // Status filter
-    if (statusFilter !== "all") {
-      if (statusFilter === "unread" && message.status !== "unread") return false;
-      if (statusFilter === "read" && message.status !== "read") return false;
-      if (statusFilter === "replied" && (!message.replies || message.replies.length === 0)) return false;
-    }
+      // Status filter
+      if (statusFilter !== "all") {
+        if (statusFilter === "unread" && message.status !== "unread")
+          return false;
+        if (statusFilter === "read" && message.status !== "read") return false;
+        if (
+          statusFilter === "replied" &&
+          (!message.replies || message.replies.length === 0)
+        )
+          return false;
+      }
 
-    // Search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        message.name?.toLowerCase().includes(query) ||
-        message.email?.toLowerCase().includes(query) ||
-        message.subject?.toLowerCase().includes(query) ||
-        message.message?.toLowerCase().includes(query) ||
-        (message.phone && message.phone.includes(query))
-      );
-    }
-    return true;
-  });
-}, [messages, activeTab, statusFilter, searchQuery]); // dependencies
+      // Search query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          message.name?.toLowerCase().includes(query) ||
+          message.email?.toLowerCase().includes(query) ||
+          message.subject?.toLowerCase().includes(query) ||
+          message.message?.toLowerCase().includes(query) ||
+          (message.phone && message.phone.includes(query))
+        );
+      }
+      return true;
+    });
+  }, [messages, activeTab, statusFilter, searchQuery]); // dependencies
 
   // Pagination
   const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
@@ -291,9 +306,6 @@ export default function ContactManagement() {
     link.download = "contact_messages.csv"; // Set your desired filename
     link.click(); // Trigger the download
   };
-
-
-
 
   const handleMarkAsRead = async (id) => {
     try {
@@ -357,64 +369,60 @@ export default function ContactManagement() {
   };
 
   const handleTemplateSelect = (templateId) => {
-  const template = quickResponses.find((t) => t.id === templateId);
-  if (template) {
-    setReplyText(template.content);
-    setSelectedTemplate(templateId);
-  }
-};
+    const template = quickResponses.find((t) => t.id === templateId);
+    if (template) {
+      setReplyText(template.content);
+      setSelectedTemplate(templateId);
+    }
+  };
 
   const handleSendReply = async () => {
-  if (!replyText.trim()) return;
+    if (!replyText.trim()) return;
 
-  try {
-    setIsSubmitting(true);
+    try {
+      setIsSubmitting(true);
 
-    const response = await replyToContact(
-      selectedMessage._id,
-      replyText
-    );
+      const response = await replyToContact(selectedMessage._id, replyText);
 
-    if (response.success) {
-      // Update UI instantly
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === selectedMessage._id
-            ? {
-                ...msg,
-                replies: [
-                  ...(msg.replies || []),
-                  {
-                    replyMessage: replyText,
-                    repliedAt: new Date(),
-                  },
-                ],
-                replied: true,
-                status: "in-progress",
-              }
-            : msg
-        )
-      );
+      if (response.success) {
+        // Update UI instantly
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === selectedMessage._id
+              ? {
+                  ...msg,
+                  replies: [
+                    ...(msg.replies || []),
+                    {
+                      replyMessage: replyText,
+                      repliedAt: new Date(),
+                    },
+                  ],
+                  replied: true,
+                  status: "in-progress",
+                }
+              : msg,
+          ),
+        );
 
-      // Show success toast
-      setSuccessMessage({
-        message: "Reply sent successfully!",
-        email: selectedMessage.email
-      });
-      
-      // Auto-hide after 5 seconds
-      setTimeout(() => setSuccessMessage(null), 5000);
+        // Show success toast
+        setSuccessMessage({
+          message: "Reply sent successfully!",
+          email: selectedMessage.email,
+        });
 
-      setShowReplyModal(false);
-      setReplyText("");
+        // Auto-hide after 5 seconds
+        setTimeout(() => setSuccessMessage(null), 5000);
+
+        setShowReplyModal(false);
+        setReplyText("");
+      }
+    } catch (err) {
+      setError("Failed to send reply");
+    } finally {
+      setIsSubmitting(false);
     }
-
-  } catch (err) {
-    setError("Failed to send reply");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const getTimeAgo = (timestamp) => {
     if (!timestamp) return "N/A";
@@ -570,9 +578,6 @@ export default function ContactManagement() {
     );
   };
 
-
-
-  
   const DeleteModal = () => (
     <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
       <div
@@ -633,10 +638,10 @@ export default function ContactManagement() {
           </p>
         </div>
         <div className="header-actions">
-         <button className="action-btn-secondary" onClick={handleRefresh}>
-  <FiRefreshCw className={isRefreshing ? "spin" : ""} /> 
-  {isRefreshing ? "Refreshing..." : "Refresh"}
-</button>
+          <button className="action-btn-secondary" onClick={handleRefresh}>
+            <FiRefreshCw className={isRefreshing ? "spin" : ""} />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </button>
           <button className="action-btn-primary" onClick={handleExport}>
             <FiDownload /> Export
           </button>
@@ -653,7 +658,7 @@ export default function ContactManagement() {
           </button>
         </div>
       )}
-        {successMessage && (
+      {successMessage && (
         <div className="success-toast">
           <FiCheckCircle />
           <div>
@@ -1014,30 +1019,29 @@ export default function ContactManagement() {
         />
       )}
       {showReplyModal && (
-  <ReplyModal
-    message={selectedMessage}
-    replyText={replyText}
-    setReplyText={setReplyText}
-    selectedTemplate={selectedTemplate}
-    handleTemplateSelect={handleTemplateSelect}
-    handleSendReply={handleSendReply}
-    isSubmitting={isSubmitting}
-    quickResponses={quickResponses}
-    onClose={() => {
-      setShowReplyModal(false);
-      setReplyText("");
-      setSelectedTemplate("");
-    }}
-  />
-)}
+        <ReplyModal
+          message={selectedMessage}
+          replyText={replyText}
+          setReplyText={setReplyText}
+          selectedTemplate={selectedTemplate}
+          handleTemplateSelect={handleTemplateSelect}
+          handleSendReply={handleSendReply}
+          isSubmitting={isSubmitting}
+          quickResponses={quickResponses}
+          onClose={() => {
+            setShowReplyModal(false);
+            setReplyText("");
+            setSelectedTemplate("");
+          }}
+        />
+      )}
       {showDeleteModal && <DeleteModal />}
     </div>
   );
 }
 
-
-
-const ReplyModal = ({ message,
+const ReplyModal = ({
+  message,
   replyText,
   setReplyText,
   selectedTemplate,
@@ -1045,89 +1049,87 @@ const ReplyModal = ({ message,
   handleSendReply,
   isSubmitting,
   quickResponses,
-  onClose}) => {
-    
-
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div
-          className="modal-content reply-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-drag-handle" />
-          <div className="modal-header">
-            <h3>Reply to {message?.name}</h3>
-            <button className="close-btn" onClick={onClose}>
-              <FiX />
-            </button>
-          </div>
-          <div className="modal-body">
-            {/* Quick Templates */}
-            <div className="quick-templates">
-              <label>Quick Templates</label>
-              <select
-                onChange={(e) => handleTemplateSelect(Number(e.target.value))}
-                value={selectedTemplate}
-              >
-                <option value="">Select a quick response...</option>
-                {quickResponses.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Original Message Preview */}
-            <div className="original-message">
-              <div className="original-header">
-                <strong>Original Message:</strong>
-                <span className="original-subject">{message?.subject}</span>
-              </div>
-              <p className="original-preview">
-                {message?.message?.substring(0, 150)}...
-              </p>
-            </div>
-
-            {/* Reply Input */}
-            <div className="reply-form">
-              <div className="form-group">
-                <label>Your Reply</label>
-               <textarea
-  placeholder="Type your reply..."
-  rows="6"
-  value={replyText}
-  onChange={(e) => setReplyText(e.target.value)}
-/>
-              </div>
-            </div>
-
-            {/* Reply Info */}
-            <div className="reply-to-info">
-              <span>
-                <FiMail /> To: {message?.email}
-              </span>
-              {message?.phone && (
-                <span>
-                  <FiPhone /> {message.phone}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="modal-footer">
-            <button className="btn-cancel" onClick={onClose}>
-              Cancel
-            </button>
-            <button
-              className="btn-send"
-              onClick={handleSendReply}
-              disabled={!replyText.trim() || isSubmitting}
+  onClose,
+}) => {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-content reply-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-drag-handle" />
+        <div className="modal-header">
+          <h3>Reply to {message?.name}</h3>
+          <button className="close-btn" onClick={onClose}>
+            <FiX />
+          </button>
+        </div>
+        <div className="modal-body">
+          {/* Quick Templates */}
+          <div className="quick-templates">
+            <label>Quick Templates</label>
+            <select
+              onChange={(e) => handleTemplateSelect(Number(e.target.value))}
+              value={selectedTemplate}
             >
-              <FiSend /> {isSubmitting ? "Sending..." : "Send Reply"}
-            </button>
+              <option value="">Select a quick response...</option>
+              {quickResponses.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Original Message Preview */}
+          <div className="original-message">
+            <div className="original-header">
+              <strong>Original Message:</strong>
+              <span className="original-subject">{message?.subject}</span>
+            </div>
+            <p className="original-preview">
+              {message?.message?.substring(0, 150)}...
+            </p>
+          </div>
+
+          {/* Reply Input */}
+          <div className="reply-form">
+            <div className="form-group">
+              <label>Your Reply</label>
+              <textarea
+                placeholder="Type your reply..."
+                rows="6"
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Reply Info */}
+          <div className="reply-to-info">
+            <span>
+              <FiMail /> To: {message?.email}
+            </span>
+            {message?.phone && (
+              <span>
+                <FiPhone /> {message.phone}
+              </span>
+            )}
           </div>
         </div>
+        <div className="modal-footer">
+          <button className="btn-cancel" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="btn-send"
+            onClick={handleSendReply}
+            disabled={!replyText.trim() || isSubmitting}
+          >
+            <FiSend /> {isSubmitting ? "Sending..." : "Send Reply"}
+          </button>
+        </div>
       </div>
-    );
-  };
-
+    </div>
+  );
+};

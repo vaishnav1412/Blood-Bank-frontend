@@ -182,3 +182,9 @@ export const deleteDonationProof = async (donationId) => {
 
   return data;
 };
+
+
+export const getMyContactHistory = async () => {
+  const response = await axiosInstance.get("/doner/my-contacts-history");
+  return response.data;
+};
