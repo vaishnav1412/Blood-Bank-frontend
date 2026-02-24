@@ -877,7 +877,7 @@ const HostBloodDrive = () => {
 
   return (
     <WrapperSection>
-      <div className="host-blood-drive-wrapper bg-gradient-to-br from-pink-300 via-pink-200 to-pink-100 md:-mt-[480px] -mt-[670px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+      <div className="host-blood-drive-wrapper bg-gradient-to-br from-pink-300 via-pink-200 to-pink-100 md:-mt-[480px] -mt-[480px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">

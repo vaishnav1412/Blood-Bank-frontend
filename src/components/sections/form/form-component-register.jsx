@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import "./form-component-styles.scss";
+import "./form-component-register.scss";
 import { DropdownIcon } from "../dropdown-icon/dropdown-icon";
 import { districtTalukMap } from "../../../data/utils/districtTalukMap";
 import WrapperSection from "../wrapper-section/wrapper-section-component";

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import "./form-component-styles.scss";
 import { FaSpinner } from "react-icons/fa";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
 import { labelStyles, inputStyles } from "../../../data/style/style";
+import "./form-component-styles.scss";
 import PropTypes from "prop-types";
 
 const FormComponent = ({
@@ -20,7 +20,7 @@ const FormComponent = ({
   const [focusedFields, setFocusedFields] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
-  // Remember Me Logic
+  
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
@@ -50,10 +50,10 @@ const FormComponent = ({
       {/* Main Wrapper */}
       <div className="form-wrapper w-full max-w-xl mx-auto relative md:-mt-[490px] -mt-36 ">
         {/* Glow Border */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-400 via-pink-300 to-pink-400 rounded-2xl blur opacity-30"></div>
+        <div className="absolute -inset-0.5 bg-white rounded-2xl blur opacity-30"></div>
 
         {/* Form Card */}
-        <div className="relative bg-gradient-to-br from-pink_super_light via-white to-pink-50 p-8 rounded-2xl shadow-xl border border-pink-100">
+        <div className="relative bg-gradient-to-b from-white/70 via-white/80 to-white p-8 rounded-2xl shadow-xl border border-pink-100">
           {/* Heading */}
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-800">{heading}</h3>

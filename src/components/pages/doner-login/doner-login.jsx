@@ -34,7 +34,6 @@ const DonateBloodPage = () => {
 
   const navigate = useNavigate();
 
-  // Load remembered email on mount
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
@@ -43,7 +42,6 @@ const DonateBloodPage = () => {
     }
   }, []);
 
-  // Save email to localStorage when rememberMe changes
   useEffect(() => {
     if (rememberMe && formData.email) {
       localStorage.setItem("rememberedEmail", formData.email);
@@ -52,7 +50,6 @@ const DonateBloodPage = () => {
     }
   }, [rememberMe, formData.email]);
 
-  
   const validateForm = useCallback(() => {
     const emailError = !formData.email.trim()
       ? "Email is required."
@@ -73,39 +70,27 @@ const DonateBloodPage = () => {
     };
   }, [formData.email, formData.password]);
 
-  // Handle form submission
   const handleSubmit = async (e) => {
-
-  e.preventDefault();
-  if (loading) return;
-
-  const { emailError, passwordError, isValid } = validateForm();
-  setError({ emailError, passwordError });
-
-  if (!isValid) return;
-  const toastId = toast.loading("Logging in...");
-  setLoading(true);
-
-  try {
-
-    const data = await loginDonor(formData.email, formData.password);
-    toast.success("Login successful!", { id: toastId });
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("donor", JSON.stringify(data.donor));
-
-    navigate("/home");
-
-    setFormData((prev) => ({ ...prev, password: "" }));
-    
-  } catch (err) {
-
-   toast.error(getErrorMessage(err), { id: toastId });
-
-  } finally {
-    setLoading(false);
-  }
-};
+    e.preventDefault();
+    if (loading) return;
+    const { emailError, passwordError, isValid } = validateForm();
+    setError({ emailError, passwordError });
+    if (!isValid) return;
+    const toastId = toast.loading("Logging in...");
+    setLoading(true);
+    try {
+      const data = await loginDonor(formData.email, formData.password);
+      toast.success("Login successful!", { id: toastId });
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("donor", JSON.stringify(data.donor));
+      navigate("/home");
+      setFormData((prev) => ({ ...prev, password: "" }));
+    } catch (err) {
+      toast.error(getErrorMessage(err), { id: toastId });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = useCallback(
     (name, value) => {
@@ -138,8 +123,8 @@ const DonateBloodPage = () => {
         buttonText={loading ? "Logging in..." : "Login"}
         handleSubmit={handleSubmit}
         formData={formData}
-        setFormData={setFormData} 
-        onInputChange={handleInputChange} 
+        setFormData={setFormData}
+        onInputChange={handleInputChange}
         error={error}
         loading={loading}
         rememberMe={rememberMe}
