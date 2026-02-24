@@ -22,7 +22,7 @@ import { getErrorMessage } from "../../../utils/getErrorMessage";
 const HostBloodDrive = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Step 1: Basic Info
+  
     organizationType: "",
     organizationName: "",
     contactPerson: "",
@@ -30,8 +30,6 @@ const HostBloodDrive = () => {
     email: "",
     phone: "",
     alternatePhone: "",
-
-    // Step 2: Event Details
     eventDate: "",
     eventTime: "",
     duration: "4",
@@ -40,14 +38,10 @@ const HostBloodDrive = () => {
     address: "",
     city: "",
     pincode: "",
-
-    // Step 3: Requirements
     requiredStaff: "2",
     equipment: ["mobile-blood-bank", "snacks"],
     specialRequirements: "",
     previousExperience: "no",
-
-    // Step 4: Additional Info
     targetGroup: "students",
     awarenessProgram: "yes",
     publicitySupport: "yes",
@@ -61,27 +55,19 @@ const HostBloodDrive = () => {
   const [upcomingCamps, setUpcomingCamps] = useState([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
- console.log(camp);
- 
-  
-
   useEffect(() => {
     campDetails()
     setUpcomingCamps(camp);
   }, []);
 
-
  const campDetails = async () => {
   try {
+
     const data = await fetchAllCampRequests();
-
-    console.log("All Camp Requests:", data);
-
-    // ✅ Save into state
     setCamp(data.camps); 
+
   } catch (error) {
     console.error("Error fetching camp requests:", error);
-
     toast.error(getErrorMessage(error));
   }
 };
@@ -94,7 +80,6 @@ const HostBloodDrive = () => {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -877,7 +862,7 @@ const HostBloodDrive = () => {
 
   return (
     <WrapperSection>
-      <div className="host-blood-drive-wrapper bg-gradient-to-br from-pink-300 via-pink-200 to-pink-100 md:-mt-[480px] -mt-[480px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+      <div className="host-blood-drive-wrapper bg-gradient-to-br from-white/60 via-white/70 to-white/90  md:-mt-[480px] -mt-[480px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-300/80">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">
