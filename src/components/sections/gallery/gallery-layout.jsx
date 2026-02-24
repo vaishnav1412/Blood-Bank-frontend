@@ -188,7 +188,7 @@ const DonationGallery = () => {
     switch (item.type) {
       case "photo":
         return (
-          <div className="donation-gallery-item bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+          <div className="donation-gallery-item bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 shadow-stone-600/50">
             {/* Image Container */}
             <div
               className="h-48 sm:h-56 md:h-64 relative overflow-hidden cursor-pointer image-container"
@@ -269,7 +269,7 @@ const DonationGallery = () => {
 
       case "video":
         return (
-          <div className="donation-gallery-item bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+          <div className="donation-gallery-item bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-500 hover:-translate-y-2 shadow-stone-600/50">
             {/* Video Thumbnail */}
             <div className="h-48 sm:h-56 md:h-64 relative overflow-hidden cursor-pointer">
               <img
@@ -316,14 +316,14 @@ const DonationGallery = () => {
       case "quote":
         return (
           <div
-            className={`quote-card ${item.bgColor} rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 relative overflow-hidden`}
+            className={`quote-card ${item.bgColor} rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 relative overflow-hidden shadow-stone-500/60`}
           >
             {/* Decorative Elements */}
-            <div className="absolute -top-8 -right-8 w-32 h-32 sm:w-40 sm:h-40 bg-pink-200 rounded-full opacity-20" />
-            <div className="absolute -bottom-8 -left-8 w-24 h-24 sm:w-32 sm:h-32 bg-red-200 rounded-full opacity-20" />
+            <div className="absolute -top-8 -right-8 w-32 h-32 sm:w-40 sm:h-40 bg-pink-300 rounded-full opacity-20" />
+            <div className="absolute -bottom-8 -left-8 w-24 h-24 sm:w-32 sm:h-32 bg-pink-300 rounded-full opacity-20" />
 
             <div className="relative z-10">
-              <FaQuoteLeft className="text-pink-500 text-3xl sm:text-4xl mb-4 opacity-50" />
+              <FaQuoteLeft className="text-pink-500 text-3xl sm:text-4xl mb-4 opacity-70" />
 
               <blockquote className="text-lg sm:text-xl md:text-2xl font-serif text-gray-800 mb-4 sm:mb-6 italic leading-relaxed">
                 "{item.content}"
@@ -348,7 +348,7 @@ const DonationGallery = () => {
       case "stats":
         return (
           <div
-            className={`stats-item ${item.bgColor} rounded-2xl p-4 sm:p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow duration-500`}
+            className={`stats-item ${item.bgColor} rounded-2xl p-4 sm:p-6 md:p-8`}
           >
             <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 sm:mb-8 text-center">
               {item.title}
@@ -446,7 +446,7 @@ const DonationGallery = () => {
 
   return (
     <WrapperSection>
-      <div className="donation-gallery bg-gradient-to-b from-pink-200 to-pink-100 md:-mt-[480px] -mt-[700px] rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-6 lg:p-8 xl:p-12 shadow-lg shadow-pink-500/20">
+      <div className="donation-gallery bg-gradient-to-br from-white/60 via-white/70  to-white/90 md:-mt-[480px] -mt-[500px] rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-6 lg:p-8 xl:p-12 shadow-2xl shadow-pink-300/80">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">
@@ -459,7 +459,7 @@ const DonationGallery = () => {
         </div>
 
         {/* Stats Banner */}
-        <div className="mb-8 sm:mb-12 bg-gradient-to-r from-pink-600 to-pink-400 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+        <div className="mb-8 sm:mb-12 bg-gradient-to-r from-pink-600 via-pink-500 to-pink-400 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-lg shadow-stone-700/80">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
             <div>
               <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">
@@ -505,8 +505,8 @@ const DonationGallery = () => {
                 onClick={() => setActiveFilter(filter.id)}
                 className={`filter-btn flex items-center px-3 sm:px-4 md:px-5 py-2 sm:py-3 rounded-lg sm:rounded-xl whitespace-nowrap transition-all duration-300 ${
                   activeFilter === filter.id
-                    ? "bg-pink-600 text-white shadow-lg active"
-                    : "bg-white text-gray-600 hover:bg-pink-50 hover:text-pink-600 border border-gray-200"
+                    ? "bg-pink-600 text-white shadow-md active shadow-stone-800/60"
+                    : "bg-white text-gray-600 hover:bg-pink-50 hover:text-pink-600 border border-gray-200 shadow-md shadow-stone-400/60"
                 }`}
               >
                 <span className="mr-1 sm:mr-2 text-sm sm:text-base">
@@ -540,7 +540,7 @@ const DonationGallery = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-pink-200 border border-pink-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 text-center">
+        <div className="bg-pink-200 border border-pink-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 text-center shadow-lg shadow-stone-700/60">
           <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
             Share Your Donation Story!
           </h3>

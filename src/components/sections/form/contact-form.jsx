@@ -147,7 +147,7 @@ const ContactForm = () => {
 
   return (
     <WrapperSection>
-      <div className="contact-form-wrapper  bg-gradient-to-br from-pink-300 via-pink-200  to-pink-100 md:-mt-[480px] -mt-[680px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+      <div className="contact-form-wrapper  bg-gradient-to-br from-white/60 via-white/70  to-white/90 md:-mt-[450px] -mt-[500px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-300/80">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">
@@ -207,9 +207,9 @@ const ContactForm = () => {
                   href={info.action}
                   target={info.action.includes('http') ? '_blank' : '_self'}
                   rel="noopener noreferrer"
-                  className="group bg-white border border-gray-200 rounded-xl p-4 flex items-start hover:shadow-lg hover:border-pink-300 transition-all duration-300"
+                  className="group bg-white border border-slate-300 rounded-xl p-4 flex items-start hover:shadow-lg hover:border-pink-300 transition-all duration-300"
                 >
-                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${info.color} flex items-center justify-center text-white mr-4 group-hover:scale-110 transition-transform`}>
+                  <div className={`w-12 h-12 rounded-lg bg-pink-500 flex items-center justify-center text-white mr-4 group-hover:scale-110 transition-transform`}>
                     {info.icon}
                   </div>
                   <div className="flex-1">
@@ -219,7 +219,7 @@ const ContactForm = () => {
                     <p className="text-gray-600 font-medium mt-1">{info.details}</p>
                     <p className="text-sm text-gray-500 mt-1">{info.subtitle}</p>
                   </div>
-                  <div className="text-gray-400 group-hover:text-pink-500 transition-colors">
+                  <div className="text-gray-400 text-3xl group-hover:text-pink-500 transition-colors">
                     →
                   </div>
                 </a>
