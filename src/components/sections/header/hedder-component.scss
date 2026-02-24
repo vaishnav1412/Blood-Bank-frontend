@@ -1,138 +1,447 @@
-// Prevent horizontal scroll on the whole page caused by fixed elements
+// hedder-component.scss
+
+// Color Variables - Match Tailwind Config
+$dark: #161A1B;
+$light: #4F5561;
+$dark_red: #260303;
+$red: #400606;
+$off_white: #F2F2F2;
+$white: #FFFFFF;
+$gray: #999999;
+$dark_gray: #444444;
+$green: rgb(20, 83, 45);
+$blue: #1E90FF;
+$light_red: rgb(239, 68, 68);
+$button_original: #db2777;
+$button_border: #b91c1c;
+$pink_dark: #db2777;
+$pink_second_dark: #be185d;
+$pink_light: #ec4899;
+$pink_second_light: #f472b6;
+$pink_super_light: #fce7f3;
+
+// Primary Color Family
+$primary: $pink_dark;
+$primary-light: $pink_light;
+$primary-dark: $pink_second_dark;
+$primary-gradient: linear-gradient(135deg, $primary, $primary-dark);
+$primary-gradient-light: linear-gradient(135deg, $pink_light, $primary);
+
+// For soft gradients, use hex colors directly with rgba()
+// Hex colors work fine with rgba() in Sass
+$primary-gradient-soft: linear-gradient(135deg, 
+  rgba($pink_dark, 0.1), 
+  rgba($pink_second_dark, 0.05)
+);
+
+// Alternative using mix() for softer transitions
+$primary-mix-soft: linear-gradient(135deg, 
+  mix($pink_dark, $white, 10%), 
+  mix($pink_second_dark, $white, 5%)
+);
+
+// Neutral Colors
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+$black: #000000;
+
+// Semantic Colors
+$error: $light_red;
+$error-light: #fee2e2;
+
+// Text Colors
+$text-primary: $dark;
+$text-secondary: $light;
+$text-tertiary: $gray;
+$text-inverse: $white;
+
+// Background Colors
+$bg-primary: $white;
+$bg-secondary: $gray-50;
+$bg-dark: $dark;
+
+// Border Colors
+$border-light: $gray-200;
+$border-medium: $gray-300;
+
+// Shadows
+$shadow-sm: 0 1px 2px 0 rgba($black, 0.05);
+$shadow-md: 0 4px 6px -1px rgba($black, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba($black, 0.1);
+$shadow-xl: 0 20px 25px -5px rgba($black, 0.1);
+$shadow-primary: 0 4px 15px -3px rgba($pink_dark, 0.3);
+
+// Border Radius
+$radius-lg: 0.5rem;
+$radius-xl: 0.75rem;
+$radius-2xl: 1rem;
+$radius-full: 9999px;
+
+// Transitions
+$transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// Z-index
+$z-10: 10;
+$z-20: 20;
+$z-30: 30;
+$z-40: 40;
+$z-50: 50;
+
+/* =======================
+   Base Styles
+======================= */
+
 html, body {
   overflow-x: hidden;
+  width: 100%;
+  position: relative;
 }
 
-// Keyframes
-@keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
+/* =======================
+   Header Wrapper
+======================= */
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-// Header Wrapper
 .header-wrapper {
-  // Prevent content from overflowing horizontally
-  overflow-x: hidden; 
-  overflow-y: visible;
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: $z-50;
+  
+  &.header-scrolled {
+    background: rgba($dark, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba($white, 0.1);
+  }
 }
 
-// Mobile Menu Panel
-.mobile-menu-panel {
-  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(135deg, #ffffff 0%, #fdf2f8 100%);
-  box-shadow: -10px 0 50px rgba(0, 0, 0, 0.15);
-  
-  // User avatar styles
-  .user-avatar {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+/* Logo */
+.logo-container {
+  .logo-image {
+    filter: drop-shadow(0 2px 4px rgba($dark, 0.1));
   }
   
-  // Active navigation item
-  .nav-item-active {
-    background: linear-gradient(90deg, rgba(236, 72, 153, 0.1) 0%, rgba(219, 39, 119, 0.05) 100%);
-    border-left: 4px solid #ec4899;
+  .company-name {
+    color: $white;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+}
+
+/* =======================
+   Desktop Navigation (LG+)
+======================= */
+
+@media (min-width: 1024px) {
+  .desktop-nav-link {
+    position: relative;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $off_white;
+    padding: 0.5rem 1rem;
+    border-radius: $radius-xl;
+    transition: all $transition-base;
+    
+    &.nav-link-active {
+      background: $primary-gradient;
+      color: $white;
+      box-shadow: $shadow-primary;
+    }
+    
+    &:hover:not(.nav-link-active) {
+      background: rgba($white, 0.1);
+    }
   }
   
-  .nav-item {
-    &:active {
-      transform: scale(0.98);
+  .logout-btn-wrapper {
+    min-width: 90px;
+    padding: 0.5rem 1rem;
+    background: $primary-gradient;
+    border-radius: $radius-xl;
+    transition: all $transition-base;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-primary;
+    }
+    
+    .logout-icon {
+      margin-right: 0.5rem;
+      
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+    
+    .logout-text {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: $white;
     }
   }
 }
 
-// Desktop Logout Button - Improved styling
-.logout-btn-wrapper {
-  // Base styles
-  min-width: 90px; // Fixed minimum width
-  padding: 0.5rem 1rem;
-  background: linear-gradient(to right, oklch(52.5% 0.223 3.958), #400606);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
+/* =======================
+   Mobile Styles (Below LG)
+======================= */
+
+@media (max-width: 1023px) {
+  .header-wrapper {
+    nav {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
   
-  // Icon styling
-  .logout-icon {
+  .mobile-menu-button {
+    background: rgba($white, 0.15);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba($white, 0.2);
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     
-    svg {
-      width: 16px;
-      height: 16px;
+    &:active {
+      transform: scale(0.95);
+      background: rgba($white, 0.25);
+    }
+  }
+}
+
+/* Mobile Menu Panel */
+.mobile-menu-panel {
+  animation: slideIn 0.3s ease-out;
+  background: $bg-primary;
+  box-shadow: -5px 0 30px rgba($black, 0.15);
+  
+  .mobile-header {
+    padding: 1rem;
+    background: $primary-gradient !important;
+    
+    .close-button {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: $radius-lg;
+      background: rgba($white, 0.1);
+      
+      &:active {
+        background: rgba($white, 0.2);
+      }
     }
   }
   
-  // Text styling - Always visible on desktop
-  .logout-text {
-    display: inline-block;
-    margin-left: 0.5rem;
+  /* User Section - Mobile */
+  .user-mobile-section {
+    // Using hex colors directly with rgba() - this works!
+    background: linear-gradient(135deg, 
+      rgba($pink_dark, 0.03), 
+      rgba($pink_second_dark, 0.01)
+    );
+    
+    .user-avatar {
+      box-shadow: $shadow-sm;
+      background: $primary-gradient !important;
+    }
+    
+    .text-primary-dark {
+      color: $primary-dark !important;
+    }
+  }
+  
+  /* Navigation Items - Mobile Optimized */
+  .mobile-nav-item {
+    padding: 0.75rem 1rem;
+    border-radius: $radius-xl;
     font-size: 0.875rem;
-    font-weight: 700;
-    color: white;
-    white-space: nowrap;
+    
+    &:active {
+      transform: scale(0.98);
+      background: $gray-50;
+    }
+    
+    &.mobile-nav-item-active {
+      background: rgba($pink_dark, 0.1);
+      color: $primary !important;
+      font-weight: 500;
+      
+      .nav-icon {
+        color: $primary;
+      }
+    }
+    
+    .nav-icon {
+      font-size: 1.25rem;
+      width: 1.5rem;
+      text-align: center;
+      color: $gray-500;
+    }
+    
+    &:hover .nav-icon {
+      color: $primary;
+    }
   }
   
-  // Hover effect
-  &:hover {
-    background: linear-gradient(to right, #991b1b, #9f1239);
-    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
-    transform: translateY(-1px);
+  /* Highlight Badge */
+  .highlight-badge {
+    background: $primary !important;
+    color: $white;
+    font-size: 0.625rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: $radius-full;
   }
   
-  // Active state
-  &:active {
-    transform: translateY(1px);
-    box-shadow: none;
-  }
-}
-
-// Responsive adjustments
-@media (min-width: 1024px) and (max-width: 1280px) {
-  .logout-btn-wrapper {
-    min-width: 80px; // Slightly smaller on medium screens
-    padding: 0.4rem 0.8rem;
+  /* Auth Buttons */
+  .bg-primary {
+    background: $primary !important;
     
-    .logout-text {
-      font-size: 0.8rem;
+    &:hover {
+      background: $primary-dark !important;
+    }
+  }
+  
+  .border-primary {
+    border-color: $primary !important;
+  }
+  
+  .text-primary {
+    color: $primary !important;
+  }
+  
+  /* Emergency Footer - Fixed at Bottom */
+  .mobile-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.75rem;
+    background: $white;
+    border-top: 1px solid $border-light;
+    box-shadow: 0 -4px 10px rgba($black, 0.05);
+    
+    .emergency-section {
+      .emergency-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $error !important;
+      }
     }
   }
 }
 
-// For very large screens
-@media (min-width: 1536px) {
-  .logout-btn-wrapper {
-    min-width: 100px;
-    padding: 0.6rem 1.2rem;
-    
-    .logout-icon svg {
-      width: 18px;
-      height: 18px;
-    }
-    
-    .logout-text {
-      font-size: 1rem;
-    }
+/* =======================
+   Animations
+======================= */
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
   }
 }
 
-// Emergency Number Styling
-.emergency-number {
-  text-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
-}
+/* =======================
+   Accessibility
+======================= */
 
-// Smooth transitions for navigation items
-.nav-item {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-// Focus states for accessibility
 *:focus-visible {
-  outline: 2px solid oklch(52.5% 0.223 3.958);
+  outline: 2px solid $primary;
   outline-offset: 2px;
-  border-radius: 4px;
+}
+
+/* =======================
+   Reduced Motion
+======================= */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =======================
+   Dark Mode
+======================= */
+
+@media (prefers-color-scheme: dark) {
+  .mobile-menu-panel {
+    background: $dark;
+    
+    .user-mobile-section {
+      border-bottom-color: $dark_gray;
+      background: linear-gradient(135deg, 
+        rgba($pink_dark, 0.1), 
+        rgba($pink_second_dark, 0.05)
+      );
+      
+      .text-gray-900 {
+        color: $white;
+      }
+      
+      .text-gray-500 {
+        color: $gray;
+      }
+      
+      .border-gray-100 {
+        border-color: $dark_gray;
+      }
+    }
+    
+    .mobile-nav-item {
+      color: $gray;
+      
+      &:hover, &:active {
+        background: rgba($white, 0.05);
+      }
+      
+      &.mobile-nav-item-active {
+        background: rgba($pink_dark, 0.2);
+        color: $pink_light !important;
+      }
+    }
+    
+    .mobile-footer {
+      background: $dark;
+      border-top-color: $dark_gray;
+      
+      .text-gray-500 {
+        color: $gray;
+      }
+    }
+  }
+}
+
+/* =======================
+   Print Styles
+======================= */
+
+@media print {
+  .header-wrapper {
+    position: static;
+    background: none;
+    border-bottom: 1px solid $gray;
+  }
+  
+  .mobile-menu-button,
+  .logout-btn-wrapper,
+  .mobile-menu-panel {
+    display: none;
+  }
 }
