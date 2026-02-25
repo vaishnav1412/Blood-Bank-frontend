@@ -82,6 +82,26 @@ const RegisterOtpPage = () => {
     }
   };
 
+  const handleResendOtp = async () => {
+  if (!email) return;
+
+  const toastId = toast.loading("Resending OTP...");
+
+  try {
+    await axios.post(`${API}/doner/resend-register-otp`, {
+      email,
+    });
+
+    toast.success("OTP resent successfully!", { id: toastId });
+
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Failed to resend OTP",
+      { id: toastId }
+    );
+  }
+};
+
   return (
     <>
       <HeaderComponent />
@@ -96,6 +116,7 @@ const RegisterOtpPage = () => {
         setFormData={setFormData}
         loading={loading}
         status={status}
+        resendOtp={handleResendOtp}
       />
 
       <ContactDetailsComponent contactDetails={ResetEmailDetails} />
