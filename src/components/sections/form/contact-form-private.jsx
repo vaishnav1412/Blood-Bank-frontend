@@ -29,6 +29,7 @@ const ContactFormPrivate = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState("form");
+  const [submittedEmail, setSubmittedEmail] = useState("");
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -96,6 +97,7 @@ const ContactFormPrivate = () => {
 
       toast.success("Message sent successfully!", { id: toastId });
 
+      const submittedEmail = formData.email;
       // Reset form
       setFormData({
         name: "",
@@ -106,6 +108,8 @@ const ContactFormPrivate = () => {
       });
       setErrors({});
       setIsSubmitted(true);
+
+      setSubmittedEmail(submittedEmail);
 
       // Reset success message after 5 seconds
       setTimeout(() => {
@@ -144,7 +148,7 @@ const ContactFormPrivate = () => {
 
   return (
     <WrapperSection>
-      <div className="contact-form-wrapper  bg-gradient-to-br from-pink-300 via-pink-200  to-pink-100 md:-mt-[480px] -mt-[480px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
+      <div className="contact-form-wrapper  bg-gradient-to-br from-white/60 via-pink-white/70  to-white/90 md:-mt-[480px] -mt-[480px] rounded-3xl p-4 sm:p-8 lg:p-12 shadow-2xl shadow-pink-500/10">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">
@@ -156,7 +160,7 @@ const ContactFormPrivate = () => {
           </p>
         </div>
 
-         <div className="mt-8">
+        <div className="mt-8">
           <ContactChat />
         </div>
 
@@ -165,35 +169,35 @@ const ContactFormPrivate = () => {
           <div className="lg:w-2/5">
             {/* Quick Actions */}
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
                 <FaClock className="mr-2 text-pink-600" />
                 Quick Actions
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => handleQuickAction("emergency")}
-                  className="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 p-4 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105"
+                  className="bg-rose-50 hover:bg-rose-300 border border-rose-100 text-rose-700 p-4 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105"
                 >
                   <span className="text-2xl mb-2">🆘</span>
                   <span className="font-bold text-sm">Emergency</span>
                 </button>
                 <button
                   onClick={() => handleQuickAction("donor")}
-                  className="bg-pink-50 hover:bg-pink-100 border border-pink-200 text-pink-700 p-4 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105"
+                  className="bg-pink-50 hover:bg-pink-300 border border-pink-100 text-pink-700 p-4 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105"
                 >
                   <span className="text-2xl mb-2">❤️</span>
                   <span className="font-bold text-sm">Become Donor</span>
                 </button>
                 <button
                   onClick={() => handleQuickAction("camp")}
-                  className="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 p-4 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105"
+                  className="bg-emerald-50 hover:bg-emerald-300 border border-emerald-100 text-emerald-700 p-4 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105"
                 >
                   <span className="text-2xl mb-2">🏥</span>
                   <span className="font-bold text-sm">Organize Camp</span>
                 </button>
                 <a
                   href="#faq"
-                  className="bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 p-4 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105"
+                  className="bg-purple-50 hover:bg-purple-300 border border-purple-100 text-purple-700 p-4 rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105"
                 >
                   <span className="text-2xl mb-2">❓</span>
                   <span className="font-bold text-sm">FAQ</span>
@@ -209,10 +213,10 @@ const ContactFormPrivate = () => {
                   href={info.action}
                   target={info.action.includes("http") ? "_blank" : "_self"}
                   rel="noopener noreferrer"
-                  className="group bg-white border border-gray-200 rounded-xl p-4 flex items-start hover:shadow-lg hover:border-pink-300 transition-all duration-300"
+                  className="group bg-white border border-slate-300 rounded-xl p-4 flex items-start hover:shadow-lg hover:border-pink-300 transition-all duration-300"
                 >
                   <div
-                    className={`w-12 h-12 rounded-lg bg-gradient-to-br ${info.color} flex items-center justify-center text-white mr-4 group-hover:scale-110 transition-transform`}
+                    className={`w-12 h-12 rounded-lg bg-pink-500 flex items-center justify-center text-white mr-4 group-hover:scale-110 transition-transform`}
                   >
                     {info.icon}
                   </div>
@@ -227,7 +231,7 @@ const ContactFormPrivate = () => {
                       {info.subtitle}
                     </p>
                   </div>
-                  <div className="text-gray-400 group-hover:text-pink-500 transition-colors">
+                  <div className="text-gray-400 text-3xl group-hover:text-pink-500 transition-colors">
                     →
                   </div>
                 </a>
@@ -257,13 +261,13 @@ const ContactFormPrivate = () => {
           {/* Right Side - Form */}
           <div className="lg:w-3/5">
             {/* Form Tabs */}
-            <div className="flex mb-6 border-b border-gray-200">
+            <div className="flex mb-6 border-b border-gray">
               <button
                 onClick={() => setActiveTab("form")}
                 className={`flex-1 py-3 font-bold text-center transition-colors ${
                   activeTab === "form"
                     ? "text-pink-600 border-b-2 border-pink-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 Send Message
@@ -273,35 +277,12 @@ const ContactFormPrivate = () => {
                 className={`flex-1 py-3 font-bold text-center transition-colors ${
                   activeTab === "faq"
                     ? "text-pink-600 border-b-2 border-pink-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 Quick FAQ
               </button>
             </div>
-
-            {/* Success Message */}
-            {isSubmitted && (
-              <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 sm:p-6 flex items-start">
-                <FaCheckCircle className="text-green-500 text-2xl mr-4 flex-shrink-0" />
-                <div className="flex-1">
-                  <h4 className="font-bold text-green-800 mb-1">
-                    Message Sent Successfully!
-                  </h4>
-                  <p className="text-green-600">
-                    Thank you for contacting us. We'll get back to you within 2
-                    hours. A confirmation email has been sent to{" "}
-                    {formData.email}.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsSubmitted(false)}
-                  className="text-green-600 hover:text-green-800 ml-2"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-            )}
 
             {/* Contact Form */}
             {activeTab === "form" && (
@@ -309,7 +290,7 @@ const ContactFormPrivate = () => {
                 {/* Name & Email Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                    <label className="flex items-center text-sm font-semibold text-slate-700 mb-2">
                       <FaUser className="mr-2 text-pink-500" />
                       Your Name *
                     </label>
@@ -321,20 +302,20 @@ const ContactFormPrivate = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        className={`w-full p-4 pl-12 border ${errors.name ? "border-red-500" : "border-gray-300"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all`}
+                        className={`w-full p-4 pl-12 border ${errors.name ? "border-rose-500" : "border-slate-500"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all`}
                         placeholder="John Doe"
                       />
-                      <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" />
                     </div>
                     {errors.name && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <p className="text-rose-500 text-sm mt-1 flex items-center">
                         ⚠️ {errors.name}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                    <label className="flex items-center text-sm font-semibold text-slate-700 mb-2">
                       <FaEnvelope className="mr-2 text-pink-500" />
                       Email Address *
                     </label>
@@ -346,13 +327,13 @@ const ContactFormPrivate = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className={`w-full p-4 pl-12 border ${errors.email ? "border-red-500" : "border-gray-300"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all`}
+                        className={`w-full p-4 pl-12 border ${errors.email ? "border-rose-500" : "border-slate-500"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all`}
                         placeholder="john@example.com"
                       />
-                      <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" />
                     </div>
                     {errors.email && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <p className="text-rose-500 text-sm mt-1 flex items-center">
                         ⚠️ {errors.email}
                       </p>
                     )}
@@ -362,7 +343,7 @@ const ContactFormPrivate = () => {
                 {/* Phone & Subject Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                    <label className="flex items-center text-sm font-semibold text-slate-700 mb-2">
                       <FaPhone className="mr-2 text-pink-500" />
                       Phone Number *
                     </label>
@@ -374,20 +355,20 @@ const ContactFormPrivate = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className={`w-full p-4 pl-12 border ${errors.phone ? "border-red-500" : "border-gray-300"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all`}
+                        className={`w-full p-4 pl-12 border ${errors.phone ? "border-rose-500" : "border-slate-500"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all`}
                         placeholder="98765 43210"
                       />
-                      <FaPhone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <FaPhone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" />
                     </div>
                     {errors.phone && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <p className="text-rose-500 text-sm mt-1 flex items-center">
                         ⚠️ {errors.phone}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                    <label className="flex items-center text-sm font-semibold text-slate-700 mb-2">
                       <FaComment className="mr-2 text-pink-500" />
                       Subject *
                     </label>
@@ -398,7 +379,7 @@ const ContactFormPrivate = () => {
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
-                        className={`w-full p-4 border ${errors.subject ? "border-red-500" : "border-gray-300"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all appearance-none`}
+                        className={`w-full p-4 border ${errors.subject ? "border-rose-500" : "border-slate-500"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all appearance-none`}
                       >
                         <option value="">Select a subject</option>
                         {subjects.map((subject, index) => (
@@ -407,12 +388,12 @@ const ContactFormPrivate = () => {
                           </option>
                         ))}
                       </select>
-                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 pointer-events-none">
                         ▼
                       </div>
                     </div>
                     {errors.subject && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <p className="text-rose-500 text-sm mt-1 flex items-center">
                         ⚠️ {errors.subject}
                       </p>
                     )}
@@ -421,7 +402,7 @@ const ContactFormPrivate = () => {
 
                 {/* Message */}
                 <div>
-                  <label className="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                  <label className="flex items-center text-sm font-semibold text-slate-700 mb-2">
                     <FaComment className="mr-2 text-pink-500" />
                     Your Message *
                   </label>
@@ -433,15 +414,15 @@ const ContactFormPrivate = () => {
                       value={formData.message}
                       onChange={handleChange}
                       rows="5"
-                      className={`w-full p-4 border ${errors.message ? "border-red-500" : "border-gray-300"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all resize-none`}
+                      className={`w-full p-4 border ${errors.message ? "border-rose-500" : "border-slate-500"} bg-white rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all resize-none`}
                       placeholder="Please describe your query in detail..."
                     />
-                    <div className="absolute bottom-3 right-3 text-gray-400 text-sm">
+                    <div className="absolute bottom-3 right-3 text-slate-400 text-sm">
                       {formData.message.length}/500
                     </div>
                   </div>
                   {errors.message && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <p className="text-rose-500 text-sm mt-1 flex items-center">
                       ⚠️ {errors.message}
                     </p>
                   )}
@@ -451,7 +432,7 @@ const ContactFormPrivate = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full bg-pink-500 hover:bg-pink-700 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center border border-pink-400 shadow-lg shadow-slate-800/60 hover:shadow-stone-800/40"
                 >
                   {isSubmitting ? (
                     <>
@@ -466,11 +447,33 @@ const ContactFormPrivate = () => {
                   )}
                 </button>
 
-                <p className="text-center text-sm text-gray-500">
+                <p className="text-center text-sm text-slate-500">
                   We respect your privacy. Your information will never be
                   shared.
                 </p>
               </form>
+            )}
+            {/* Success Message */}
+            {isSubmitted && (
+              <div className="mb-6 bg-gradient-to-r from-emerald-50 to-emerald-50 border border-emerald-200 rounded-xl p-4 sm:p-6 flex items-start">
+                <FaCheckCircle className="text-emeald-500 text-2xl mr-4 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-bold text-emerald-800 mb-1">
+                    Message Sent Successfully!
+                  </h4>
+                  <p className="text-emeald-600">
+                    Thank you for contacting us. We'll get back to you within 2
+                    hours. A confirmation email has been sent to{" "}
+                    {submittedEmail}.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsSubmitted(false)}
+                  className="text-emerald-600 hover:text-emerald-800 ml-2"
+                >
+                  <FaTimes />
+                </button>
+              </div>
             )}
 
             {/* FAQ Tab */}
@@ -496,7 +499,7 @@ const ContactFormPrivate = () => {
                 ].map((faq, index) => (
                   <div
                     key={index}
-                    className="bg-white border border-gray-200 rounded-xl p-4 hover:border-pink-300 transition-colors"
+                    className="bg-white border border-slate-200 rounded-xl p-4 hover:border-pink-300 transition-colors"
                   >
                     <h4 className="font-bold text-gray-800 mb-2 flex items-center">
                       <span className="w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mr-3 text-sm">
@@ -504,7 +507,7 @@ const ContactFormPrivate = () => {
                       </span>
                       {faq.q}
                     </h4>
-                    <p className="text-gray-600 ml-9">{faq.a}</p>
+                    <p className="text-slate-600 ml-9">{faq.a}</p>
                   </div>
                 ))}
 

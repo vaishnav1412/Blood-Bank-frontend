@@ -146,8 +146,8 @@ const ContactChat = () => {
   }
 
   return (
-    <div className="contact-chat-container">
-      <div className="chat-header">
+    <div className="contact-chat-container  shadow-md shadow-stone-400/80">
+      <div className="chat-header bg-gradient-to-r from-pink-600 via-pink-500 to-pink-400">
         <div className="header-left">
           <FaInbox />
           <h3>Your Conversations</h3>
