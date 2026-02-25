@@ -27,13 +27,15 @@ const ContactChat = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await getMyContactHistory();
-      
+
       if (response && response.success) {
         // Sort by most recent activity
-        const sorted = response.data.sort((a, b) => 
-          new Date(b.lastRepliedAt || b.createdAt) - new Date(a.lastRepliedAt || a.createdAt)
+        const sorted = response.data.sort(
+          (a, b) =>
+            new Date(b.lastRepliedAt || b.createdAt) -
+            new Date(a.lastRepliedAt || a.createdAt),
         );
         setConversations(sorted);
       } else {
@@ -52,15 +54,15 @@ const ContactChat = () => {
   };
 
   const toggleThread = (convId) => {
-    setExpandedThreads(prev => ({
+    setExpandedThreads((prev) => ({
       ...prev,
-      [convId]: !prev[convId]
+      [convId]: !prev[convId],
     }));
   };
 
   const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    
+    if (!timestamp) return "";
+
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now - date;
@@ -68,43 +70,43 @@ const ContactChat = () => {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'Just now';
+    if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return 'Yesterday';
+    if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusBadge = (status) => {
     const badges = {
-      'unread': { 
-        text: 'Pending', 
-        class: 'status-pending',
-        icon: <FaClock /> 
+      unread: {
+        text: "Pending",
+        class: "status-pending",
+        icon: <FaClock />,
       },
-      'read': { 
-        text: 'Seen', 
-        class: 'status-seen',
-        icon: <FaCheckCircle /> 
+      read: {
+        text: "Seen",
+        class: "status-seen",
+        icon: <FaCheckCircle />,
       },
-      'in-progress': { 
-        text: 'In Progress', 
-        class: 'status-progress',
-        icon: <FaSpinner /> 
+      "in-progress": {
+        text: "In Progress",
+        class: "status-progress",
+        icon: <FaSpinner />,
       },
-      'closed': { 
-        text: 'Resolved', 
-        class: 'status-resolved',
-        icon: <FaCheckCircle /> 
-      }
+      closed: {
+        text: "Resolved",
+        class: "status-resolved",
+        icon: <FaCheckCircle />,
+      },
     };
-    return badges[status] || badges['unread'];
+    return badges[status] || badges["unread"];
   };
 
   // Show loading state
@@ -112,7 +114,9 @@ const ContactChat = () => {
     return (
       <div className="contact-chat-container">
         <div className="chat-header">
-          <h3><FaInbox /> Your Conversations</h3>
+          <h3>
+            <FaInbox /> Your Conversations
+          </h3>
         </div>
         <div className="loading-state">
           <FaSpinner className="spin" size={32} />
@@ -127,7 +131,9 @@ const ContactChat = () => {
     return (
       <div className="contact-chat-container">
         <div className="chat-header">
-          <h3><FaInbox /> Your Conversations</h3>
+          <h3>
+            <FaInbox /> Your Conversations
+          </h3>
         </div>
         <div className="error-state">
           <FaExclamationCircle size={48} />
@@ -154,7 +160,11 @@ const ContactChat = () => {
         </div>
         <div className="header-right">
           <span className="badge">{conversations.length} Total</span>
-          <button onClick={fetchConversations} className="refresh-btn" title="Refresh">
+          <button
+            onClick={fetchConversations}
+            className="refresh-btn"
+            title="Refresh"
+          >
             <FaSpinner className={loading ? "spin" : ""} />
           </button>
         </div>
@@ -165,11 +175,11 @@ const ContactChat = () => {
           const status = getStatusBadge(conv.status);
           const hasReplies = conv.replies && conv.replies.length > 0;
           const isExpanded = expandedThreads[conv._id] || false;
-          
+
           return (
             <div key={conv._id || idx} className="conversation-card">
               {/* Main Message Preview */}
-              <div 
+              <div
                 className="message-preview"
                 onClick={() => toggleThread(conv._id)}
               >
@@ -179,14 +189,16 @@ const ContactChat = () => {
                   </div>
                   <div className="preview-content">
                     <div className="preview-header">
-                      <span className="subject">{conv.subject || 'No Subject'}</span>
+                      <span className="subject">
+                        {conv.subject || "No Subject"}
+                      </span>
                       <span className={`status-badge ${status.class}`}>
                         {status.icon} {status.text}
                       </span>
                     </div>
                     <p className="preview-text">
                       {conv.message?.substring(0, 60)}
-                      {conv.message?.length > 60 ? '...' : ''}
+                      {conv.message?.length > 60 ? "..." : ""}
                     </p>
                     <div className="preview-meta">
                       <span className="time">
@@ -194,14 +206,17 @@ const ContactChat = () => {
                       </span>
                       {hasReplies && (
                         <span className="reply-count">
-                          <FaReply /> {conv.replies.length} {conv.replies.length === 1 ? 'reply' : 'replies'}
+                          <FaReply /> {conv.replies.length}{" "}
+                          {conv.replies.length === 1 ? "reply" : "replies"}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
                 <div className="preview-right">
-                  <button className={`expand-btn ${isExpanded ? 'expanded' : ''}`}>
+                  <button
+                    className={`expand-btn ${isExpanded ? "expanded" : ""}`}
+                  >
                     ▼
                   </button>
                 </div>
@@ -218,10 +233,14 @@ const ContactChat = () => {
                     <div className="message-content">
                       <div className="message-header">
                         <span className="sender">You</span>
-                        <span className="time">{formatTime(conv.createdAt)}</span>
+                        <span className="time">
+                          {formatTime(conv.createdAt)}
+                        </span>
                       </div>
                       <div className="message-bubble">
-                        <strong className="message-subject">{conv.subject}</strong>
+                        <strong className="message-subject">
+                          {conv.subject}
+                        </strong>
                         <p className="message-text">{conv.message}</p>
                       </div>
                     </div>
@@ -231,7 +250,10 @@ const ContactChat = () => {
                   {conv.replies && conv.replies.length > 0 && (
                     <div className="replies-section">
                       {conv.replies.map((reply, index) => (
-                        <div key={index} className="message-wrapper admin-message">
+                        <div
+                          key={index}
+                          className="message-wrapper admin-message"
+                        >
                           <div className="message-avatar admin-avatar">
                             <FaUserShield />
                           </div>
@@ -240,10 +262,14 @@ const ContactChat = () => {
                               <span className="sender">
                                 <FaUserShield /> Admin Support
                               </span>
-                              <span className="time">{formatTime(reply.repliedAt)}</span>
+                              <span className="time">
+                                {formatTime(reply.repliedAt)}
+                              </span>
                             </div>
                             <div className="message-bubble admin-bubble">
-                              <p className="message-text">{reply.replyMessage}</p>
+                              <p className="message-text">
+                                {reply.replyMessage}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -253,12 +279,12 @@ const ContactChat = () => {
 
                   {/* Conversation Footer */}
                   <div className="conversation-footer">
-                    {conv.status !== 'closed' && (
+                    {conv.status !== "closed" && (
                       <p className="waiting-message">
                         Waiting for admin response...
                       </p>
                     )}
-                    {conv.status === 'closed' && (
+                    {conv.status === "closed" && (
                       <p className="resolved-message">
                         This conversation has been resolved.
                       </p>
