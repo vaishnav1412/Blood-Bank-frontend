@@ -29,6 +29,8 @@ const ContactForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState("form");
+  const [submittedEmail, setSubmittedEmail] = useState("");
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -99,17 +101,21 @@ const ContactForm = () => {
       
       toast.success("Message sent successfully!", { id: toastId });
       
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: ""
-      });
+       // ✅ Save email before resetting form
+    const submittedEmail = formData.email;
+
+    // Reset form
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: ""
+    });
       setErrors({});
       setIsSubmitted(true);
-      
+
+       setSubmittedEmail(submittedEmail)
       // Reset success message after 5 seconds
       setTimeout(() => {
         setIsSubmitted(false);
@@ -254,7 +260,7 @@ const ContactForm = () => {
                 onClick={() => setActiveTab("form")}
                 className={`flex-1 py-3 font-bold text-center transition-colors ${activeTab === "form" 
                   ? "text-pink-600 border-b-2 border-pink-600" 
-                  : "text-gray-500 hover:text-gray-700"}`}
+                  : "text-slate-500 hover:text-slate-700"}`}
               >
                 Send Message
               </button>
@@ -262,31 +268,13 @@ const ContactForm = () => {
                 onClick={() => setActiveTab("faq")}
                 className={`flex-1 py-3 font-bold text-center transition-colors ${activeTab === "faq" 
                   ? "text-pink-600 border-b-2 border-pink-600" 
-                  : "text-gray-500 hover:text-gray-700"}`}
+                  : "text-slate-500 hover:text-slate-700"}`}
               >
                 Quick FAQ
               </button>
             </div>
 
-            {/* Success Message */}
-            {isSubmitted && (
-              <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 sm:p-6 flex items-start">
-                <FaCheckCircle className="text-green-500 text-2xl mr-4 flex-shrink-0" />
-                <div className="flex-1">
-                  <h4 className="font-bold text-green-800 mb-1">Message Sent Successfully!</h4>
-                  <p className="text-green-600">
-                    Thank you for contacting us. We'll get back to you within 2 hours.
-                    A confirmation email has been sent to {formData.email}.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setIsSubmitted(false)}
-                  className="text-green-600 hover:text-green-800 ml-2"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-            )}
+           
 
             {/* Contact Form */}
             {activeTab === "form" && (
@@ -359,7 +347,7 @@ const ContactForm = () => {
                       <FaPhone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500" />
                     </div>
                     {errors.phone && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <p className="text-rose-500 text-sm mt-1 flex items-center">
                         ⚠️ {errors.phone}
                       </p>
                     )}
@@ -439,10 +427,29 @@ const ContactForm = () => {
                   )}
                 </button>
 
-                <p className="text-center text-sm text-gray-500">
+                <p className="text-center text-sm text-slate-500">
                   We respect your privacy. Your information will never be shared.
                 </p>
               </form>
+            )}
+             {/* Success Message */}
+            {isSubmitted && (
+              <div className="mb-6 bg-gradient-to-r from-emerald-50 to-emerald-50 border border-emerald-200 rounded-xl p-4 sm:p-6 flex items-start">
+                <FaCheckCircle className="text-emeald-500 text-2xl mr-4 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-bold text-emerald-800 mb-1">Message Sent Successfully!</h4>
+                  <p className="text-emeald-600">
+                    Thank you for contacting us. We'll get back to you within 2 hours.
+                   A confirmation email has been sent to {submittedEmail}.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setIsSubmitted(false)}
+                  className="text-emerald-600 hover:text-emerald-800 ml-2"
+                >
+                  <FaTimes />
+                </button>
+              </div>
             )}
 
             {/* FAQ Tab */}
@@ -466,14 +473,14 @@ const ContactForm = () => {
                     a: "Yes, after 6 months from the date of getting a tattoo."
                   }
                 ].map((faq, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-xl p-4 hover:border-pink-300 transition-colors">
+                  <div key={index} className="bg-white border border-slate-200 rounded-xl p-4 hover:border-pink-300 transition-colors">
                     <h4 className="font-bold text-gray-800 mb-2 flex items-center">
                       <span className="w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mr-3 text-sm">
                         {index + 1}
                       </span>
                       {faq.q}
                     </h4>
-                    <p className="text-gray-600 ml-9">{faq.a}</p>
+                    <p className="text-slate-600 ml-9">{faq.a}</p>
                   </div>
                 ))}
                 

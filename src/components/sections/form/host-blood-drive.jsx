@@ -14,15 +14,20 @@ import {
 import "./host-blood-drive";
 import toast from "react-hot-toast";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
-import { organizationTypes ,organizationTypeUI,statusUI} from "../../../data/content/camp";
-import { submitBloodDriveApplication,fetchAllCampRequests } from "../../../services/donorServices";
+import {
+  organizationTypes,
+  organizationTypeUI,
+  statusUI,
+} from "../../../data/content/camp";
+import {
+  submitBloodDriveApplication,
+  fetchAllCampRequests,
+} from "../../../services/donorServices";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
-
 
 const HostBloodDrive = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [formData, setFormData] = useState({
-  
     organizationType: "",
     organizationName: "",
     contactPerson: "",
@@ -49,28 +54,26 @@ const HostBloodDrive = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [camp,setCamp] = useState([])
+  const [camp, setCamp] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [upcomingCamps, setUpcomingCamps] = useState([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
-    campDetails()
+    campDetails();
     setUpcomingCamps(camp);
   }, []);
 
- const campDetails = async () => {
-  try {
-
-    const data = await fetchAllCampRequests();
-    setCamp(data.camps); 
-
-  } catch (error) {
-    console.error("Error fetching camp requests:", error);
-    toast.error(getErrorMessage(error));
-  }
-};
+  const campDetails = async () => {
+    try {
+      const data = await fetchAllCampRequests();
+      setCamp(data.camps);
+    } catch (error) {
+      console.error("Error fetching camp requests:", error);
+      toast.error(getErrorMessage(error));
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -170,72 +173,70 @@ const HostBloodDrive = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const finalErrors = validateStep(4);
-  if (Object.keys(finalErrors).length > 0) {
-    setErrors(finalErrors);
-    return;
-  }
+    const finalErrors = validateStep(4);
+    if (Object.keys(finalErrors).length > 0) {
+      setErrors(finalErrors);
+      return;
+    }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  const toastId = toast.loading("Submitting your application...");
+    const toastId = toast.loading("Submitting your application...");
 
-  try {
-    const data = await submitBloodDriveApplication(formData);
-    console.log("Server Response:", data);
+    try {
+      const data = await submitBloodDriveApplication(formData);
+      console.log("Server Response:", data);
 
-    toast.success("Application submitted successfully!", { id: toastId });
+      toast.success("Application submitted successfully!", { id: toastId });
 
-    setShowSuccessModal(true);
-    setIsSubmitted(true);
+      setShowSuccessModal(true);
+      setIsSubmitted(true);
 
-    setTimeout(() => {
-      setFormData({
-        organizationType: "",
-        organizationName: "",
-        contactPerson: "",
-        designation: "",
-        email: "",
-        phone: "",
-        alternatePhone: "",
-        eventDate: "",
-        eventTime: "",
-        duration: "4",
-        expectedDonors: "50",
-        venue: "",
-        address: "",
-        city: "",
-        pincode: "",
-        requiredStaff: "2",
-        equipment: ["mobile-blood-bank", "snacks"],
-        specialRequirements: "",
-        previousExperience: "no",
-        targetGroup: "students",
-        awarenessProgram: "yes",
-        publicitySupport: "yes",
-        termsAccepted: false,
-      });
+      setTimeout(() => {
+        setFormData({
+          organizationType: "",
+          organizationName: "",
+          contactPerson: "",
+          designation: "",
+          email: "",
+          phone: "",
+          alternatePhone: "",
+          eventDate: "",
+          eventTime: "",
+          duration: "4",
+          expectedDonors: "50",
+          venue: "",
+          address: "",
+          city: "",
+          pincode: "",
+          requiredStaff: "2",
+          equipment: ["mobile-blood-bank", "snacks"],
+          specialRequirements: "",
+          previousExperience: "no",
+          targetGroup: "students",
+          awarenessProgram: "yes",
+          publicitySupport: "yes",
+          termsAccepted: false,
+        });
 
-      setActiveStep(1);
-      setIsSubmitted(false);
-      setShowSuccessModal(false);
-    }, 5000);
+        setActiveStep(1);
+        setIsSubmitted(false);
+        setShowSuccessModal(false);
+      }, 5000);
+    } catch (error) {
+      console.error("Submission error:", error);
 
-  } catch (error) {
-    console.error("Submission error:", error);
-
-    toast.error(
-      error.response?.data?.message ||
-        "Failed to submit application. Please try again.",
-      { id: toastId }
-    );
-
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to submit application. Please try again.",
+        { id: toastId },
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Render form steps
   const renderStep = () => {
@@ -243,14 +244,14 @@ const HostBloodDrive = () => {
       case 1:
         return (
           <div className="form-step space-y-6 ">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
               <FaUniversity className="mr-3 text-pink-600" />
               Organization Details
             </h3>
 
             {/* Organization Type */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
                 Type of Organization *
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -266,8 +267,8 @@ const HostBloodDrive = () => {
                     }
                     className={`p-4 rounded-xl border-2 transition-all ${
                       formData.organizationType === type.id
-                        ? `border-pink-500 bg-gradient-to-br ${type.color} text-white shadow-lg`
-                        : "border-gray-200 bg-white hover:border-pink-300 hover:bg-pink-50"
+                        ? `border-emerald-400 bg-emerald-500  text-white shadow-lg`
+                        : "border-slate-400 bg-emerald-50 hover:border-emerald-200 hover:bg-emerald-300"
                     }`}
                   >
                     <div className="text-2xl mb-2">{type.icon}</div>
@@ -276,7 +277,7 @@ const HostBloodDrive = () => {
                 ))}
               </div>
               {errors.organizationType && (
-                <p className="text-red-500 text-sm mt-2">
+                <p className="text-rose-500 text-sm mt-2">
                   ⚠️ {errors.organizationType}
                 </p>
               )}
@@ -285,7 +286,7 @@ const HostBloodDrive = () => {
             {/* Organization Name & Contact Person */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Organization Name *
                 </label>
                 <input
@@ -293,18 +294,18 @@ const HostBloodDrive = () => {
                   name="organizationName"
                   value={formData.organizationName}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   placeholder="e.g., ABC University"
                 />
                 {errors.organizationName && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-rose-500 text-sm mt-1">
                     ⚠️ {errors.organizationName}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Contact Person *
                 </label>
                 <input
@@ -312,11 +313,11 @@ const HostBloodDrive = () => {
                   name="contactPerson"
                   value={formData.contactPerson}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   placeholder="Person responsible"
                 />
                 {errors.contactPerson && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-rose-500 text-sm mt-1">
                     ⚠️ {errors.contactPerson}
                   </p>
                 )}
@@ -326,7 +327,7 @@ const HostBloodDrive = () => {
             {/* Email & Phone */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Email Address *
                 </label>
                 <input
@@ -334,16 +335,16 @@ const HostBloodDrive = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   placeholder="contact@organization.com"
                 />
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">⚠️ {errors.email}</p>
+                  <p className="text-rose-500 text-sm mt-1">⚠️ {errors.email}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Phone Number *
                 </label>
                 <input
@@ -351,11 +352,11 @@ const HostBloodDrive = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   placeholder="9876543210"
                 />
                 {errors.phone && (
-                  <p className="text-red-500 text-sm mt-1">⚠️ {errors.phone}</p>
+                  <p className="text-rose-500 text-sm mt-1">⚠️ {errors.phone}</p>
                 )}
               </div>
             </div>
@@ -365,7 +366,7 @@ const HostBloodDrive = () => {
       case 2:
         return (
           <div className="form-step space-y-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
               <FaCalendarAlt className="mr-3 text-pink-600" />
               Event Details
             </h3>
@@ -373,7 +374,7 @@ const HostBloodDrive = () => {
             {/* Date & Time */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Preferred Date *
                 </label>
                 <input
@@ -382,17 +383,17 @@ const HostBloodDrive = () => {
                   value={formData.eventDate}
                   onChange={handleChange}
                   min={new Date().toISOString().split("T")[0]}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 />
                 {errors.eventDate && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-rose-500 text-sm mt-1">
                     ⚠️ {errors.eventDate}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Start Time *
                 </label>
                 <input
@@ -400,24 +401,24 @@ const HostBloodDrive = () => {
                   name="eventTime"
                   value={formData.eventTime}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 />
                 {errors.eventTime && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-rose-500 text-sm mt-1">
                     ⚠️ {errors.eventTime}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Duration (hours)
                 </label>
                 <select
                   name="duration"
                   value={formData.duration}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
                   {[2, 3, 4, 5, 6, 7, 8].map((hours) => (
                     <option key={hours} value={hours}>
@@ -425,12 +426,13 @@ const HostBloodDrive = () => {
                     </option>
                   ))}
                 </select>
+                  
               </div>
             </div>
 
             {/* Venue Details */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Venue Name *
               </label>
               <input
@@ -438,17 +440,17 @@ const HostBloodDrive = () => {
                 name="venue"
                 value={formData.venue}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 placeholder="e.g., Main Auditorium, College Campus"
               />
               {errors.venue && (
-                <p className="text-red-500 text-sm mt-1">⚠️ {errors.venue}</p>
+                <p className="text-rose-500 text-sm mt-1">⚠️ {errors.venue}</p>
               )}
             </div>
 
             {/* Address */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Complete Address *
               </label>
               <textarea
@@ -456,18 +458,18 @@ const HostBloodDrive = () => {
                 value={formData.address}
                 onChange={handleChange}
                 rows="3"
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 placeholder="Full address with landmarks"
               />
               {errors.address && (
-                <p className="text-red-500 text-sm mt-1">⚠️ {errors.address}</p>
+                <p className="text-rose-500 text-sm mt-1">⚠️ {errors.address}</p>
               )}
             </div>
 
             {/* City & Pincode */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   City *
                 </label>
                 <input
@@ -475,16 +477,16 @@ const HostBloodDrive = () => {
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   placeholder="City name"
                 />
                 {errors.city && (
-                  <p className="text-red-500 text-sm mt-1">⚠️ {errors.city}</p>
+                  <p className="text-rose-500 text-sm mt-1">⚠️ {errors.city}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Pincode *
                 </label>
                 <input
@@ -492,11 +494,11 @@ const HostBloodDrive = () => {
                   name="pincode"
                   value={formData.pincode}
                   onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   placeholder="6-digit pincode"
                 />
                 {errors.pincode && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-rose-500 text-sm mt-1">
                     ⚠️ {errors.pincode}
                   </p>
                 )}
@@ -508,16 +510,16 @@ const HostBloodDrive = () => {
       case 3:
         return (
           <div className="form-step space-y-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
               <FaUsers className="mr-3 text-pink-600" />
               Requirements & Expectations
             </h3>
 
             {/* Expected Donors */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Expected Number of Donors *
-                <span className="ml-2 text-gray-500 font-normal">
+                <span className="ml-2 text-slate-500 font-normal">
                   (Minimum 20)
                 </span>
               </label>
@@ -530,9 +532,9 @@ const HostBloodDrive = () => {
                   min="20"
                   max="500"
                   step="10"
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
                 />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
                   <span>20</span>
                   <span>100</span>
                   <span>200</span>
@@ -545,10 +547,10 @@ const HostBloodDrive = () => {
                 <span className="text-3xl font-bold text-pink-600">
                   {formData.expectedDonors}
                 </span>
-                <span className="text-gray-600 ml-2">expected donors</span>
+                <span className="text-slate-600 ml-2">expected donors</span>
               </div>
               {errors.expectedDonors && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-rose-500 text-sm mt-1">
                   ⚠️ {errors.expectedDonors}
                 </p>
               )}
@@ -556,7 +558,7 @@ const HostBloodDrive = () => {
 
             {/* Equipment Needed */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
                 Equipment & Facilities Required
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -583,7 +585,7 @@ const HostBloodDrive = () => {
                     className={`p-4 rounded-xl border-2 transition-all ${
                       formData.equipment.includes(item.id)
                         ? "border-pink-500 bg-pink-50 text-pink-700"
-                        : "border-gray-200 bg-white hover:border-pink-300"
+                        : "border-slate-200 bg-white hover:border-pink-300"
                     }`}
                   >
                     <div className="text-2xl mb-2">{item.icon}</div>
@@ -595,7 +597,7 @@ const HostBloodDrive = () => {
 
             {/* Special Requirements */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Any Special Requirements
               </label>
               <textarea
@@ -603,7 +605,7 @@ const HostBloodDrive = () => {
                 value={formData.specialRequirements}
                 onChange={handleChange}
                 rows="3"
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 placeholder="Any specific requirements or arrangements needed..."
               />
             </div>
@@ -613,14 +615,14 @@ const HostBloodDrive = () => {
       case 4:
         return (
           <div className="form-step space-y-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
               <FaFileAlt className="mr-3 text-pink-600" />
               Final Details & Confirmation
             </h3>
 
             {/* Target Group */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
                 Primary Target Group
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -642,7 +644,7 @@ const HostBloodDrive = () => {
                     className={`p-4 rounded-xl border-2 transition-all ${
                       formData.targetGroup === group.id
                         ? "border-pink-500 bg-pink-50 text-pink-700"
-                        : "border-gray-200 bg-white hover:border-pink-300"
+                        : "border-slate-200 bg-white hover:border-pink-300"
                     }`}
                   >
                     <div className="text-2xl mb-2">{group.icon}</div>
@@ -654,7 +656,7 @@ const HostBloodDrive = () => {
 
             {/* Awareness Program */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
                 Would you like us to conduct an awareness program?
               </label>
               <div className="flex space-x-4">
@@ -668,8 +670,8 @@ const HostBloodDrive = () => {
                   }
                   className={`relative flex-1 py-4 rounded-xl border-2 transition-all duration-500 ease-in-out overflow-hidden group ${
                     formData.awarenessProgram === "yes"
-                      ? "border-green-500 bg-gradient-to-br from-green-50 to-green-100 text-green-700 shadow-lg shadow-green-500/20 scale-[1.02]"
-                      : "border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/30 hover:shadow-md"
+                      ? "border-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-700 shadow-lg shadow-emerald-500/20 scale-[1.02]"
+                      : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/30 hover:shadow-md"
                   }`}
                 >
                   {/* Shine effect for selected state */}
@@ -679,7 +681,7 @@ const HostBloodDrive = () => {
 
                   {/* Checkmark indicator for selected state */}
                   {formData.awarenessProgram === "yes" && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                    <div className="absolute top-1 right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
                       <FaCheckCircle className="text-white text-sm" />
                     </div>
                   )}
@@ -691,11 +693,11 @@ const HostBloodDrive = () => {
                     <span className="font-bold flex items-center">
                       Yes, Please
                       {formData.awarenessProgram === "yes" && (
-                        <FaCheckCircle className="ml-2 text-green-500 animate-pulse" />
+                        <FaCheckCircle className="ml-2 text-emerald-500 animate-pulse" />
                       )}
                     </span>
                     {formData.awarenessProgram === "yes" && (
-                      <span className="text-xs mt-1 text-green-600 font-medium animate-pulse">
+                      <span className="text-xs mt-1 text-emerald-600 font-medium animate-pulse">
                         Selected
                       </span>
                     )}
@@ -703,7 +705,7 @@ const HostBloodDrive = () => {
 
                   {/* Animated underline */}
                   {formData.awarenessProgram === "yes" && (
-                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-green-400 to-green-500 rounded-full animate-pulse" />
+                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-emerald-400 to-emeald-500 rounded-full animate-pulse" />
                   )}
                 </button>
 
@@ -714,8 +716,8 @@ const HostBloodDrive = () => {
                   }
                   className={`relative flex-1 py-4 rounded-xl border-2 transition-all duration-500 ease-in-out overflow-hidden group ${
                     formData.awarenessProgram === "no"
-                      ? "border-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 shadow-lg shadow-gray-500/20 scale-[1.02]"
-                      : "border-gray-200 bg-white hover:border-gray-400 hover:bg-gray-50/30 hover:shadow-md"
+                      ? "border-slate-500 bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 shadow-lg shadow-slate-500/20 scale-[1.02]"
+                      : "border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50/30 hover:shadow-md"
                   }`}
                 >
                   {/* Shine effect for selected state */}
@@ -725,7 +727,7 @@ const HostBloodDrive = () => {
 
                   {/* Checkmark indicator for selected state */}
                   {formData.awarenessProgram === "no" && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                    <div className="absolute top-1 right-1 w-6 h-6 bg-slate-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
                       <FaCheckCircle className="text-white text-sm" />
                     </div>
                   )}
@@ -737,11 +739,11 @@ const HostBloodDrive = () => {
                     <span className="font-bold flex items-center">
                       Not Required
                       {formData.awarenessProgram === "no" && (
-                        <FaCheckCircle className="ml-2 text-gray-500 animate-pulse" />
+                        <FaCheckCircle className="ml-2 text-slate-500 animate-pulse" />
                       )}
                     </span>
                     {formData.awarenessProgram === "no" && (
-                      <span className="text-xs mt-1 text-gray-600 font-medium animate-pulse">
+                      <span className="text-xs mt-1 text-slate-600 font-medium animate-pulse">
                         Selected
                       </span>
                     )}
@@ -749,7 +751,7 @@ const HostBloodDrive = () => {
 
                   {/* Animated underline */}
                   {formData.awarenessProgram === "no" && (
-                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full animate-pulse" />
+                    <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-slate-400 to-slate-500 rounded-full animate-pulse" />
                   )}
                 </button>
               </div>
@@ -766,7 +768,7 @@ const HostBloodDrive = () => {
                   onChange={handleChange}
                   className="mt-1 mr-3 h-5 w-5 text-pink-600 rounded focus:ring-pink-500"
                 />
-                <label htmlFor="termsAccepted" className="text-gray-700">
+                <label htmlFor="termsAccepted" className="text-slate-700">
                   I agree to the{" "}
                   <a
                     href="#terms"
@@ -775,7 +777,7 @@ const HostBloodDrive = () => {
                     Terms & Conditions
                   </a>{" "}
                   and confirm that:
-                  <ul className="mt-2 space-y-1 text-sm text-gray-600 list-disc list-inside">
+                  <ul className="mt-2 space-y-1 text-sm text-slate-600 list-disc list-inside">
                     <li>We will provide adequate space and basic facilities</li>
                     <li>We will promote the event among our members</li>
                     <li>We will coordinate with volunteers as needed</li>
@@ -784,15 +786,15 @@ const HostBloodDrive = () => {
                 </label>
               </div>
               {errors.termsAccepted && (
-                <p className="text-red-500 text-sm mt-2">
+                <p className="text-rose-500 text-sm mt-2">
                   ⚠️ {errors.termsAccepted}
                 </p>
               )}
             </div>
 
             {/* Review Summary */}
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
-              <h4 className="font-bold text-gray-800 mb-3">
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <h4 className="font-bold text-slate-800 mb-3">
                 Application Summary
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
@@ -832,11 +834,11 @@ const HostBloodDrive = () => {
           <FaCheckCircle className="text-white text-3xl" />
         </div>
 
-        <h3 className="text-2xl font-bold text-gray-800 mb-3">
+        <h3 className="text-2xl font-bold text-slate-800 mb-3">
           Application Submitted!
         </h3>
 
-        <p className="text-gray-600 mb-6">
+        <p className="text-slate-600 mb-6">
           Your blood drive application has been received. Our team will review
           it and contact you within 48 hours.
         </p>
@@ -845,7 +847,7 @@ const HostBloodDrive = () => {
           <p className="font-bold text-pink-700">
             Application ID: BD{Date.now().toString().slice(-6)}
           </p>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             Keep this for future reference
           </p>
         </div>
@@ -868,7 +870,7 @@ const HostBloodDrive = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3 sm:mb-4">
             <span className="text-pink-600">Host a</span> Blood Drive
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto">
             Schools, colleges, corporates & clubs can organize blood donation
             camps. Our team will coordinate everything from approval to
             execution.
@@ -879,8 +881,8 @@ const HostBloodDrive = () => {
           {/* Left Side - Info & Benefits */}
           <div className="lg:w-2/5">
             {/* Benefits Card */}
-            <div className="bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-200 rounded-2xl p-6 mb-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <div className="bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-200 rounded-2xl p-6 mb-8 shadow-md shadow-stone-400/80 ">
+              <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
                 <FaCheckCircle className="mr-3 text-pink-600" />
                 Why Host With Us?
               </h3>
@@ -902,68 +904,50 @@ const HostBloodDrive = () => {
             </div>
 
             {/* Upcoming Camps */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md shadow-stone-400/80">
+              <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
                 <FaCalendarCheck className="mr-3 text-pink-600" />
                 Upcoming Blood Drives
               </h3>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
               <div className="space-y-4">
                 {camp.map((camp) => {
-  const orgUI = organizationTypeUI[camp.organizationType];
+                  const orgUI = organizationTypeUI[camp.organizationType];
 
-  return (
-    <div
-      key={camp._id}
-      className="flex items-start p-3 bg-gray-50 rounded-xl"
-    >
-      {/* Status Badge */}
-      <div
-        className={`px-3 py-1 rounded-full text-xs font-bold mr-3 ${statusUI[camp.status]}`}
-      >
-        {camp.status}
-      </div>
+                  return (
+                    <div
+                      key={camp._id}
+                      className="flex items-start p-3 bg-slate-100 rounded-xl"
+                    >
+                      {/* Status Badge */}
+                      <div
+                        className={`px-3 py-1 rounded-full text-xs font-bold mr-3 ${statusUI[camp.status]}`}
+                      >
+                        {camp.status}
+                      </div>
 
-      {/* Content */}
-      <div className="flex-1">
-        <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-          <span className={`p-1 rounded ${orgUI.badge}`}>
-            {orgUI.icon}
-          </span>
-          {camp.organizationName}
-        </h4>
+                      {/* Content */}
+                      <div className="flex-1">
+                        <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                          <span className={`p-1 rounded ${orgUI.badge}`}>
+                            {orgUI.icon}
+                          </span>
+                          {camp.organizationName}
+                        </h4>
 
-        <div className="flex items-center text-xs text-gray-600 mt-1">
-          <FaCalendarAlt className="mr-1" />
-          {new Date(camp.eventDate).toLocaleDateString()} •{" "}
-          {camp.expectedDonors} donors
-        </div>
+                        <div className="flex items-center text-xs text-slate-600 mt-1">
+                          <FaCalendarAlt className="mr-1" />
+                          {new Date(camp.eventDate).toLocaleDateString()} •{" "}
+                          {camp.expectedDonors} donors
+                        </div>
 
-        <div className="text-xs text-gray-500 mt-1">
-          {camp.venue}
-        </div>
-      </div>
-    </div>
-  );
-})}
+                        <div className="text-xs text-slate-500 mt-1">
+                          {camp.venue}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="mt-6 text-center">
@@ -976,13 +960,13 @@ const HostBloodDrive = () => {
 
             {/* Quick Stats */}
             <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 text-center shadow-md">
                 <div className="text-2xl font-bold text-pink-600">150+</div>
-                <div className="text-sm text-gray-600">Camps Organized</div>
+                <div className="text-sm text-slate-600">Camps Organized</div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+              <div className="bg-white border border-slate-200 rounded-xl p-4 text-center shadow-md">
                 <div className="text-2xl font-bold text-pink-600">5K+</div>
-                <div className="text-sm text-gray-600">Lives Saved</div>
+                <div className="text-sm text-slate-600">Lives Saved</div>
               </div>
             </div>
           </div>
@@ -998,12 +982,12 @@ const HostBloodDrive = () => {
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
                         activeStep >= step
                           ? "bg-pink-600 text-white shadow-lg"
-                          : "bg-gray-200 text-gray-500"
+                          : "bg-slate-300 text-slate-700"
                       }`}
                     >
                       {step}
                     </div>
-                    <span className="text-xs mt-2 text-gray-600 hidden sm:block">
+                    <span className="text-xs mt-2 text-slate-700 hidden sm:block">
                       {step === 1 && "Organization"}
                       {step === 2 && "Event Details"}
                       {step === 3 && "Requirements"}
@@ -1012,7 +996,7 @@ const HostBloodDrive = () => {
                   </div>
                 ))}
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-2 bg-emerald-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-pink-500 to-pink-600 transition-all duration-500"
                   style={{ width: `${((activeStep - 1) / 3) * 100}%` }}
@@ -1023,7 +1007,7 @@ const HostBloodDrive = () => {
             {/* Form Content */}
             <form
               onSubmit={handleSubmit}
-              className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6"
+              className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm  shadow-stone-400/80"
             >
               {renderStep()}
 
@@ -1033,7 +1017,7 @@ const HostBloodDrive = () => {
                   type="button"
                   onClick={prevStep}
                   disabled={activeStep === 1}
-                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 border-2 border-slate-400 bg-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ← Previous
                 </button>
@@ -1074,7 +1058,7 @@ const HostBloodDrive = () => {
             </form>
 
             {/* Quick Info */}
-            <div className="mt-6 bg-gradient-to-r from-pink-50 to-pink-100 border border-pink-200 rounded-2xl p-4 sm:p-6">
+            <div className="mt-6 bg-gradient-to-r from-pink-50 to-pink-100 border border-pink-200 rounded-2xl p-4 sm:p-6 shadow-md shadow-stone-400/80">
               <h4 className="font-bold text-gray-800 mb-2 flex items-center">
                 <FaClock className="mr-2 text-pink-600" />
                 What happens next?

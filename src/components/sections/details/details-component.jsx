@@ -23,7 +23,7 @@ const ContactDetailsComponent = ({ contactDetails }) => {
   return (
     <WrapperSection>
       {/* Wrapper Background Like Login */}
-      <div className="bg-gradient-to-br from-pink-300 via-pink-100 to-pink-300 
+      <div className="bg-gradient-to-br from-pink-300 via-pink-200 to-pink-300 
         w-full py-16 px-4 sm:px-8 md:px-12 lg:px-20 
         rounded-2xl shadow-xl border border-pink-100"
       >
