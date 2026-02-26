@@ -3,21 +3,22 @@ import { Routes, Route } from "react-router-dom";
 
 // Common Components
 import PageLoader from "../components/common/PageLoader";
-import ScrollToTop from "../components/common/ScrollToTop";
+import ScrollToTop from "../components/common/ScrollTop";
 
 // Route Guards
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 
 // --- LAZY LOADING (Note: Corrected spelling to 'Donor') ---
-const DonorLogin = lazy(() => import("../components/pages/donor-login/donor-login"));
+const DonorLogin = lazy(() => import("../components/pages/doner-login/doner-login"));
 const ForgotEmailPage = lazy(() => import("../components/pages/forgot-password-email/forgot-password-email"));
-const DonorRegister = lazy(() => import("../components/pages/donor-register/donor-register"));
+const DonorRegister = lazy(() => import("../components/pages/doner-register/doner-register"));
 const HomePage = lazy(() => import("../components/pages/home/home-page"));
 const PublicHomePage = lazy(() => import("../components/pages/home-public/home-public"));
 const HostBloodDrivePage = lazy(() => import("../components/pages/host-blood-drive/host-blood-drive"));
+
 const NeedBloodPage = lazy(() => import("../components/pages/need-blood/need-blood-page"));
-const BloodDonorProfile = lazy(() => import("../components/pages/blood-donor-profile/bloodDonorProfile"));
+const BloodDonorProfile = lazy(() => import("../components/pages/blood-doner-profile/bloodDonerProfile"));
 const Gallery = lazy(() => import("../components/pages/gallery/gallery"));
 const ContactPage = lazy(() => import("../components/pages/contact/contact-page"));
 const ContactPagePrivate = lazy(() => import("../components/pages/contact/contact-page-private"));

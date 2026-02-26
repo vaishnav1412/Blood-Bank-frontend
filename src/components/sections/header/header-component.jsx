@@ -41,7 +41,7 @@ const HeaderComponent = () => {
     localStorage.removeItem("donor");
     setUser(null);
     setMobileMenuOpen(false);
-    navigate("/login");
+    navigate("/");
   };
 
   useEffect(() => {
@@ -106,12 +106,15 @@ const HeaderComponent = () => {
       >
         {/* Logo */}
         <div className="flex lg:flex-1 z-10">
-          <a href="/" className="logo-container -m-1.5 p-1.5 flex items-center gap-2">
+          <a
+            href="/"
+            className="logo-container -m-1.5 p-1.5 flex items-center gap-2"
+          >
             <span className="sr-only">{companyName}</span>
-            <img 
-              className="logo-image h-8 w-auto md:h-10 transition-transform duration-300 hover:scale-110" 
-              src={WhiteLogo} 
-              alt="Logo" 
+            <img
+              className="logo-image h-8 w-auto md:h-10 transition-transform duration-300 hover:scale-110"
+              src={WhiteLogo}
+              alt="Logo"
             />
             <span className="company-name hidden sm:block text-sm font-semibold text-white">
               {companyName}
@@ -135,10 +138,12 @@ const HeaderComponent = () => {
               }
             >
               <span className="relative z-10 flex items-center gap-2">
-                {item.icon && <span className="nav-icon text-lg">{item.icon}</span>}
+                {item.icon && (
+                  <span className="nav-icon text-lg">{item.icon}</span>
+                )}
                 {item.name}
               </span>
-              {(!isActiveRoute(item.href) && !item.last && !item.secondLast) && (
+              {!isActiveRoute(item.href) && !item.last && !item.secondLast && (
                 <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
               )}
             </NavLink>
@@ -150,7 +155,7 @@ const HeaderComponent = () => {
               className="logout-btn-wrapper group relative flex items-center justify-center px-4 py-2 ml-2 bg-gradient-to-r from-primary to-primary-dark rounded-xl hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 overflow-hidden"
             >
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-              
+
               <span className="logout-icon flex items-center justify-center mr-2">
                 <ArrowRightOnRectangleIcon className="w-4 h-4 text-white" />
               </span>
@@ -213,17 +218,25 @@ const HeaderComponent = () => {
                     {user.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-900 text-sm truncate">{user.name}</div>
-                    <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                    <div className="font-semibold text-gray-900 text-sm truncate">
+                      {user.name}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {user.email}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-around mt-3 pt-3 border-t border-gray-100">
                   <div className="text-center">
-                    <div className="font-bold text-primary-dark text-sm">{user.totalDonations || 0}</div>
+                    <div className="font-bold text-primary-dark text-sm">
+                      {user.totalDonations || 0}
+                    </div>
                     <div className="text-[10px] text-gray-500">Donations</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-bold text-primary-dark text-sm">{(user.totalDonations || 0) * 3}</div>
+                    <div className="font-bold text-primary-dark text-sm">
+                      {(user.totalDonations || 0) * 3}
+                    </div>
                     <div className="text-[10px] text-gray-500">Lives Saved</div>
                   </div>
                 </div>
@@ -306,7 +319,9 @@ const HeaderComponent = () => {
           {/* Emergency Footer - Fixed at Bottom */}
           <div className="mobile-footer fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-gray-100">
             <div className="emergency-section text-center">
-              <div className="text-[10px] font-semibold text-gray-500 mb-1">Emergency</div>
+              <div className="text-[10px] font-semibold text-gray-500 mb-1">
+                Emergency
+              </div>
               <div className="text-xl font-bold text-red-600">108</div>
             </div>
           </div>
