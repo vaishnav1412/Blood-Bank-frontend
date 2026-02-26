@@ -8,6 +8,8 @@ import ScrollToTop from "../components/common/ScrollTop";
 // Route Guards
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
+import AdminPublicRoute from "./AdminPublicRoute";
+import AdminProtectedRoute from "./AdminProtectedRoute";
 
 // --- LAZY LOADING (Note: Corrected spelling to 'Donor') ---
 const DonorLogin = lazy(() => import("../components/pages/doner-login/doner-login"));
@@ -126,8 +128,8 @@ const AppRouter = () => {
           />
 
           {/* --- Admin Routes --- */}
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/admin/*" element={<Admin />} />
+          <Route path="/admin-login" element={<AdminPublicRoute><AdminLogin /></AdminPublicRoute>} />
+          <Route path="/admin/*" element={<AdminProtectedRoute><Admin /></AdminProtectedRoute>} />
 
           {/* --- 404 Not Found --- */}
           <Route path="*" element={<NotFound />} />

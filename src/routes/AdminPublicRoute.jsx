@@ -1,13 +1,13 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
-const AdminPublicRoute = () => {
+const AdminPublicRoute = ({ children }) => {
   const adminToken = localStorage.getItem("adminToken");
 
   if (adminToken) {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
-  return <Outlet />;
+  return children;
 };
 
 export default AdminPublicRoute;
