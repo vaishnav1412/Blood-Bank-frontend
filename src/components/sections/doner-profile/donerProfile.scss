@@ -1,21 +1,144 @@
-/* Add to your global CSS or component SCSS */
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap');
 
-.font-signature {
-  font-family: 'Dancing Script', cursive;
+.donor-profile-wrapper {
+  position: relative;
+  width: 100%;
+
+  // Animations
+  @keyframes gradient-xy {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .animate-gradient-xy {
+    background-size: 200% 200%;
+    animation: gradient-xy 5s ease infinite;
+  }
+
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+
+  .animation-delay-2000 { animation-delay: 2s; }
+  .animation-delay-4000 { animation-delay: 4s; }
+
+  .animate-slideUp {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-pulse {
+    animation: pulse 2s infinite;
+  }
+
+  .font-signature {
+    font-family: 'Dancing Script', cursive;
+  }
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #ec4899, #db2777);
+    border-radius: 4px;
+
+    &:hover {
+      background: linear-gradient(to bottom, #db2777, #be185d);
+    }
+  }
+
+  // Glass morphism effect
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  // Hover effects for cards
+  .hover-lift {
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px -10px rgba(236, 72, 153, 0.3);
+    }
+  }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+// Responsive Fix for Badges
+@media (max-width: 768px) {
+  .donor-profile-wrapper {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-actions {
+      grid-template-columns: 1fr;
+    }
+    
+    // Fix specific mobile overlaps
+    .profile-header-actions {
+      position: relative;
+      margin-top: 1rem;
+      justify-content: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
   }
 }
 
-.animate-slideUp {
-  animation: slideUp 0.3s ease-out;
+@media (max-width: 640px) {
+  .donor-profile-wrapper {
+    .profile-header {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .profile-avatar {
+      margin-bottom: 1rem;
+    }
+
+    .tabs-container {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      justify-content: flex-start;
+
+      .tab-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+    }
+  }
 }

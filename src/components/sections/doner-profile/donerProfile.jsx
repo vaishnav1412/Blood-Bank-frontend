@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import HealthStatusForm from "../form/HealthStatusForm";
 import EditProfileForm from "../form/EditProfileForm";
 import DonationUploadForm from "../form/DonationUploadForm";
@@ -25,10 +25,8 @@ import {
   FaCheckCircle,
   FaUserFriends,
   FaCog,
-  FaUserCheck,
   FaHandHoldingHeart,
   FaWhatsapp,
-  FaLock,
   FaPlusCircle,
   FaTimes,
   FaUpload,
@@ -42,6 +40,13 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaKey,
+  FaChartLine,
+  FaShieldAlt,
+  FaRibbon,
+  FaGem,
+  FaTrophy,
+  FaTint,
+  FaLink,
 } from "react-icons/fa";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
 import toast from "react-hot-toast";
@@ -59,10 +64,422 @@ import {
 } from "../../../services/donorServices";
 import "./donerProfile.scss";
 
+// --- Helper Components ---
+
+const ImagePreviewModal = ({ showImagePreview, setShowImagePreview, selectedImage }) => {
+  if (!showImagePreview) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[60] p-4"
+      onClick={() => setShowImagePreview(false)}
+    >
+      <div className="relative w-full max-w-5xl">
+        <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-2xl blur-xl opacity-50"></div>
+        <div className="relative bg-white rounded-2xl overflow-hidden">
+          <img
+            src={selectedImage}
+            alt="Donation Proof"
+            className="w-full h-auto max-h-[80vh] object-contain"
+          />
+          <button
+            onClick={() => setShowImagePreview(false)}
+            className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-all hover:scale-110"
+          >
+            <FaTimes />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DeleteAccountModal = ({ showDeleteModal, setShowDeleteModal, handleDeleteAccount, isDeleting }) => {
+  if (!showDeleteModal) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform animate-slideUp">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-red-600 flex items-center">
+            <FaExclamationTriangle className="mr-3 text-2xl" />
+            Delete Account
+          </h3>
+          <button
+            onClick={() => setShowDeleteModal(false)}
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        <p className="text-gray-600 mb-8 leading-relaxed">
+          Are you sure you want to delete your account? This action is
+          <span className="font-bold text-red-600"> permanent </span>
+          and cannot be undone. All your data will be permanently removed.
+        </p>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowDeleteModal(false)}
+            className="flex-1 border-2 border-gray-300 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+            disabled={isDeleting}
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={handleDeleteAccount}
+            disabled={isDeleting}
+            className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+          >
+            {isDeleting ? (
+              <>
+                <FaSpinner className="animate-spin mr-2" />
+                Deleting...
+              </>
+            ) : (
+              "Yes, Delete"
+            )}
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-500 text-center mt-4">
+          You will be logged out and redirected to the login page.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const CertificateModal = ({ selectedCertificate, showCertificateModal, setShowCertificateModal, user }) => {
+  const certificateRef = useRef(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  if (!selectedCertificate || !showCertificateModal) return null;
+
+  const getMilestoneTitle = () => {
+    const count = user?.donationCount || 0;
+    if (count === 1) return "1st Donation Hero";
+    if (count === 2) return "2nd Donation Hero";
+    if (count === 3) return "3rd Donation Hero";
+    if (count === 4) return "4th Donation Hero";
+    if (count >= 5 && count <= 9) return `${count} Donations Champion`;
+    if (count >= 10) return "10 Donations Platinum Donor";
+    return "Blood Donation Hero";
+  };
+
+  const handleDownloadPNG = async () => {
+    if (!certificateRef.current) return;
+    try {
+      setIsDownloading(true);
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(certificateRef.current, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        logging: false,
+        allowTaint: false,
+        useCORS: true,
+      });
+
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = `certificate-${selectedCertificate.certificateId || "donation"}.png`;
+      link.click();
+      toast.success("Certificate downloaded successfully!");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download certificate. Make sure html2canvas is installed.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareText = `I just received my ${getMilestoneTitle()} certificate for blood donation! 🩸❤️\n\nDonate blood, save lives!`;
+    const shareUrl = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Blood Donation Certificate",
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        console.log("Share cancelled");
+      }
+    } else {
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
+      window.open(whatsappUrl, "_blank");
+    }
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow pop-ups to print");
+      return;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Blood Donation Certificate</title>
+          <style>
+            body { font-family: 'Georgia', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; padding: 20px; }
+            .certificate-wrapper { max-width: 1000px; width: 100%; }
+          </style>
+        </head>
+        <body>
+          <div class="certificate-wrapper">
+            ${document.getElementById("certificate-content")?.innerHTML || ""}
+          </div>
+          <script>
+            window.onload = () => window.print();
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-end sm:items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-3xl w-full max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl animate-slideUp">
+        <div
+          id="certificate-content"
+          ref={certificateRef}
+          className="relative bg-gradient-to-br from-amber-50 via-white to-pink-50 p-8 sm:p-12"
+        >
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute top-0 left-0 w-32 h-32 bg-pink-200 rounded-full filter blur-3xl"></div>
+            <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-200 rounded-full filter blur-3xl"></div>
+          </div>
+          
+          <div className="absolute inset-4 border-2 border-pink-200/50 rounded-2xl pointer-events-none"></div>
+          <div className="absolute inset-6 border border-pink-300/30 rounded-xl pointer-events-none"></div>
+
+          <div className="absolute top-8 left-8 w-20 h-20 border-t-4 border-l-4 border-pink-400/30 rounded-tl-3xl"></div>
+          <div className="absolute top-8 right-8 w-20 h-20 border-t-4 border-r-4 border-pink-400/30 rounded-tr-3xl"></div>
+          <div className="absolute bottom-8 left-8 w-20 h-20 border-b-4 border-l-4 border-pink-400/30 rounded-bl-3xl"></div>
+          <div className="absolute bottom-8 right-8 w-20 h-20 border-b-4 border-r-4 border-pink-400/30 rounded-br-3xl"></div>
+
+          <div className="text-center mb-10 relative">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl transform rotate-12">
+                <span className="text-white text-3xl font-bold">🩸</span>
+              </div>
+              <div className="text-left">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                  Kannur Blood Link
+                </h2>
+                <p className="text-sm text-gray-500 tracking-wider">Life is in your blood</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <h1 className="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-red-800 via-pink-600 to-red-800 bg-clip-text text-transparent mb-4">
+                Certificate of Appreciation
+              </h1>
+              <div className="w-40 h-1 bg-gradient-to-r from-pink-400 via-red-400 to-pink-400 mx-auto rounded-full"></div>
+            </div>
+
+            <p className="text-sm text-gray-500 mt-4 font-mono bg-gray-50 inline-block px-4 py-1 rounded-full">
+              Cert. ID:{" "}
+              <span className="font-semibold text-gray-700">
+                {selectedCertificate.certificateId}
+              </span>
+            </p>
+          </div>
+
+          <div className="text-center mb-10">
+            <p className="text-xl text-gray-600 mb-4">This is proudly presented to</p>
+
+            <div className="relative inline-block mb-6">
+              <h3 className="text-5xl sm:text-6xl font-bold text-gray-800 px-8 py-4 border-b-4 border-pink-300">
+                {user?.name}
+              </h3>
+              <FaTrophy className="absolute -top-4 -left-8 text-4xl text-yellow-500 rotate-[-15deg]" />
+              <FaTrophy className="absolute -top-4 -right-8 text-4xl text-yellow-500 rotate-[15deg]" />
+            </div>
+
+            <div className="inline-block bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 text-white px-8 py-3 rounded-full text-xl font-bold shadow-lg mb-8 animate-pulse">
+              {getMilestoneTitle()}
+            </div>
+
+            <div className="space-y-3 text-gray-700">
+              <p className="text-xl">For their noble contribution of blood donation on</p>
+              <p className="text-4xl font-bold text-pink-700">
+                {new Date(selectedCertificate.date).toLocaleDateString(
+                  "en-US",
+                  {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  },
+                )}
+              </p>
+              <p className="text-xl">
+                at{" "}
+                <span className="font-semibold text-gray-900">
+                  {selectedCertificate.center}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mb-10">
+            <div className="bg-gradient-to-b from-pink-50 to-white rounded-2xl p-5 text-center shadow-lg border border-pink-100 transform hover:scale-105 transition-transform">
+              <div className="text-3xl font-bold text-pink-600 mb-1">
+                {user?.bloodGroup}
+              </div>
+              <div className="text-xs uppercase tracking-wider text-gray-500">
+                Blood Group
+              </div>
+            </div>
+            <div className="bg-gradient-to-b from-pink-50 to-white rounded-2xl p-5 text-center shadow-lg border border-pink-100 transform hover:scale-105 transition-transform">
+              <div className="text-3xl font-bold text-pink-600 mb-1">
+                {user?.donationCount}
+              </div>
+              <div className="text-xs uppercase tracking-wider text-gray-500">
+                Total Donations
+              </div>
+            </div>
+            <div className="bg-gradient-to-b from-pink-50 to-white rounded-2xl p-5 text-center shadow-lg border border-pink-100 transform hover:scale-105 transition-transform">
+              <div className="text-3xl font-bold text-pink-600 mb-1">
+                {(user?.donationCount || 0) * 150}
+              </div>
+              <div className="text-xs uppercase tracking-wider text-gray-500">
+                Life Points
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-8 mt-10 pt-8 border-t-2 border-dashed border-pink-200">
+            <div className="flex flex-col items-center">
+              <div className="w-28 h-28 bg-white p-2 rounded-xl shadow-xl border border-gray-200">
+                <img
+                  src={
+                    selectedCertificate.qrCode ||
+                    `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedCertificate.certificateId}`
+                  }
+                  alt="QR Code"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Scan to verify</p>
+            </div>
+
+            <div className="flex-1 flex justify-between items-center px-6">
+              <div className="text-center">
+                <div className="w-40 h-16 mb-1">
+                  <svg className="w-full h-full" viewBox="0 0 140 50">
+                    <path
+                      d="M10,30 Q35,10 60,30 T110,30"
+                      stroke="#ec4899"
+                      fill="none"
+                      strokeWidth="2"
+                    />
+                    <text
+                      x="25"
+                      y="40"
+                      className="text-lg fill-gray-600 font-signature"
+                    >
+                      Dr. Priya Sharma
+                    </text>
+                  </svg>
+                </div>
+                <div className="font-bold text-gray-800">Medical Director</div>
+                <div className="text-xs text-gray-500">Kannur Blood Link</div>
+              </div>
+
+              <div className="w-px h-16 bg-gradient-to-b from-transparent via-pink-300 to-transparent"></div>
+
+              <div className="text-center">
+                <div className="font-bold text-gray-800 text-2xl mb-1">
+                  {new Date().toLocaleDateString()}
+                </div>
+                <div className="font-bold text-gray-800">Date of Issue</div>
+                <div className="text-xs text-gray-500">Valid Forever</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center text-sm text-gray-400">
+            <p className="mb-1">
+              This certificate is digitally generated and can be verified online.
+            </p>
+            <p>
+              © Kannur Blood Link - Every drop saves a life <span className="text-pink-500">❤️</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-b-3xl border-t border-gray-200">
+          <div className="grid grid-cols-4 gap-3 max-w-2xl mx-auto">
+            <button
+              onClick={handleDownloadPNG}
+              disabled={isDownloading}
+              className="bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            >
+              {isDownloading ? (
+                <FaSpinner className="animate-spin mr-2" />
+              ) : (
+                <FaDownload className="mr-2" />
+              )}
+              <span>Download</span>
+            </button>
+
+            <button
+              onClick={handleShare}
+              className="border-2 border-pink-600 text-pink-600 hover:bg-pink-50 py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-105"
+            >
+              <FaShareAlt className="mr-2" />
+              Share
+            </button>
+
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                toast.success("Certificate link copied!");
+              }}
+              className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-105"
+            >
+              <FaLink className="mr-2" />
+              Copy
+            </button>
+
+            <button
+              onClick={handlePrint}
+              className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-105"
+            >
+              <FaPrint className="mr-2" />
+              Print
+            </button>
+          </div>
+
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => setShowCertificateModal(false)}
+              className="px-8 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-sm font-medium transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// --- Main Component ---
+
 const DonorProfile = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
-  const [certificates, setCertificates] = useState([]);
   const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -80,7 +497,7 @@ const DonorProfile = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null); // Added missing state
+  const [hoveredStat, setHoveredStat] = useState(null);
 
   const [uploadForm, setUploadForm] = useState({
     donationDate: "",
@@ -91,15 +508,33 @@ const DonorProfile = () => {
     imagePreview: null,
   });
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
 
-  // Add ref for file input
   const fileInputRef = useRef(null);
 
-  // Clear image function
+  // FIX: Made filter case-insensitive (verified vs Verified)
+  const certificates = useMemo(() => {
+    return allDonations
+      .filter((donation) => donation.status?.toLowerCase() === "verified")
+      .map((donation, index) => ({
+        id: donation._id,
+        title:
+          index === 0
+            ? "First Blood Donation Certificate"
+            : `Blood Donation Certificate #${index + 1}`,
+        date: donation.donationDate,
+        center: donation.donationCenter,
+        certificateId: `CERT-${index + 1}-${donation._id.slice(-5)}`,
+        downloadable: true,
+        shareable: true,
+      }));
+  }, [allDonations]);
+
   const clearImage = () => {
+    if (uploadForm.imagePreview) {
+      URL.revokeObjectURL(uploadForm.imagePreview);
+    }
     setUploadForm((prev) => ({
       ...prev,
       image: null,
@@ -110,7 +545,6 @@ const DonorProfile = () => {
     }
   };
 
-  // Get filtered donations based on status
   const getFilteredDonations = () => {
     if (filterStatus === "all") {
       return allDonations;
@@ -118,20 +552,24 @@ const DonorProfile = () => {
     return allDonations.filter((donation) => donation.status === filterStatus);
   };
 
-  // Get verified donations for pagination
-  const getVerifiedDonations = () => {
-    return allDonations.filter((donation) => donation.status === "verified");
-  };
-
-  // Pagination for verified donations
-  const verifiedDonations = getVerifiedDonations();
+  const filteredDonations = getFilteredDonations();
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentVerifiedDonations = verifiedDonations.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-  const totalPages = Math.ceil(verifiedDonations.length / itemsPerPage);
+  const currentDonations = filteredDonations.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredDonations.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus]);
+
+  useEffect(() => {
+    return () => {
+      if (uploadForm.imagePreview) {
+        URL.revokeObjectURL(uploadForm.imagePreview);
+      }
+    };
+  }, [uploadForm.imagePreview]);
+
 
   const upcomingCamps = [
     {
@@ -154,42 +592,20 @@ const DonorProfile = () => {
     },
   ];
 
+  // FIX: This function now opens the modal where the actual download logic exists
   const handleDownloadCertificate = (certificate) => {
-    toast.success("Certificate download started", { duration: 3000 });
-  };
-
-  // fetch certificates
-  const loadCertificates = () => {
-    try {
-      const verifiedDonations = allDonations.filter(
-        (donation) => donation.status === "verified",
-      );
-
-      const generatedCertificates = verifiedDonations.map(
-        (donation, index) => ({
-          id: donation._id,
-          title:
-            index === 0
-              ? "First Blood Donation Certificate"
-              : `Blood Donation Certificate #${index + 1}`,
-          date: donation.donationDate,
-          center: donation.donationCenter,
-          certificateId: `CERT-${index + 1}-${donation._id.slice(-5)}`,
-          downloadable: true,
-          shareable: true,
-        }),
-      );
-
-      setCertificates(generatedCertificates);
-      console.log("Certificates Generated:", generatedCertificates);
-    } catch (error) {
-      console.error("Failed to generate certificates:", error);
-    }
+    setSelectedCertificate(certificate);
+    setShowCertificateModal(true);
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    
+    if (uploadForm.imagePreview) {
+      URL.revokeObjectURL(uploadForm.imagePreview);
+    }
+
     const previewUrl = URL.createObjectURL(file);
     setUploadForm((prev) => ({
       ...prev,
@@ -198,7 +614,6 @@ const DonorProfile = () => {
     }));
   };
 
-  // delete donation pending state only
   const handleDeleteUpload = async (donationId) => {
     try {
       const toastId = toast.loading("Removing donation proof...");
@@ -219,11 +634,9 @@ const DonorProfile = () => {
     }
   };
 
-  // fetch donation history
   const loadDonationHistory = async () => {
     try {
       const data = await fetchDonationHistory();
-      console.log("Donation History:", data.history);
       setAllDonations(data.history || []);
     } catch (error) {
       console.error("Failed to fetch donation history:", error);
@@ -231,7 +644,6 @@ const DonorProfile = () => {
     }
   };
 
-  // prof upload part
   const handleUploadDonation = async () => {
     if (
       !uploadForm.donationDate ||
@@ -250,7 +662,6 @@ const DonorProfile = () => {
       formData.append("units", uploadForm.units);
       formData.append("image", uploadForm.image);
       const data = await uploadDonationProof(formData);
-      console.log("Upload Response:", data);
       const savedDonation = data.proof;
 
       setAllDonations((prev) => [savedDonation, ...prev]);
@@ -259,6 +670,7 @@ const DonorProfile = () => {
         id: toastId,
         duration: 3000,
       });
+      clearImage();
       setUploadForm({
         donationDate: "",
         donationCenter: "",
@@ -276,12 +688,10 @@ const DonorProfile = () => {
     }
   };
 
-  // update profile photo part
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setImagePreview(URL.createObjectURL(file));
     setShowPhotoOptions(false);
 
     const formData = new FormData();
@@ -299,7 +709,6 @@ const DonorProfile = () => {
     }
   };
 
-  // Handle photo removal
   const handleRemovePhoto = async () => {
     try {
       setIsUploading(true);
@@ -320,7 +729,6 @@ const DonorProfile = () => {
     }
   };
 
-  // Password Reset Handler
   const handleResetPassword = async () => {
     const email = user?.email;
     if (!email) {
@@ -339,7 +747,7 @@ const DonorProfile = () => {
       );
       localStorage.setItem("resetEmail", email);
       setTimeout(() => {
-        navigate("/verify-otp"); // Fixed typo from "varify-otp" to "verify-otp"
+        navigate("/verify-otp");
       }, 1000);
     } catch (error) {
       console.error("Send OTP Error:", error);
@@ -350,7 +758,6 @@ const DonorProfile = () => {
     }
   };
 
-  // update health status
   const handleAddHealthStatus = async (healthData) => {
     const toastId = toast.loading("Updating health status...");
     try {
@@ -370,7 +777,6 @@ const DonorProfile = () => {
     }
   };
 
-  // Delete Account part
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
@@ -389,7 +795,6 @@ const DonorProfile = () => {
     }
   };
 
-  // edit profile part
   const handleSaveProfile = async (updatedData) => {
     if (updatedData.email !== updatedData.reEmail) {
       toast.error("Emails do not match!");
@@ -402,7 +807,6 @@ const DonorProfile = () => {
         id: toastId,
         duration: 3000,
       });
-      console.log("Updated Profile:", data);
       setUser(data.donor);
       setShowEditProfile(false);
       profileDetails();
@@ -414,12 +818,10 @@ const DonorProfile = () => {
     }
   };
 
-  // retrieve profile part
   const profileDetails = async () => {
     try {
       setIsLoading(true);
       const data = await getDonorProfileDetails();
-      console.log("Profile Data:", data);
       const { donor, health } = data;
       setUser(donor);
       setHealth(health || {});
@@ -442,460 +844,23 @@ const DonorProfile = () => {
     loadAllData();
   }, []);
 
-  useEffect(() => {
-    if (allDonations.length > 0) {
-      loadCertificates();
-    }
-  }, [allDonations]);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
 
-  // Image Preview Modal
-  const ImagePreviewModal = () => (
-    <div
-      className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60] p-4"
-      onClick={() => setShowImagePreview(false)}
-    >
-      <div className="relative w-full flex items-center justify-center">
-        <img
-          src={selectedImage}
-          alt="Donation Proof"
-          className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-        />
-        <button
-          onClick={() => setShowImagePreview(false)}
-          className="absolute top-0 right-0 -mt-4 -mr-4 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 sm:absolute sm:top-2 sm:right-2 sm:mt-0 sm:mr-0"
-        >
-          <FaTimes />
-        </button>
-      </div>
-    </div>
-  );
-
-  // Certificate Modal Component
-  const CertificateModal = () => {
-    const certificateRef = useRef(null);
-    const [isDownloading, setIsDownloading] = useState(false);
-
-    if (!selectedCertificate || !showCertificateModal) return null;
-
-    const getMilestoneTitle = () => {
-      const count = user?.donationCount || 0;
-      if (count === 1) return "1st Donation Hero";
-      if (count === 2) return "2nd Donation Hero";
-      if (count === 3) return "3rd Donation Hero";
-      if (count === 4) return "4th Donation Hero";
-      if (count >= 5 && count <= 9) return `${count} Donations Champion`;
-      if (count >= 10) return "10 Donations Platinum Donor";
-      return "Blood Donation Hero";
-    };
-
-    const handleDownloadPNG = async () => {
-      if (!certificateRef.current) return;
-
-      try {
-        setIsDownloading(true);
-        const html2canvas = (await import("html2canvas")).default;
-
-        const canvas = await html2canvas(certificateRef.current, {
-          scale: 2,
-          backgroundColor: "#ffffff",
-          logging: false,
-          allowTaint: false,
-          useCORS: true,
-        });
-
-        const image = canvas.toDataURL("image/png");
-        const link = document.createElement("a");
-        link.href = image;
-        link.download = `certificate-${selectedCertificate.certificateId || "donation"}.png`;
-        link.click();
-
-        toast.success("Certificate downloaded successfully!");
-      } catch (error) {
-        console.error("Download error:", error);
-        toast.error("Failed to download certificate");
-      } finally {
-        setIsDownloading(false);
-      }
-    };
-
-    const handleShare = async () => {
-      const shareText = `I just received my ${getMilestoneTitle()} certificate for blood donation! 🩸❤️\n\nDonate blood, save lives!`;
-      const shareUrl = window.location.href;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: "Blood Donation Certificate",
-            text: shareText,
-            url: shareUrl,
-          });
-        } catch (error) {
-          console.log("Share cancelled");
-        }
-      } else {
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
-        window.open(whatsappUrl, "_blank");
-      }
-    };
-
-    const handlePrint = () => {
-      const printWindow = window.open("", "_blank");
-      if (!printWindow) {
-        toast.error("Please allow pop-ups to print");
-        return;
-      }
-
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Blood Donation Certificate</title>
-            <style>
-              body { 
-                font-family: 'Georgia', serif; 
-                display: flex; 
-                justify-content: center; 
-                align-items: center; 
-                min-height: 100vh; 
-                margin: 0; 
-                background: #f5f5f5;
-                padding: 20px;
-              }
-              .certificate-wrapper {
-                max-width: 1000px;
-                width: 100%;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="certificate-wrapper">
-              ${document.getElementById("certificate-content")?.innerHTML || ""}
-            </div>
-            <script>
-              window.onload = () => window.print();
-            </script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 p-2 sm:p-4">
-        <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl animate-slideUp">
-          <div
-            id="certificate-content"
-            ref={certificateRef}
-            className="relative bg-gradient-to-br from-amber-50 via-white to-pink-50 p-6 sm:p-10"
-          >
-            <div className="absolute inset-4 border-2 border-pink-200/50 rounded-2xl pointer-events-none"></div>
-            <div className="absolute inset-6 border border-pink-300/30 rounded-xl pointer-events-none"></div>
-
-            <div className="absolute top-8 left-8 w-16 h-16 border-t-4 border-l-4 border-pink-400/30 rounded-tl-3xl"></div>
-            <div className="absolute top-8 right-8 w-16 h-16 border-t-4 border-r-4 border-pink-400/30 rounded-tr-3xl"></div>
-            <div className="absolute bottom-8 left-8 w-16 h-16 border-b-4 border-l-4 border-pink-400/30 rounded-bl-3xl"></div>
-            <div className="absolute bottom-8 right-8 w-16 h-16 border-b-4 border-r-4 border-pink-400/30 rounded-br-3xl"></div>
-
-            <div className="text-center mb-8 relative">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-white text-2xl font-bold">🩸</span>
-                </div>
-                <div className="text-left">
-                  <h2 className="text-xl font-bold text-gray-800">
-                    Kannur Blood Link
-                  </h2>
-                  <p className="text-xs text-gray-500">Life is in your blood</p>
-                </div>
-              </div>
-
-              <div className="relative">
-                <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-red-800 via-pink-600 to-red-800 bg-clip-text text-transparent mb-2">
-                  Certificate of Appreciation
-                </h1>
-                <div className="w-32 h-1 bg-gradient-to-r from-pink-400 to-red-400 mx-auto rounded-full"></div>
-              </div>
-
-              <p className="text-sm text-gray-500 mt-3 font-mono">
-                Cert. ID:{" "}
-                <span className="font-semibold text-gray-700">
-                  {selectedCertificate.certificateId}
-                </span>
-              </p>
-            </div>
-
-            <div className="text-center mb-8">
-              <p className="text-lg text-gray-600 mb-3">
-                This is proudly presented to
-              </p>
-
-              <div className="relative inline-block mb-4">
-                <h3 className="text-4xl sm:text-5xl font-bold text-gray-800 px-8 py-2 border-b-4 border-pink-300">
-                  {user?.name}
-                </h3>
-                <FaAward className="absolute -top-3 -left-4 text-3xl text-pink-400 rotate-[-15deg]" />
-                <FaAward className="absolute -top-3 -right-4 text-3xl text-pink-400 rotate-[15deg]" />
-              </div>
-
-              <div className="inline-block bg-gradient-to-r from-amber-400 to-yellow-500 text-white px-6 py-2 rounded-full text-lg font-bold shadow-lg mb-6">
-                {getMilestoneTitle()}
-              </div>
-
-              <div className="space-y-2 text-gray-700">
-                <p className="text-lg">
-                  For their noble contribution of blood donation on
-                </p>
-                <p className="text-3xl font-bold text-pink-700">
-                  {new Date(selectedCertificate.date).toLocaleDateString(
-                    "en-US",
-                    {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    },
-                  )}
-                </p>
-                <p className="text-lg">
-                  at{" "}
-                  <span className="font-semibold text-gray-900">
-                    {selectedCertificate.center}
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
-              <div className="bg-gradient-to-b from-pink-50 to-white rounded-xl p-4 text-center shadow-sm border border-pink-100">
-                <div className="text-3xl font-bold text-pink-600 mb-1">
-                  {user?.bloodGroup}
-                </div>
-                <div className="text-xs uppercase tracking-wider text-gray-500">
-                  Blood Group
-                </div>
-              </div>
-              <div className="bg-gradient-to-b from-pink-50 to-white rounded-xl p-4 text-center shadow-sm border border-pink-100">
-                <div className="text-3xl font-bold text-pink-600 mb-1">
-                  {user?.donationCount}
-                </div>
-                <div className="text-xs uppercase tracking-wider text-gray-500">
-                  Total Donations
-                </div>
-              </div>
-              <div className="bg-gradient-to-b from-pink-50 to-white rounded-xl p-4 text-center shadow-sm border border-pink-100">
-                <div className="text-3xl font-bold text-pink-600 mb-1">
-                  {(user?.donationCount || 0) * 150}
-                </div>
-                <div className="text-xs uppercase tracking-wider text-gray-500">
-                  Life Points
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-8 pt-6 border-t-2 border-dashed border-pink-200">
-              <div className="flex flex-col items-center">
-                <div className="w-24 h-24 bg-white p-1 rounded-lg shadow-md border border-gray-200">
-                  <img
-                    src={
-                      selectedCertificate.qrCode ||
-                      `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedCertificate.certificateId}`
-                    }
-                    alt="QR Code"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-2">Scan to verify</p>
-              </div>
-
-              <div className="flex-1 flex justify-between items-center px-4">
-                <div className="text-center">
-                  <div className="w-32 h-12 mb-1">
-                    <svg className="w-full h-full" viewBox="0 0 120 40">
-                      <path
-                        d="M10,25 Q30,10 50,25 T90,25"
-                        stroke="#ec4899"
-                        fill="none"
-                        strokeWidth="2"
-                      />
-                      <text
-                        x="20"
-                        y="35"
-                        className="text-xs fill-gray-600 font-signature"
-                      >
-                        Dr. Priya Sharma
-                      </text>
-                    </svg>
-                  </div>
-                  <div className="font-bold text-gray-800 text-sm">
-                    Medical Director
-                  </div>
-                  <div className="text-xs text-gray-500">Kannur Blood Link</div>
-                </div>
-
-                <div className="w-px h-12 bg-gray-300"></div>
-
-                <div className="text-center">
-                  <div className="font-bold text-gray-800 text-lg mb-1">
-                    {new Date().toLocaleDateString()}
-                  </div>
-                  <div className="font-bold text-gray-800 text-sm">
-                    Date of Issue
-                  </div>
-                  <div className="text-xs text-gray-500">Valid Forever</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 text-center text-xs text-gray-400">
-              <p>
-                This certificate is digitally generated and can be verified
-                online.
-              </p>
-              <p className="mt-1">
-                © Kannur Blood Link - Every drop saves a life ❤️
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 p-4 sm:p-6 rounded-b-2xl sm:rounded-b-3xl border-t border-gray-200">
-            <div className="grid grid-cols-4 gap-2 sm:gap-3 max-w-2xl mx-auto">
-              <button
-                onClick={handleDownloadPNG}
-                disabled={isDownloading}
-                className="bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white py-3 rounded-xl font-bold flex items-center justify-center text-xs sm:text-sm transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isDownloading ? (
-                  <FaSpinner className="animate-spin mr-1 sm:mr-2" />
-                ) : (
-                  <FaDownload className="mr-1 sm:mr-2" />
-                )}
-                <span className="hidden sm:inline">Download PNG</span>
-                <span className="sm:hidden">DL</span>
-              </button>
-
-              <button
-                onClick={handleShare}
-                className="border-2 border-pink-600 text-pink-600 hover:bg-pink-50 py-3 rounded-xl font-bold flex items-center justify-center text-xs sm:text-sm transition-all transform hover:scale-105"
-              >
-                <FaShareAlt className="mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Share</span>
-                <span className="sm:hidden">Share</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success("Certificate link copied!");
-                }}
-                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-xl font-bold flex items-center justify-center text-xs sm:text-sm transition-all transform hover:scale-105"
-              >
-                <svg
-                  className="w-4 h-4 mr-1 sm:mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Copy Link</span>
-                <span className="sm:hidden">Copy</span>
-              </button>
-
-              <button
-                onClick={handlePrint}
-                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-xl font-bold flex items-center justify-center text-xs sm:text-sm transition-all transform hover:scale-105"
-              >
-                <FaPrint className="mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Print</span>
-                <span className="sm:hidden">Print</span>
-              </button>
-            </div>
-
-            <div className="flex justify-center mt-4">
-              <button
-                onClick={() => setShowCertificateModal(false)}
-                className="px-8 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-sm font-medium transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Delete Account Modal Component
-  const DeleteAccountModal = () => {
-    if (!showDeleteModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-red-600 flex items-center">
-              <FaExclamationTriangle className="mr-2" />
-              Delete Account
-            </h3>
-            <button
-              onClick={() => setShowDeleteModal(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <FaTimes />
-            </button>
-          </div>
-
-          <p className="text-sm text-gray-600 mb-6">
-            Are you sure you want to delete your account? This action is
-            <span className="font-bold text-red-600"> permanent </span>
-            and cannot be undone. All your data will be permanently removed.
-          </p>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowDeleteModal(false)}
-              className="flex-1 border-2 border-gray-300 py-2.5 rounded-xl font-bold hover:bg-gray-50 transition-colors"
-              disabled={isDeleting}
-            >
-              Cancel
-            </button>
-
-            <button
-              onClick={handleDeleteAccount}
-              disabled={isDeleting}
-              className="flex-1 bg-orange-700 hover:bg-orange-800 text-white py-2.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-            >
-              {isDeleting ? (
-                <>
-                  <FaSpinner className="animate-spin mr-2" />
-                  Deleting...
-                </>
-              ) : (
-                "Yes, Delete"
-              )}
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-500 text-center mt-4">
-            You will be logged out and redirected to the login page.
-          </p>
-        </div>
-      </div>
-    );
-  };
 
   if (isLoading) {
     return (
       <WrapperSection>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <FaSpinner className="animate-spin text-4xl sm:text-5xl text-pink-600 mx-auto mb-4" />
-            <p className="text-sm sm:text-base text-gray-600">
-              Loading donor profile...
-            </p>
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-pink-200 border-t-pink-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <FaHeartbeat className="text-pink-600 text-2xl animate-pulse" />
+              </div>
+            </div>
+            <p className="text-slate-600">Loading donor profile...</p>
           </div>
         </div>
       </WrapperSection>
@@ -906,11 +871,13 @@ const DonorProfile = () => {
     return (
       <WrapperSection>
         <div className="text-center py-12">
-          <FaUser className="text-5xl text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-800 mb-2">
+          <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FaUser className="text-4xl text-slate-400" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 mb-2">
             Profile Not Found
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-slate-600">
             Please log in to view your donor profile.
           </p>
         </div>
@@ -920,668 +887,524 @@ const DonorProfile = () => {
 
   return (
     <WrapperSection>
-      <div className="donor-profile-wrapper bg-gradient-to-br from-pink-100 via-pink-200 to-pink-300 md:-mt-[480px] -mt-[650px] rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl shadow-pink-500/10 overflow-hidden max-w-7xl">
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-          {/* Left Column - Profile Card */}
-          <div className="lg:w-1/3 w-full">
-            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-5 border border-gray-200">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left mb-4">
-                <div className="relative mb-3 sm:mb-0">
-                  <div
-                    className="relative group cursor-pointer"
-                    onClick={() => setShowPhotoOptions(!showPhotoOptions)}
-                  >
-                    <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg ring-4 ring-white overflow-hidden transition-transform duration-300 transform group-hover:scale-105">
-                      {isUploading ? (
-                        <FaSpinner className="animate-spin text-3xl" />
-                      ) : user?.profilePic ? (
-                        <img
-                          src={user.profilePic}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        user?.name?.charAt(0) || "U"
-                      )}
+      <div className="donor-profile-wrapper relative md:-mt-[480px] -mt-[650px]">
+        <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 via-purple-400 to-pink-600 rounded-3xl blur-xl opacity-75 animate-gradient-xy"></div>
+        
+        <div className="absolute inset-0 overflow-hidden rounded-3xl">
+          <div className="absolute top-0 -left-4 w-24 h-24 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+          <div className="absolute top-0 -right-4 w-24 h-24 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-0 left-20 w-24 h-24 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+        </div>
 
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-full">
-                        <FaCamera className="text-white text-xl" />
+        <div className="relative bg-gradient-to-br from-white via-white/95 to-white/90 backdrop-blur-sm p-6 lg:p-8 rounded-3xl shadow-2xl border border-white/50">
+          
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-pink-500 to-purple-400 rounded-b-full"></div>
+
+          {/* Profile Header with Cover - ADDED z-20 HERE */}
+          <div className="relative z-20 mb-8">
+            <div className="h-48 md:h-56 bg-gradient-to-r from-rose-500 via-fuchsia-500 to-purple-600 rounded-2xl overflow-hidden shadow-lg">
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                  backgroundSize: '40px 40px'
+                }}></div>
+              </div>
+            </div>
+            
+            {/* Profile Avatar - Responsive Positioning */}
+            <div className="absolute -bottom-12 left-1/2 md:left-8 -translate-x-1/2 md:translate-x-0">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                
+                {/* MOVED ONCLICK TO PARENT CONTAINER */}
+                <div 
+                  className="relative w-28 h-28 bg-white rounded-full p-1 cursor-pointer"
+                  onClick={() => setShowPhotoOptions(!showPhotoOptions)}
+                >
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    {isUploading ? (
+                      <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                        <FaSpinner className="animate-spin text-white text-2xl" />
                       </div>
-                    </div>
-
-                    {user?.isVerified && (
-                      <div className="absolute bottom-1 right-1 w-7 h-7 bg-lime-600 rounded-full flex items-center justify-center border-3 border-white shadow-sm z-10">
-                        <FaUserCheck className="text-white text-xs" />
+                    ) : user?.profilePic ? (
+                      <img
+                        src={user.profilePic}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white text-4xl font-bold">
+                          {user?.name?.charAt(0) || "U"}
+                        </span>
                       </div>
                     )}
                   </div>
 
-                  {showPhotoOptions && (
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 z-20">
-                      <div className="p-2">
-                        <button
-                          onClick={() => {
-                            document.getElementById("profile-upload").click();
-                            setShowPhotoOptions(false);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center text-gray-700"
-                        >
-                          <FaCamera className="mr-2 text-pink-600" />
-                          Upload New Photo
-                        </button>
+                  {/* Camera Icon - Now sits inside clickable parent */}
+                  <div className="absolute bottom-1 right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-pink-50 transition-colors">
+                    <FaCamera className="text-pink-600 text-sm" />
+                  </div>
 
-                        {user?.profilePic && (
-                          <button
-                            onClick={handleRemovePhoto}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center text-red-600"
-                          >
-                            <FaTrash className="mr-2" />
-                            Remove Photo
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => setShowPhotoOptions(false)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center text-gray-500"
-                        >
-                          <FaTimes className="mr-2" />
-                          Cancel
-                        </button>
-                      </div>
+                  {user?.isVerified && (
+                    <div className="absolute -top-1 -right-1 w-8 h-8 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                      <FaCheckCircle className="text-white text-xs" />
                     </div>
                   )}
-
-                  <input
-                    type="file"
-                    id="profile-upload"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
                 </div>
 
-                <div className="sm:ml-5">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-                      {user?.name}
-                    </h2>
-                    <span className="inline-flex px-2.5 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-bold">
-                      {user?.level}
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                    ID: {user?._id?.slice(0, 8)}
-                  </p>
-                  <div className="flex items-center justify-center sm:justify-start mt-1 text-xs text-gray-500">
-                    <FaUserFriends className="mr-1" />
-                    Since{" "}
-                    {user?.createdAt
-                      ? new Date(user.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          year: "numeric",
-                        })
-                      : "N/A"}
-                  </div>
-                </div>
-              </div>
+                {showPhotoOptions && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 z-30">
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          document.getElementById("profile-upload").click();
+                          setShowPhotoOptions(false);
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-pink-50 rounded-lg text-sm flex items-center text-gray-700"
+                      >
+                        <FaCamera className="mr-3 text-pink-600" />
+                        Upload New Photo
+                      </button>
 
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="bg-pink-50 rounded-xl p-2 sm:p-3 text-center">
-                  <div className="text-lg sm:text-xl font-bold text-pink-600">
-                    {user?.donationCount}
-                  </div>
-                  <div className="text-xs text-gray-600">Donations</div>
-                </div>
-                <div className="bg-pink-50 rounded-xl p-2 sm:p-3 text-center">
-                  <div className="text-lg sm:text-xl font-bold text-pink-600">
-                    {user?.points || (user?.donationCount || 0) * 250}
-                  </div>
-                  <div className="text-xs text-gray-600">Points</div>
-                </div>
-                <div className="bg-pink-50 rounded-xl p-2 sm:p-3 text-center">
-                  <div className="text-lg sm:text-xl font-bold text-pink-600">
-                    {user?.bloodGroup}
-                  </div>
-                  <div className="text-xs text-gray-600">Blood</div>
-                </div>
-              </div>
+                      {user?.profilePic && (
+                        <button
+                          onClick={handleRemovePhoto}
+                          className="w-full text-left px-4 py-3 hover:bg-rose-50 rounded-lg text-sm flex items-center text-rose-600"
+                        >
+                          <FaTrash className="mr-3" />
+                          Remove Photo
+                        </button>
+                      )}
 
-              <div className="mb-4 p-3 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl border border-pink-200">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center w-full sm:w-auto">
-                    <FaHeartbeat className="text-pink-600 text-lg mr-2 flex-shrink-0" />
-                    <div>
-                      <div className="font-bold text-gray-800 text-sm">
-                        Health Status
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {!health || Object.keys(health).length === 0 ? (
-                          <span className="text-yellow-600">Not updated</span>
-                        ) : (
-                          "Updated"
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowHealthForm(true)}
-                    className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center"
-                  >
-                    <FaPlusCircle className="mr-1" />
-                    Add
-                  </button>
-                </div>
-                {health?.weight && (
-                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-pink-200">
-                    <div>
-                      <span className="text-xs text-gray-500">Weight</span>
-                      <p className="font-medium text-gray-800 text-sm">
-                        {health?.weight} kg
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500">Platelet</span>
-                      <p className="font-medium text-gray-800 text-sm">
-                        {health?.platelet}
-                      </p>
+                      <button
+                        onClick={() => setShowPhotoOptions(false)}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 rounded-lg text-sm flex items-center text-gray-500"
+                      >
+                        <FaTimes className="mr-3" />
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 )}
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center text-xs text-gray-600">
-                  <FaPhone className="mr-2 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{user?.mobile}</span>
-                </div>
-                <div className="flex items-center text-xs text-gray-600">
-                  <FaWhatsapp className="mr-2 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">
-                    {user?.whatsapp || user?.mobile}
-                  </span>
-                </div>
-                <div className="flex items-center text-xs text-gray-600">
-                  <FaEnvelope className="mr-2 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{user?.email}</span>
-                </div>
-                <div className="flex items-center text-xs text-gray-600">
-                  <FaMapMarkerAlt className="mr-2 text-gray-400 flex-shrink-0" />
-                  <span className="truncate">{user?.taluk}</span>
-                </div>
+                <input
+                  type="file"
+                  id="profile-upload"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
               </div>
+            </div>
 
-              <button
-                onClick={() => setShowEditProfile(true)}
-                className="w-full mt-4 border-2 border-pink-600 text-pink-600 hover:bg-pink-50 py-2.5 rounded-xl font-bold flex items-center justify-center text-sm"
-              >
-                <FaEdit className="mr-2" />
-                Edit Profile
-              </button>
+            {/* Badges - Hidden on Mobile to prevent overlap, shown on Desktop */}
+            <div className="hidden md:flex absolute bottom-0 right-8 text-right pb-4 gap-3 justify-end">
+              <span className="px-4 py-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-amber-900 rounded-full text-sm font-bold shadow-lg border border-yellow-300">
+                {user?.level || "Bronze Donor"}
+              </span>
+              <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                <span className="text-slate-600 text-sm">Member since </span>
+                <span className="font-bold text-pink-600">
+                  {user?.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "N/A"}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Right Column - Main Content */}
-          <div className="lg:w-2/3 w-full">
-            <div className="flex overflow-x-auto pb-2 mb-4 border-b border-gray-200 scrollbar-hide">
-              {[
-                { id: "overview", label: "Overview", icon: <FaUser /> },
-                {
-                  id: "certificates",
-                  label: "Certificates",
-                  icon: <FaCertificate />,
-                },
-                { id: "history", label: "History", icon: <FaHistory /> },
-                {
-                  id: "achievements",
-                  label: "Achievements",
-                  icon: <FaAward />,
-                },
-                { id: "settings", label: "Settings", icon: <FaCog /> },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center px-3 sm:px-4 py-2.5 font-medium whitespace-nowrap transition-colors text-sm flex-shrink-0 ${
-                    activeTab === tab.id
-                      ? "text-pink-600 border-b-2 border-pink-600"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <span className="mr-1.5">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-5 border border-gray-200">
-              {activeTab === "overview" && (
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-pink-50 to-pink-100 border border-pink-200 rounded-xl p-4">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1">
-                          Next Donation
-                        </h3>
-                        <p className="text-xs text-gray-600">
-                          You're eligible from
-                        </p>
-                        <p className="text-lg sm:text-xl font-bold text-pink-600 mt-1">
-                          {user?.nextEligibleDate
-                            ? new Date(
-                                user.nextEligibleDate,
-                              ).toLocaleDateString("en-US", {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              })
-                            : "Not available"}
-                        </p>
-                      </div>
-                      <div className="text-left sm:text-right">
-                        <div className="text-2xl sm:text-3xl font-bold text-gray-800">
-                          {user?.nextEligibleDate
-                            ? Math.ceil(
-                                (new Date(user.nextEligibleDate) - new Date()) /
-                                  (1000 * 60 * 60 * 24),
-                              )
-                            : 0}
-                          d
-                        </div>
-                        <div className="text-xs text-gray-600">remaining</div>
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-pink-500 to-pink-600"
-                          style={{
-                            width: user?.nextEligibleDate ? "65%" : "0%",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3">
-                      Quick Actions
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => setShowDonationUpload(true)}
-                        className="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-4 rounded-xl font-bold flex flex-col items-center text-sm hover:shadow-lg transition-all hover:-translate-y-1"
-                      >
-                        <FaUpload className="text-2xl mb-2" />
-                        <span>Upload Proof</span>
-                        <span className="text-xs opacity-90 mt-1">
-                          Add new donation
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab("certificates")}
-                        className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-xl font-bold flex flex-col items-center text-sm hover:shadow-lg transition-all hover:-translate-y-1"
-                      >
-                        <FaCertificate className="text-2xl mb-2" />
-                        <span>Certificates</span>
-                        <span className="text-xs opacity-90 mt-1">
-                          {certificates.length} available
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 flex items-center">
-                      <FaCalendarAlt className="mr-2 text-pink-600 text-sm" />
-                      Upcoming Camps
-                    </h3>
-                    <div className="space-y-2">
-                      {upcomingCamps.slice(0, 2).map((camp, index) => (
-                        <div
-                          key={index}
-                          className="flex flex-col sm:flex-row items-start sm:items-center p-3 border border-gray-200 rounded-xl gap-2"
-                        >
-                          <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                            <FaCalendarAlt className="text-pink-600 text-xs" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-gray-800 text-sm truncate">
-                              {camp.name}
-                            </h4>
-                            <div className="flex items-center text-xs text-gray-600">
-                              <FaMapMarkerAlt className="mr-1 flex-shrink-0" />
-                              <span className="truncate">{camp.location}</span>
-                            </div>
-                          </div>
-                          <button className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 w-full sm:w-auto">
-                            Book
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-800 flex items-center">
-                        <FaHistory className="mr-2 text-pink-600 text-sm" />
-                        Recent Activity
-                      </h3>
-                      <button
-                        onClick={() => setActiveTab("history")}
-                        className="text-sm text-pink-600 hover:text-pink-700 font-medium flex items-center"
-                      >
-                        View All <FaChevronRight className="ml-1 text-xs" />
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {verifiedDonations.slice(0, 3).map((donation) => (
-                        <div
-                          key={donation._id}
-                          className="flex items-center p-2 bg-gray-50 rounded-lg"
-                        >
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                            <FaCheckCircle className="text-green-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-800">
-                              Donation at {donation.donationCenter}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(
-                                donation.donationDate,
-                              ).toLocaleDateString("en-US", {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                      {verifiedDonations.length === 0 && (
-                        <p className="text-sm text-gray-500 text-center py-4">
-                          No donation history yet
-                        </p>
-                      )}
+          <div className="flex flex-col lg:flex-row gap-6 mt-16 md:mt-20">
+            {/* Left Column - Profile Card */}
+            <div className="lg:w-1/3 w-full">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-pink-100">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold text-slate-800 mb-1">{user?.name}</h2>
+                  <p className="text-sm text-slate-500">ID: {user?._id?.slice(0, 8)}</p>
+                  
+                  {/* Mobile Only Badges */}
+                  <div className="md:hidden mt-3 flex flex-col items-center gap-2">
+                    <span className="px-4 py-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-amber-900 rounded-full text-sm font-bold shadow-lg border border-yellow-300">
+                      {user?.level || "Bronze Donor"}
+                    </span>
+                    <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg text-xs">
+                      <span className="text-slate-600">Member since </span>
+                      <span className="font-bold text-pink-600">
+                        {user?.createdAt
+                          ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "N/A"}
+                      </span>
                     </div>
                   </div>
                 </div>
-              )}
 
-              {activeTab === "history" && (
-                <div>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">
-                      Donation History
-                    </h3>
-
-                    <div className="relative w-full sm:w-auto">
-                      <button
-                        onClick={() => setShowFilterMenu(!showFilterMenu)}
-                        className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center"
-                      >
-                        <FaFilter className="mr-2" />
-                        {filterStatus === "all"
-                          ? "All Donations"
-                          : filterStatus === "pending"
-                            ? "Pending"
-                            : filterStatus === "verified"
-                              ? "Verified"
-                              : "Rejected"}
-                      </button>
-
-                      {showFilterMenu && (
-                        <div className="absolute top-full right-0 mt-1 w-full sm:w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                          <button
-                            onClick={() => {
-                              setFilterStatus("all");
-                              setShowFilterMenu(false);
-                              setCurrentPage(1);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm block"
-                          >
-                            All Donations
-                          </button>
-                          <button
-                            onClick={() => {
-                              setFilterStatus("pending");
-                              setShowFilterMenu(false);
-                              setCurrentPage(1);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm block"
-                          >
-                            Pending
-                          </button>
-                          <button
-                            onClick={() => {
-                              setFilterStatus("verified");
-                              setShowFilterMenu(false);
-                              setCurrentPage(1);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm block"
-                          >
-                            Verified
-                          </button>
-                          <button
-                            onClick={() => {
-                              setFilterStatus("rejected");
-                              setShowFilterMenu(false);
-                              setCurrentPage(1);
-                            }}
-                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm block"
-                          >
-                            Rejected
-                          </button>
-                        </div>
-                      )}
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {[
+                    { label: "Donations", value: user?.donationCount, icon: <FaHeartbeat />, color: "from-pink-500 to-pink-600" },
+                    { label: "Points", value: user?.points || (user?.donationCount || 0) * 250, icon: <FaGem />, color: "from-amber-500 to-amber-600" },
+                    { label: "Blood", value: user?.bloodGroup, icon: <FaTint />, color: "from-red-500 to-red-600" },
+                  ].map((stat, index) => (
+                    <div
+                      key={index}
+                      className="relative group"
+                      onMouseEnter={() => setHoveredStat(index)}
+                      onMouseLeave={() => setHoveredStat(null)}
+                    >
+                      <div className={`absolute -inset-0.5 bg-gradient-to-r ${stat.color} rounded-xl blur opacity-0 group-hover:opacity-30 transition-opacity`}></div>
+                      <div className="relative bg-gradient-to-br from-pink-50 to-white rounded-xl p-4 text-center border border-pink-100">
+                        <div className="text-2xl mb-2 text-pink-600">{stat.icon}</div>
+                        <div className="text-xl font-bold text-slate-800">{stat.value}</div>
+                        <div className="text-xs text-slate-500">{stat.label}</div>
+                      </div>
                     </div>
+                  ))}
+                </div>
+
+                {/* Health Status Card */}
+                <div className="mb-6 p-4 bg-gradient-to-br from-pink-50 to-white rounded-xl border border-pink-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center">
+                      <FaHeartbeat className="text-pink-600 text-lg mr-2" />
+                      <span className="font-bold text-slate-800">Health Status</span>
+                    </div>
+                    <button
+                      onClick={() => setShowHealthForm(true)}
+                      className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center transition-all hover:scale-105"
+                    >
+                      <FaPlusCircle className="mr-1" />
+                      Update
+                    </button>
                   </div>
+                  
+                  {!health || Object.keys(health).length === 0 ? (
+                    <p className="text-sm text-yellow-600 text-center py-2">No health data added yet</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white p-2 rounded-lg">
+                        <span className="text-xs text-slate-500">Weight</span>
+                        <p className="font-bold text-slate-800">{health?.weight} kg</p>
+                      </div>
+                      <div className="bg-white p-2 rounded-lg">
+                        <span className="text-xs text-slate-500">Platelet</span>
+                        <p className="font-bold text-slate-800">{health?.platelet}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                  <div className="mb-6">
-                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center">
-                      <FaFilter className="text-pink-600 mr-2" />
-                      {filterStatus === "all"
-                        ? "All Donations"
-                        : filterStatus === "pending"
-                          ? "Pending Donations"
-                          : filterStatus === "verified"
-                            ? "Verified Donations"
-                            : "Rejected Donations"}
-                    </h4>
+                {/* Contact Info */}
+                <div className="space-y-3 mb-6">
+                  {[
+                    { icon: <FaPhone />, value: user?.mobile },
+                    { icon: <FaWhatsapp />, value: user?.whatsapp || user?.mobile },
+                    { icon: <FaEnvelope />, value: user?.email },
+                    { icon: <FaMapMarkerAlt />, value: `${user?.district}, ${user?.taluk}` },
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center p-3 bg-slate-50 rounded-lg hover:bg-pink-50 transition-colors">
+                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-3 shadow-sm">
+                        <span className="text-pink-600">{item.icon}</span>
+                      </div>
+                      <span className="text-sm text-slate-700 truncate">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
 
-                    {getFilteredDonations().length === 0 ? (
-                      <div className="text-center py-8">
-                        <FaFileImage className="text-4xl text-gray-400 mx-auto mb-3" />
-                        <p className="text-sm text-gray-600">
-                          No {filterStatus !== "all" ? filterStatus : ""}{" "}
-                          donations found
-                        </p>
+                <button
+                  onClick={() => setShowEditProfile(true)}
+                  className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-[1.02] shadow-lg"
+                >
+                  <FaEdit className="mr-2" />
+                  Edit Profile
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column - Main Content */}
+            <div className="lg:w-2/3 w-full">
+              {/* Premium Tabs */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 mb-6 border border-pink-100 overflow-x-auto">
+                <div className="flex flex-wrap gap-1 min-w-max">
+                  {[
+                    { id: "overview", label: "Overview", icon: <FaUser /> },
+                    { id: "history", label: "History", icon: <FaHistory /> },
+                    { id: "certificates", label: "Certificates", icon: <FaCertificate /> },
+                    { id: "achievements", label: "Achievements", icon: <FaAward /> },
+                    { id: "settings", label: "Settings", icon: <FaCog /> },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 flex items-center justify-center px-4 py-3 rounded-xl font-medium transition-all ${
+                        activeTab === tab.id
+                          ? "bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg"
+                          : "text-slate-600 hover:bg-pink-50 hover:text-pink-600"
+                      }`}
+                    >
+                      <span className="mr-2">{tab.icon}</span>
+                      <span className="hidden sm:inline">{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-pink-100">
+                {activeTab === "overview" && (
+                  <div className="space-y-6">
+                    {/* Next Donation Card */}
+                    <div className="relative group">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                      <div className="relative bg-gradient-to-br from-pink-50 to-white rounded-2xl p-6 border border-pink-200">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-800 mb-2">Next Eligible Donation</h3>
+                            <p className="text-3xl font-bold text-pink-600">
+                              {user?.nextEligibleDate
+                                ? new Date(user.nextEligibleDate).toLocaleDateString("en-US", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                  })
+                                : "Not available"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-4xl font-bold text-slate-800">
+                              {user?.nextEligibleDate
+                                ? Math.ceil(
+                                    (new Date(user.nextEligibleDate) - new Date()) /
+                                      (1000 * 60 * 60 * 24),
+                                  )
+                                : 0}
+                              <span className="text-lg text-slate-500 ml-1">days</span>
+                            </div>
+                            <p className="text-sm text-slate-500">remaining</p>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full transition-all duration-500"
+                              style={{ width: user?.nextEligibleDate ? "65%" : "0%" }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800 mb-4">Quick Actions</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button
                           onClick={() => setShowDonationUpload(true)}
-                          className="mt-3 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-bold"
+                          className="group relative overflow-hidden bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white transition-all hover:scale-[1.02] hover:shadow-2xl"
                         >
-                          Upload New
+                          <div className="absolute inset-0 opacity-10">
+                            <div className="absolute inset-0" style={{
+                              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                              backgroundSize: '20px 20px'
+                            }}></div>
+                          </div>
+                          <div className="relative">
+                            <FaUpload className="text-3xl mb-3" />
+                            <h4 className="text-lg font-bold mb-1">Upload Donation Proof</h4>
+                            <p className="text-sm opacity-90">Add new donation record</p>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveTab("certificates")}
+                          className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white transition-all hover:scale-[1.02] hover:shadow-2xl"
+                        >
+                          <div className="absolute inset-0 opacity-10">
+                            <div className="absolute inset-0" style={{
+                              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                              backgroundSize: '20px 20px'
+                            }}></div>
+                          </div>
+                          <div className="relative">
+                            <FaCertificate className="text-3xl mb-3" />
+                            <h4 className="text-lg font-bold mb-1">View Certificates</h4>
+                            <p className="text-sm opacity-90">{certificates.length} available</p>
+                          </div>
                         </button>
                       </div>
-                    ) : (
+                    </div>
+
+                    {/* Upcoming Camps */}
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                        <FaCalendarAlt className="mr-2 text-pink-600" />
+                        Upcoming Donation Camps
+                      </h3>
                       <div className="space-y-3">
-                        {getFilteredDonations().map((donation) => (
+                        {upcomingCamps.map((camp, index) => (
                           <div
-                            key={donation._id}
-                            className="border border-gray-200 rounded-xl p-3 hover:shadow-md transition-shadow"
+                            key={index}
+                            className="flex flex-col sm:flex-row items-start sm:items-center p-4 bg-gray-50 rounded-xl hover:bg-pink-50 transition-colors border border-gray-200"
                           >
-                            <div className="flex flex-col sm:flex-row items-start gap-3">
-                              <div
-                                className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 mx-auto sm:mx-0"
-                                onClick={() => {
-                                  setSelectedImage(
-                                    donation.proofImage || donation.image,
-                                  );
-                                  setShowImagePreview(true);
-                                }}
-                              >
-                                <img
-                                  src={donation.proofImage || donation.image}
-                                  alt="Donation"
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-
-                              <div className="flex-1 min-w-0 w-full">
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-1 gap-2">
-                                  <span className="font-medium text-gray-800 text-sm">
-                                    {new Date(
-                                      donation.donationDate,
-                                    ).toLocaleDateString("en-US", {
-                                      day: "numeric",
-                                      month: "short",
-                                      year: "numeric",
-                                    })}
-                                  </span>
-
-                                  {donation.status === "pending" && (
-                                    <span className="inline-flex items-center px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                                      <FaClock className="mr-1 text-xs" />
-                                      Pending
-                                    </span>
-                                  )}
-                                  {donation.status === "verified" && (
-                                    <span className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                                      <FaCheckCircle className="mr-1 text-xs" />
-                                      Verified
-                                    </span>
-                                  )}
-                                  {donation.status === "rejected" && (
-                                    <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                                      <FaBan className="mr-1 text-xs" />
-                                      Rejected
-                                    </span>
-                                  )}
-                                </div>
-
-                                <p className="text-xs text-gray-600 truncate">
-                                  {donation.donationCenter}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {donation.bloodGroup || user?.bloodGroup} •{" "}
-                                  {donation.units} Unit
-                                </p>
-
-                                {donation.adminRemarks && (
-                                  <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                                    <p className="text-xs text-gray-600">
-                                      <span className="font-medium">
-                                        Admin:
-                                      </span>{" "}
-                                      {donation.adminRemarks}
-                                    </p>
-                                  </div>
-                                )}
-
-                                {(donation.status === "pending" ||
-                                  donation.status === "rejected") && (
-                                  <div className="flex flex-wrap items-center gap-3 mt-2">
-                                    <button
-                                      onClick={() => {
-                                        setSelectedImage(
-                                          donation.proofImage || donation.image,
-                                        );
-                                        setShowImagePreview(true);
-                                      }}
-                                      className="text-pink-600 hover:text-pink-700 text-xs font-medium flex items-center"
-                                    >
-                                      <FaEye className="mr-1" /> View
-                                    </button>
-
-                                    {donation.status === "pending" && (
-                                      <button
-                                        onClick={() =>
-                                          handleDeleteUpload(donation._id)
-                                        }
-                                        className="text-red-600 hover:text-red-700 text-xs font-medium flex items-center"
-                                      >
-                                        <FaTrash className="mr-1" /> Remove
-                                      </button>
-                                    )}
-
-                                    {donation.status === "rejected" && (
-                                      <button
-                                        onClick={() => {
-                                          setUploadForm({
-                                            donationDate: donation.donationDate,
-                                            donationCenter:
-                                              donation.donationCenter,
-                                            bloodGroup: donation.bloodGroup,
-                                            units: donation.units,
-                                            image: null,
-                                            imagePreview: null,
-                                          });
-                                          setShowDonationUpload(true);
-                                          handleDeleteUpload(donation._id);
-                                        }}
-                                        className="text-blue-600 hover:text-blue-700 text-xs font-medium flex items-center"
-                                      >
-                                        <FaUpload className="mr-1" /> Re-upload
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
+                            <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mr-4 mb-2 sm:mb-0">
+                              <FaCalendarAlt className="text-pink-600 text-xl" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-slate-800">{camp.name}</h4>
+                              <div className="flex items-center text-sm text-slate-600 mt-1">
+                                <FaMapMarkerAlt className="mr-1 text-pink-500" />
+                                {camp.location} • {camp.time}
                               </div>
                             </div>
+                            <button className="mt-2 sm:mt-0 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105">
+                              Register
+                            </button>
                           </div>
                         ))}
                       </div>
-                    )}
+                    </div>
                   </div>
+                )}
 
-                  {(filterStatus === "all" || filterStatus === "verified") &&
-                    verifiedDonations.length > 0 && (
-                      <div className="mt-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-sm font-bold text-gray-700 flex items-center">
-                            <FaCheckCircle className="text-green-500 mr-2" />
-                            Verified Donations
-                          </h4>
-                          <span className="text-xs text-gray-500">
-                            Showing {indexOfFirstItem + 1}-
-                            {Math.min(
-                              indexOfLastItem,
-                              verifiedDonations.length,
-                            )}{" "}
-                            of {verifiedDonations.length}
-                          </span>
+                {activeTab === "history" && (
+                  <div>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                      <h3 className="text-xl font-bold text-slate-800">Donation History</h3>
+
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowFilterMenu(!showFilterMenu)}
+                          className="flex items-center bg-white border-2 border-pink-200 text-slate-700 px-4 py-2 rounded-xl font-medium text-sm hover:border-pink-400 transition-colors"
+                        >
+                          <FaFilter className="mr-2 text-pink-600" />
+                          {filterStatus === "all"
+                            ? "All Donations"
+                            : filterStatus === "pending"
+                              ? "Pending"
+                              : filterStatus === "verified"
+                                ? "Verified"
+                                : "Rejected"}
+                        </button>
+
+                        {showFilterMenu && (
+                          <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-2xl z-10">
+                            {["all", "pending", "verified", "rejected"].map((status) => (
+                              <button
+                                key={status}
+                                onClick={() => {
+                                  setFilterStatus(status);
+                                  setShowFilterMenu(false);
+                                }}
+                                className="w-full text-left px-4 py-3 hover:bg-pink-50 text-sm first:rounded-t-xl last:rounded-b-xl capitalize"
+                              >
+                                {status === "all" ? "All Donations" : status}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {currentDonations.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <FaFileImage className="text-3xl text-slate-400" />
                         </div>
-
-                        <div className="space-y-2">
-                          {currentVerifiedDonations.map((donation) => (
+                        <h4 className="text-lg font-bold text-slate-800 mb-2">No Donations Found</h4>
+                        <p className="text-slate-600 mb-4">Start your journey by uploading your first donation proof</p>
+                        <button
+                          onClick={() => setShowDonationUpload(true)}
+                          className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-xl font-bold transition-all hover:scale-105"
+                        >
+                          Upload Donation Proof
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-4">
+                          {currentDonations.map((donation) => (
                             <div
                               key={donation._id}
-                              className="flex items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                              className="bg-white border border-slate-200 rounded-xl p-4 hover:shadow-xl transition-all hover:scale-[1.02]"
                             >
-                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                                <FaCheckCircle className="text-green-600 text-sm" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <span className="font-medium text-gray-800 text-sm">
-                                      {new Date(
-                                        donation.donationDate,
-                                      ).toLocaleDateString("en-US", {
+                              <div className="flex flex-col sm:flex-row items-start gap-4">
+                                <div
+                                  className="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden cursor-pointer flex-shrink-0"
+                                  onClick={() => {
+                                    setSelectedImage(donation.proofImage || donation.image);
+                                    setShowImagePreview(true);
+                                  }}
+                                >
+                                  <img
+                                    src={donation.proofImage || donation.image}
+                                    alt="Donation"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+
+                                <div className="flex-1">
+                                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
+                                    <span className="font-bold text-slate-800">
+                                      {new Date(donation.donationDate).toLocaleDateString("en-US", {
                                         day: "numeric",
-                                        month: "short",
+                                        month: "long",
                                         year: "numeric",
                                       })}
                                     </span>
-                                    <span className="text-xs text-gray-500 ml-2">
-                                      {donation.donationCenter}
+
+                                    <span
+                                      className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                        donation.status === "verified"
+                                          ? "bg-emerald-100 text-emerald-700"
+                                          : donation.status === "pending"
+                                            ? "bg-yellow-100 text-yellow-700"
+                                            : "bg-rose-100 text-rose-700"
+                                      }`}
+                                    >
+                                      {donation.status === "verified" && <FaCheckCircle className="inline mr-1" />}
+                                      {donation.status === "pending" && <FaClock className="inline mr-1" />}
+                                      {donation.status === "rejected" && <FaBan className="inline mr-1" />}
+                                      {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
                                     </span>
                                   </div>
-                                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded-full">
-                                    Verified
-                                  </span>
+
+                                  <p className="text-slate-600 text-sm mb-2">{donation.donationCenter}</p>
+                                  <p className="text-sm text-slate-500">
+                                    {donation.bloodGroup || user?.bloodGroup} • {donation.units} Unit
+                                  </p>
+
+                                  {donation.adminRemarks && (
+                                    <div className="mt-3 p-3 bg-slate-50 rounded-lg">
+                                      <p className="text-sm text-slate-600">
+                                        <span className="font-bold">Admin Remark:</span> {donation.adminRemarks}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {donation.status === "pending" && (
+                                    <div className="flex gap-3 mt-3">
+                                      <button
+                                        onClick={() => {
+                                          setSelectedImage(donation.proofImage || donation.image);
+                                          setShowImagePreview(true);
+                                        }}
+                                        className="text-pink-600 hover:text-pink-700 text-sm font-medium flex items-center"
+                                      >
+                                        <FaEye className="mr-1" /> View
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteUpload(donation._id)}
+                                        className="text-rose-600 hover:text-rose-700 text-sm font-medium flex items-center"
+                                      >
+                                        <FaTrash className="mr-1" /> Remove
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1589,281 +1412,255 @@ const DonorProfile = () => {
                         </div>
 
                         {totalPages > 1 && (
-                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                          <div className="flex justify-center items-center gap-4 mt-8">
                             <button
-                              onClick={() =>
-                                setCurrentPage((prev) => Math.max(prev - 1, 1))
-                              }
+                              onClick={prevPage}
                               disabled={currentPage === 1}
-                              className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                currentPage === 1
-                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                  : "bg-pink-100 text-pink-600 hover:bg-pink-200"
-                              }`}
+                              className="flex items-center px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                             >
-                              <FaChevronLeft className="mr-1 text-xs" />
-                              Previous
+                              <FaChevronLeft className="mr-2" /> Previous
                             </button>
-
+                            
                             <div className="flex items-center gap-2">
-                              {[...Array(totalPages)].map((_, i) => (
+                              {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
                                 <button
-                                  key={i}
-                                  onClick={() => setCurrentPage(i + 1)}
-                                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                                    currentPage === i + 1
-                                      ? "bg-pink-600 text-white"
-                                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                  key={number}
+                                  onClick={() => paginate(number)}
+                                  className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
+                                    currentPage === number
+                                      ? "bg-pink-600 text-white shadow-lg"
+                                      : "bg-white border border-slate-300 text-slate-700 hover:bg-pink-50"
                                   }`}
                                 >
-                                  {i + 1}
+                                  {number}
                                 </button>
                               ))}
                             </div>
 
                             <button
-                              onClick={() =>
-                                setCurrentPage((prev) =>
-                                  Math.min(prev + 1, totalPages),
-                                )
-                              }
+                              onClick={nextPage}
                               disabled={currentPage === totalPages}
-                              className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                currentPage === totalPages
-                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                  : "bg-pink-100 text-pink-600 hover:bg-pink-200"
-                              }`}
+                              className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                             >
-                              Next
-                              <FaChevronRight className="ml-1 text-xs" />
+                              Next <FaChevronRight className="ml-2" />
                             </button>
                           </div>
                         )}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "certificates" && (
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-bold text-slate-800">My Certificates</h3>
+                      <span className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-bold">
+                        {certificates.length} Total
+                      </span>
+                    </div>
+
+                    {certificates.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <FaCertificate className="text-3xl text-slate-400" />
+                        </div>
+                        <h4 className="text-lg font-bold text-slate-800 mb-2">No Certificates Yet</h4>
+                        <p className="text-slate-600 mb-4">Upload and verify donation proofs to earn certificates</p>
+                        <button
+                          onClick={() => setShowDonationUpload(true)}
+                          className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-xl font-bold transition-all hover:scale-105"
+                        >
+                          Upload Donation Proof
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {certificates.map((certificate) => (
+                          <div
+                            key={certificate.id}
+                            className="group relative bg-gradient-to-br from-pink-50 to-white rounded-xl p-5 border border-pink-200 hover:shadow-2xl transition-all hover:scale-[1.02]"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl opacity-0 group-hover:opacity-5 transition-opacity"></div>
+                            <div className="flex items-start justify-between mb-3">
+                              <FaCertificate className="text-3xl text-pink-600" />
+                              <FaAward className="text-2xl text-yellow-500" />
+                            </div>
+                            <h4 className="font-bold text-slate-800 mb-2">{certificate.title}</h4>
+                            <p className="text-sm text-slate-600 mb-3">
+                              {new Date(certificate.date).toLocaleDateString("en-US", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedCertificate(certificate);
+                                  setShowCertificateModal(true);
+                                }}
+                                className="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={() => handleDownloadCertificate(certificate)}
+                                className="flex-1 border-2 border-pink-600 text-pink-600 hover:bg-pink-50 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                              >
+                                Download
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
-                </div>
-              )}
-
-              {activeTab === "certificates" && (
-                <div>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-800">
-                      My Certificates
-                    </h3>
-                    <div className="text-sm text-gray-500">
-                      {certificates.length} certificate
-                      {certificates.length !== 1 ? "s" : ""} available
-                    </div>
                   </div>
+                )}
 
-                  {certificates.length === 0 ? (
-                    <div className="text-center py-8">
-                      <FaCertificate className="text-4xl text-gray-400 mx-auto mb-3" />
-                      <p className="text-sm text-gray-600">
-                        No certificates yet. Upload donation proofs to earn
-                        certificates.
-                      </p>
-                      <button
-                        onClick={() => setShowDonationUpload(true)}
-                        className="mt-3 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-bold"
-                      >
-                        Upload Donation Proof
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {certificates.map((certificate) => (
+                {activeTab === "achievements" && (
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-800 mb-6">Achievements & Milestones</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {[
+                        {
+                          title: "First Donation",
+                          icon: <FaStar />,
+                          unlocked: (user?.donationCount || 0) >= 1,
+                          color: "from-yellow-400 to-yellow-500",
+                        },
+                        {
+                          title: "5 Donations",
+                          icon: <FaMedal />,
+                          unlocked: (user?.donationCount || 0) >= 5,
+                          color: "from-purple-400 to-purple-500",
+                        },
+                        {
+                          title: "Emergency Hero",
+                          icon: <FaHandHoldingHeart />,
+                          unlocked: true,
+                          color: "from-rose-400 to-rose-500",
+                        },
+                        {
+                          title: "Platinum Donor",
+                          icon: <FaGem />,
+                          unlocked: (user?.donationCount || 0) >= 10,
+                          color: "from-emerald-400 to-emerald-500",
+                        },
+                        {
+                          title: "Life Saver",
+                          icon: <FaHeartbeat />,
+                          unlocked: (user?.donationCount || 0) >= 3,
+                          color: "from-pink-400 to-pink-500",
+                        },
+                        {
+                          title: "Campaign Leader",
+                          icon: <FaUserFriends />,
+                          unlocked: false,
+                          color: "from-stone-400 to-stone-500",
+                        },
+                      ].map((achievement, index) => (
                         <div
-                          key={certificate.id}
-                          className="bg-gradient-to-r from-pink-50 to-white border border-pink-200 rounded-xl p-3"
+                          key={index}
+                          className={`relative group ${!achievement.unlocked && "opacity-50"}`}
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-bold text-gray-800 text-sm">
-                                {certificate.title}
-                              </h4>
-                              <p className="text-xs text-gray-600 mt-1">
-                                {new Date(certificate.date).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  },
-                                )}{" "}
-                                • {certificate.center}
-                              </p>
+                          <div className={`absolute -inset-0.5 bg-gradient-to-r ${achievement.color} rounded-xl blur opacity-0 group-hover:opacity-30 transition-opacity`}></div>
+                          <div className="relative bg-white rounded-xl p-5 text-center border border-slate-200">
+                            <div className={`w-14 h-14 mx-auto mb-3 rounded-full bg-gradient-to-br ${achievement.color} flex items-center justify-center text-white text-2xl shadow-lg`}>
+                              {achievement.icon}
                             </div>
-                            <FaAward className="text-pink-500 text-xl flex-shrink-0" />
-                          </div>
-                          <div className="flex items-center gap-2 mt-3">
-                            <button
-                              onClick={() => {
-                                setSelectedCertificate(certificate);
-                                setShowCertificateModal(true);
-                              }}
-                              className="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-1.5 rounded-lg text-xs font-medium"
-                            >
-                              View Certificate
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleDownloadCertificate(certificate)
-                              }
-                              className="flex-1 border border-pink-600 text-pink-600 hover:bg-pink-50 py-1.5 rounded-lg text-xs font-medium"
-                            >
-                              Download
-                            </button>
+                            <h4 className="font-bold text-slate-800 text-sm mb-1">{achievement.title}</h4>
+                            {achievement.unlocked ? (
+                              <span className="text-xs text-emerald-600 flex items-center justify-center">
+                                <FaCheckCircle className="mr-1" /> Unlocked
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-500">Locked</span>
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "achievements" && (
-                <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">
-                    Achievements
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {[
-                      {
-                        title: "First Donation",
-                        icon: <FaStar />,
-                        unlocked: (user?.donationCount || 0) >= 1,
-                      },
-                      {
-                        title: "5 Donations",
-                        icon: <FaMedal />,
-                        unlocked: (user?.donationCount || 0) >= 5,
-                      },
-                      {
-                        title: "Emergency Hero",
-                        icon: <FaHandHoldingHeart />,
-                        unlocked: true,
-                      },
-                      {
-                        title: "Platinum Donor",
-                        icon: <FaAward />,
-                        unlocked: (user?.donationCount || 0) >= 10,
-                      },
-                      {
-                        title: "10 Donations",
-                        icon: <FaMedal />,
-                        unlocked: (user?.donationCount || 0) >= 10,
-                        progress: `${user?.donationCount || 0}/10`,
-                      },
-                      {
-                        title: "Campaign Leader",
-                        icon: <FaUserFriends />,
-                        unlocked: false,
-                      },
-                    ].map((achievement, index) => (
-                      <div
-                        key={index}
-                        className={`rounded-xl p-3 text-center ${
-                          achievement.unlocked
-                            ? "bg-gradient-to-br from-pink-50 to-white border border-pink-200"
-                            : "bg-gray-50 border border-gray-200 opacity-60"
-                        }`}
-                      >
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2 ${
-                            achievement.unlocked
-                              ? "bg-gradient-to-br from-pink-500 to-pink-600 text-white"
-                              : "bg-gray-300 text-gray-500"
-                          }`}
-                        >
-                          <div className="text-lg">{achievement.icon}</div>
-                        </div>
-                        <h4 className="font-bold text-gray-800 text-xs mb-1">
-                          {achievement.title}
-                        </h4>
-                        {achievement.unlocked ? (
-                          <span className="text-xs text-green-600 flex items-center justify-center">
-                            <FaCheckCircle className="mr-1" /> Unlocked
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-500">
-                            {achievement.progress || "Locked"}
-                          </span>
-                        )}
-                      </div>
-                    ))}
                   </div>
-                </div>
-              )}
+                )}
 
-              {activeTab === "settings" && (
-                <div className="space-y-4">
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">
-                    Settings
-                  </h3>
+                {activeTab === "settings" && (
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-bold text-slate-800 mb-6">Account Settings</h3>
 
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <h4 className="font-bold text-gray-800 mb-3 flex items-center text-sm">
-                      <FaBell className="mr-2 text-pink-600" />
-                      Notifications
-                    </h4>
-                    <div className="space-y-2">
-                      <label className="flex items-center text-xs">
-                        <input
-                          type="checkbox"
-                          className="mr-2"
-                          defaultChecked
-                        />
-                        <span>Email updates</span>
-                      </label>
-                      <label className="flex items-center text-xs">
-                        <input
-                          type="checkbox"
-                          className="mr-2"
-                          defaultChecked
-                        />
-                        <span>SMS reminders</span>
-                      </label>
+                    {/* Notifications */}
+                    <div className="bg-gradient-to-br from-pink-50 to-white rounded-xl p-6 border border-pink-200">
+                      <h4 className="font-bold text-slate-800 mb-4 flex items-center">
+                        <FaBell className="mr-2 text-pink-600" />
+                        Notification Preferences
+                      </h4>
+                      <div className="space-y-3">
+                        <label className="flex items-center p-3 bg-white rounded-lg cursor-pointer hover:bg-pink-50 transition-colors">
+                          <input type="checkbox" className="mr-3 w-4 h-4 text-pink-600" defaultChecked />
+                          <span className="text-sm text-slate-700">Email updates about donation camps</span>
+                        </label>
+                        <label className="flex items-center p-3 bg-white rounded-lg cursor-pointer hover:bg-pink-50 transition-colors">
+                          <input type="checkbox" className="mr-3 w-4 h-4 text-pink-600" defaultChecked />
+                          <span className="text-sm text-slate-700">SMS reminders for next eligible date</span>
+                        </label>
+                        <label className="flex items-center p-3 bg-white rounded-lg cursor-pointer hover:bg-pink-50 transition-colors">
+                          <input type="checkbox" className="mr-3 w-4 h-4 text-pink-600" />
+                          <span className="text-sm text-slate-700">WhatsApp notifications</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Security */}
+                    <div className="bg-gradient-to-br from-pink-50 to-white rounded-xl p-6 border border-pink-200">
+                      <h4 className="font-bold text-slate-800 mb-4 flex items-center">
+                        <FaShieldAlt className="mr-2 text-pink-600" />
+                        Security
+                      </h4>
+                      <button
+                        onClick={handleResetPassword}
+                        className="flex items-center bg-white border-2 border-pink-600 text-pink-600 hover:bg-pink-50 px-6 py-3 rounded-xl font-medium text-sm transition-all hover:scale-105"
+                      >
+                        <FaKey className="mr-2" />
+                        Reset Password
+                      </button>
+                    </div>
+
+                    {/* Danger Zone */}
+                    <div className="bg-gradient-to-br from-rose-50 to-white rounded-xl p-6 border border-rose-200">
+                      <h4 className="font-bold text-rose-600 mb-2 flex items-center">
+                        <FaExclamationTriangle className="mr-2" />
+                        Danger Zone
+                      </h4>
+                      <p className="text-sm text-rose-600 mb-4">
+                        Once you delete your account, there is no going back. Please be certain.
+                      </p>
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="bg-white border-2 border-rose-600 text-rose-600 hover:bg-rose-50 px-6 py-3 rounded-xl font-bold text-sm transition-all hover:scale-105"
+                      >
+                        Delete Account
+                      </button>
                     </div>
                   </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <h4 className="font-bold text-gray-800 mb-3 flex items-center text-sm">
-                      <FaLock className="mr-2 text-pink-600" />
-                      Security
-                    </h4>
-                    <button
-                      onClick={handleResetPassword}
-                      className="bg-white border-2 border-pink-600 text-pink-600 hover:bg-pink-50 px-4 py-2 rounded-lg font-medium text-sm flex items-center"
-                    >
-                      <FaKey className="mr-2" />
-                      Reset Password
-                    </button>
-                  </div>
-
-                  <div className="bg-amber-100 border border-amber-300 rounded-xl p-4">
-                    <h4 className="font-bold text-amber-800 mb-1 text-sm">
-                      Danger Zone
-                    </h4>
-                    <p className="text-amber-700 text-xs mb-3">
-                      Once you delete your account, there is no going back.
-                    </p>
-                    <button
-                      onClick={() => setShowDeleteModal(true)}
-                      className="bg-white border border-amber-500 text-amber-600 hover:bg-amber-50 px-4 py-2 rounded-lg font-bold text-xs"
-                    >
-                      Delete Account
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Modals */}
-        <CertificateModal />
-        <DeleteAccountModal />
+        <CertificateModal 
+          selectedCertificate={selectedCertificate} 
+          showCertificateModal={showCertificateModal} 
+          setShowCertificateModal={setShowCertificateModal}
+          user={user}
+        />
+        <DeleteAccountModal 
+          showDeleteModal={showDeleteModal} 
+          setShowDeleteModal={setShowDeleteModal} 
+          handleDeleteAccount={handleDeleteAccount} 
+          isDeleting={isDeleting} 
+        />
         {showHealthForm && (
           <HealthStatusForm
             onClose={() => setShowHealthForm(false)}
@@ -1889,7 +1686,11 @@ const DonorProfile = () => {
             clearImage={clearImage}
           />
         )}
-        {showImagePreview && <ImagePreviewModal />}
+        <ImagePreviewModal 
+          showImagePreview={showImagePreview} 
+          setShowImagePreview={setShowImagePreview} 
+          selectedImage={selectedImage} 
+        />
       </div>
     </WrapperSection>
   );
