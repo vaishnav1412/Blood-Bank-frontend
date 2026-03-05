@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useNavigate, NavLink, useLocation } from "react-router-dom";
 import { getDonorInfo } from "../../../services/donorServices";
-import BlackLogo from "../../../../public/HemoCell Logo black.png";
+
 import WhiteLogo from "../../../../public/Gemini_Generated_Image_twae1mtwae1mtwae-removebg-preview.png";
 import {
   getNavigation,

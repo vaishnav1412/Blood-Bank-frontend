@@ -3,7 +3,7 @@ import { publicAxios } from "../api/publicInstance";
 
 
 export const loginDonor = async (email, password) => {
-  const response = await axiosInstance.post("/doner/login", {
+  const response = await axiosInstance.post("/donor/auth/login", {
     email: email.trim(),
     password,
   });
@@ -11,22 +11,31 @@ export const loginDonor = async (email, password) => {
   return response.data;
 };
 
-export const getDonorInfo = async () => {
-  const response = await axiosInstance.post("/doner/get-user-info");
-
-  return response.data.user;
-};
-
 export const registerDonor = async (formData) => {
-  const response = await axiosInstance.post("/doner/doner-register", formData);
+  const response = await axiosInstance.post("/donor/auth/register", formData);
 
   return response.data;
 };
 
+export const verifyRegisterOtp = async (email, otp) => {
+  const { data } = await publicAxios.post("/donor/auth/verify-otp", {
+    email,
+    otp,
+  });
 
-// Send OTP for password reset
+  return data;
+};
+
+export const resendRegisterOtp = async (email) => {
+  const { data } = await publicAxios.post("/donor/auth/resend-otp", {
+    email,
+  });
+
+  return data;
+};
+
 export const sendForgotOtp = async (email) => {
-  const response = await axiosInstance.post("/doner/send-otp", {
+  const response = await axiosInstance.post("/donor/auth/forgot-password/send-otp", {
     email,
     purpose: "password_reset",
   });
@@ -34,9 +43,8 @@ export const sendForgotOtp = async (email) => {
   return response.data;
 };
 
-// Verify OTP
 export const verifyForgotOtp = async (email, otp) => {
-  const response = await axiosInstance.post("/doner/verify-forgot-otp", {
+  const response = await axiosInstance.post("donor/auth/forgot-password/verify-otp", {
     email,
     otp,
   });
@@ -44,18 +52,8 @@ export const verifyForgotOtp = async (email, otp) => {
   return response.data;
 };
 
-// Resend OTP
-export const resendForgotOtp = async (email) => {
-  const response = await axiosInstance.post("/doner/resend-otp", {
-    email,
-  });
-
-  return response.data;
-};
-
-// Reset Password
 export const resetForgotPassword = async ({ userId, email, otp, newPassword }) => {
-  const response = await axiosInstance.post("/doner/reset-password", {
+  const response = await axiosInstance.post("/donor/auth/reset-password", {
     userId,
     email,
     otp,
@@ -65,20 +63,26 @@ export const resetForgotPassword = async ({ userId, email, otp, newPassword }) =
   return response.data;
 };
 
+
+export const getDonorInfo = async () => {
+  const response = await axiosInstance.get("/donor/profile/me");
+
+  return response.data.user;
+};
+
 //-------------camp--------------
 
 export const submitBloodDriveApplication = async (formData) => {
   const response = await publicAxios.post(
-    "/doner/applicationSubmission",
+    "/donor/camps/apply",
     formData
   );
 
-  return response.data; // always return only backend data
+  return response.data;
 };
 
-//fetch all campdetails using public axios
 export const fetchAllCampRequests = async () => {
-  const response = await publicAxios.get("/doner/getAllCamps");
+  const response = await publicAxios.get("/donor/camps");
 
   return response.data;
 
@@ -88,26 +92,21 @@ export const fetchAllCampRequests = async () => {
 
 
 export const sendContactMessage = (data) => {
-  return publicAxios.post("/doner/contact", data);
+  return publicAxios.post("/donor/contact", data);
 };
 
 export const sendContactMessagePrivate = (data) => {
-  return axiosInstance.post("/doner/contact-private", data);
+  return axiosInstance.post("/donor/contact/private", data);
 };
 
-
-
-export const searchDonors = async (filters = {}) => {
-  const response = await publicAxios.get("/doner/search-user", {
-    params: filters,
-  });
-
+export const getMyContactHistory = async () => {
+  const response = await axiosInstance.get("/donor/contact/history");
   return response.data;
 };
 
 export const updateDonorProfile = async (updatedData) => {
   const response = await axiosInstance.put(
-    "/doner/update-profile",
+    "/donor/profile",
     updatedData
   );
 
@@ -115,13 +114,13 @@ export const updateDonorProfile = async (updatedData) => {
 };
 
 export const deleteDonorAccount = async () => {
-  const response = await axiosInstance.delete("/doner/delete-account");
+  const response = await axiosInstance.delete("/donor/profile");
   return response.data;
 };
 
 export const updateHealthStatus = async (healthData) => {
   const response = await axiosInstance.post(
-    "/doner/healthStatus",
+    "/donor/profile/health-status",
     healthData
   );
 
@@ -129,28 +128,13 @@ export const updateHealthStatus = async (healthData) => {
 };
 
 export const getDonorProfileDetails = async () => {
-  const response = await axiosInstance.get("/doner/profile-details");
+  const response = await axiosInstance.get("/donor/profile");
   return response.data;
 };
 
 export const uploadProfilePhoto = async (formData) => {
   const response = await axiosInstance.put(
-    "/doner/profile-photo",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
-
-  return response.data;
-};
-
-
-export const uploadDonationProof = async (formData) => {
-  const response = await axiosInstance.post(
-    "/doner/upload-proof",
+    "/donor/profile/photo",
     formData,
     {
       headers: {
@@ -163,28 +147,44 @@ export const uploadDonationProof = async (formData) => {
 };
 
 export const removeProfilePhoto = async () => {
-  const response = await axiosInstance.delete("/doner/profile-photo");
+  const response = await axiosInstance.delete("/donor/profile/photo");
   return response.data;
 };
 
 
-// Fetch Donation History
+export const uploadDonationProof = async (formData) => {
+  const response = await axiosInstance.post(
+    "/donor/donations/proof",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
+};
+
 export const fetchDonationHistory = async () => {
-  const response = await axiosInstance.get("/doner/donation-history");
+  const response = await axiosInstance.get("/donor/donations/history");
   return response.data;
 };
-
 
 export const deleteDonationProof = async (donationId) => {
   const { data } = await axiosInstance.delete(
-    `/doner/delete-proof/${donationId}`
+    `/donor/donations/proof${donationId}`
   );
 
   return data;
 };
 
+export const searchDonors = async (filters = {}) => {
+  const response = await publicAxios.get("/donor/donations/search", {
+    params: filters,
+  });
 
-export const getMyContactHistory = async () => {
-  const response = await axiosInstance.get("/doner/my-contacts-history");
   return response.data;
 };
+
+

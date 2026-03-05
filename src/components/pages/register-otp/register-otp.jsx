@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
 import toast from "react-hot-toast";
 
 import HeroComponent from "../../sections/hero/hero-component";
@@ -14,6 +13,7 @@ import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
 import FooterComponent from "../../sections/footer/footer-component";
 import ContactForm from "../../sections/form/form-component-otp";
+import { verifyRegisterOtp,resendRegisterOtp } from "../../../services/donorServices";
 
 const RegisterOtpPage = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ const RegisterOtpPage = () => {
   // ✅ Email passed from registration page
   const email = location.state?.email;
 
-  const API = import.meta.env.VITE_API_URL;
+  
 
   const [formData, setFormData] = useState({
     otp: ["", "", "", ""],
@@ -57,18 +57,12 @@ const RegisterOtpPage = () => {
     const toastId = toast.loading("Verifying OTP...");
 
     try {
-      const response = await axios.post(`${API}/doner/verify-otp`, {
-        email,
-        otp: otpValue,
-      });
-
+       await verifyRegisterOtp(email, otpValue);
       toast.success("OTP Verified Successfully 🎉", { id: toastId });
-
       setStatus("Registration completed! Password sent to your email.");
 
-      // ✅ Redirect after success
       setTimeout(() => {
-        navigate("/login"); // login page
+        navigate("/login");
       }, 2000);
 
     } catch (error) {
@@ -88,10 +82,7 @@ const RegisterOtpPage = () => {
   const toastId = toast.loading("Resending OTP...");
 
   try {
-    await axios.post(`${API}/doner/resend-register-otp`, {
-      email,
-    });
-
+    await resendRegisterOtp(email);
     toast.success("OTP resent successfully!", { id: toastId });
 
   } catch (error) {

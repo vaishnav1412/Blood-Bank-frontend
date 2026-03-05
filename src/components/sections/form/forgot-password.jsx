@@ -11,13 +11,11 @@ import {
   FaExclamationTriangle,
   FaArrowLeft,
   FaLock,
-  FaMobile,
-  FaUserShield,
+  
 } from "react-icons/fa";
 import {
   sendForgotOtp,
   verifyForgotOtp,
-  resendForgotOtp,
   resetForgotPassword,
 } from "../../../services/donorServices";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
@@ -186,7 +184,7 @@ const ForgotPasswordForm = () => {
     setIsResending(true);
     const toastId = toast.loading("Sending new OTP...");
     try {
-      const response = await resendForgotOtp(formData.email);
+      const response = await sendForgotOtp(formData.email);
 
       if (response.success) {
         setTimer(60);

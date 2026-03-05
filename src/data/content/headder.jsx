@@ -12,7 +12,7 @@ export const getNavigation = (user) => [
           user.name && user.name.length > 12
             ? user.name.slice(0, 10) + "..."
             : user.name || "Profile",
-        href: "/doner-profile",
+        href: "/donor-profile",
         last: true,
       }
     : {
@@ -37,7 +37,7 @@ export const getMobileNavigation = (user) => [
   user
     ? {
         name: user.name?.split(" ")[0] || "Profile",
-        href: "/doner-profile",
+        href: "/donor-profile",
         icon: "👤",
         last: true,
       }
