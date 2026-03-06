@@ -3,7 +3,7 @@ import { publicAxios } from "../api/publicInstance";
 
 
 export const loginDonor = async (email, password) => {
-  const response = await axiosInstance.post("/donor/auth/login", {
+  const response = await axiosInstance.post("/api/v1/donor/auth/login", {
     email: email.trim(),
     password,
   });
@@ -12,13 +12,13 @@ export const loginDonor = async (email, password) => {
 };
 
 export const registerDonor = async (formData) => {
-  const response = await axiosInstance.post("/donor/auth/register", formData);
+  const response = await axiosInstance.post("/api/v1/donor/auth/register", formData);
 
   return response.data;
 };
 
 export const verifyRegisterOtp = async (email, otp) => {
-  const { data } = await publicAxios.post("/donor/auth/verify-otp", {
+  const { data } = await publicAxios.post("/api/v1/donor/auth/verify-otp", {
     email,
     otp,
   });
@@ -27,7 +27,7 @@ export const verifyRegisterOtp = async (email, otp) => {
 };
 
 export const resendRegisterOtp = async (email) => {
-  const { data } = await publicAxios.post("/donor/auth/resend-otp", {
+  const { data } = await publicAxios.post("/api/v1/donor/auth/resend-otp", {
     email,
   });
 
@@ -35,7 +35,7 @@ export const resendRegisterOtp = async (email) => {
 };
 
 export const sendForgotOtp = async (email) => {
-  const response = await axiosInstance.post("/donor/auth/forgot-password/send-otp", {
+  const response = await axiosInstance.post("/api/v1/donor/auth/forgot-password/send-otp", {
     email,
     purpose: "password_reset",
   });
@@ -44,7 +44,7 @@ export const sendForgotOtp = async (email) => {
 };
 
 export const verifyForgotOtp = async (email, otp) => {
-  const response = await axiosInstance.post("donor/auth/forgot-password/verify-otp", {
+  const response = await axiosInstance.post("/api/v1/donor/auth/forgot-password/verify-otp", {
     email,
     otp,
   });
@@ -53,7 +53,7 @@ export const verifyForgotOtp = async (email, otp) => {
 };
 
 export const resetForgotPassword = async ({ userId, email, otp, newPassword }) => {
-  const response = await axiosInstance.post("/donor/auth/reset-password", {
+  const response = await axiosInstance.post("/api/v1/donor/auth/reset-password", {
     userId,
     email,
     otp,
@@ -65,7 +65,7 @@ export const resetForgotPassword = async ({ userId, email, otp, newPassword }) =
 
 
 export const getDonorInfo = async () => {
-  const response = await axiosInstance.get("/donor/profile/me");
+  const response = await axiosInstance.get("/api/v1/donor/profile/me");
 
   return response.data.user;
 };
@@ -74,7 +74,7 @@ export const getDonorInfo = async () => {
 
 export const submitBloodDriveApplication = async (formData) => {
   const response = await publicAxios.post(
-    "/donor/camps/apply",
+    "/api/v1/donor/camps/apply",
     formData
   );
 
@@ -82,7 +82,7 @@ export const submitBloodDriveApplication = async (formData) => {
 };
 
 export const fetchAllCampRequests = async () => {
-  const response = await publicAxios.get("/donor/camps");
+  const response = await publicAxios.get("/api/v1/donor/camps");
 
   return response.data;
 
@@ -92,21 +92,21 @@ export const fetchAllCampRequests = async () => {
 
 
 export const sendContactMessage = (data) => {
-  return publicAxios.post("/donor/contact", data);
+  return publicAxios.post("/api/v1/donor/contact", data);
 };
 
 export const sendContactMessagePrivate = (data) => {
-  return axiosInstance.post("/donor/contact/private", data);
+  return axiosInstance.post("/api/v1/donor/contact/private", data);
 };
 
 export const getMyContactHistory = async () => {
-  const response = await axiosInstance.get("/donor/contact/history");
+  const response = await axiosInstance.get("/api/v1/donor/contact/history");
   return response.data;
 };
 
 export const updateDonorProfile = async (updatedData) => {
   const response = await axiosInstance.put(
-    "/donor/profile",
+    "/api/v1/donor/profile",
     updatedData
   );
 
@@ -114,13 +114,13 @@ export const updateDonorProfile = async (updatedData) => {
 };
 
 export const deleteDonorAccount = async () => {
-  const response = await axiosInstance.delete("/donor/profile");
+  const response = await axiosInstance.delete("/api/v1/donor/profile");
   return response.data;
 };
 
 export const updateHealthStatus = async (healthData) => {
   const response = await axiosInstance.post(
-    "/donor/profile/health-status",
+    "/api/v1/donor/profile/health-status",
     healthData
   );
 
@@ -128,13 +128,13 @@ export const updateHealthStatus = async (healthData) => {
 };
 
 export const getDonorProfileDetails = async () => {
-  const response = await axiosInstance.get("/donor/profile");
+  const response = await axiosInstance.get("/api/v1/donor/profile");
   return response.data;
 };
 
 export const uploadProfilePhoto = async (formData) => {
   const response = await axiosInstance.put(
-    "/donor/profile/photo",
+    "/api/v1/donor/profile/photo",
     formData,
     {
       headers: {
@@ -147,14 +147,14 @@ export const uploadProfilePhoto = async (formData) => {
 };
 
 export const removeProfilePhoto = async () => {
-  const response = await axiosInstance.delete("/donor/profile/photo");
+  const response = await axiosInstance.delete("/api/v1/donor/profile/photo");
   return response.data;
 };
 
 
 export const uploadDonationProof = async (formData) => {
   const response = await axiosInstance.post(
-    "/donor/donations/proof",
+    "/api/v1/donor/donations/proof",
     formData,
     {
       headers: {
@@ -167,20 +167,20 @@ export const uploadDonationProof = async (formData) => {
 };
 
 export const fetchDonationHistory = async () => {
-  const response = await axiosInstance.get("/donor/donations/history");
+  const response = await axiosInstance.get("/api/v1/donor/donations/history");
   return response.data;
 };
 
 export const deleteDonationProof = async (donationId) => {
   const { data } = await axiosInstance.delete(
-    `/donor/donations/proof${donationId}`
+    `/api/v1/donor/donations/proof${donationId}`
   );
 
   return data;
 };
 
 export const searchDonors = async (filters = {}) => {
-  const response = await publicAxios.get("/donor/donations/search", {
+  const response = await publicAxios.get("/api/v1/donor/donations/search", {
     params: filters,
   });
 
