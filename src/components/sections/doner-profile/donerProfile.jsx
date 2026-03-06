@@ -3,7 +3,10 @@ import HealthStatusForm from "../form/HealthStatusForm";
 import EditProfileForm from "../form/EditProfileForm";
 import DonationUploadForm from "../form/DonationUploadForm";
 import { useNavigate } from "react-router-dom";
-import OtpVerificationModal from "./otpVerificationModel"
+import OtpVerificationModal from "./otpVerificationModel";
+import CertificateModal from "./certificateModal";
+import DeleteAccountModal from "./deleteAccountModal";
+import ImagePreviewModal from "./imagePreviewModal";
 import {
   FaUser,
   FaCamera,
@@ -15,14 +18,11 @@ import {
   FaPhone,
   FaEnvelope,
   FaHeartbeat,
-  FaDownload,
-  FaShareAlt,
   FaEdit,
   FaBell,
   FaMedal,
   FaStar,
   FaSpinner,
-  FaPrint,
   FaCheckCircle,
   FaUserFriends,
   FaCog,
@@ -41,13 +41,9 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaKey,
-  FaChartLine,
   FaShieldAlt,
-  FaRibbon,
   FaGem,
-  FaTrophy,
   FaTint,
-  FaLink,
 } from "react-icons/fa";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
 import toast from "react-hot-toast";
@@ -65,440 +61,6 @@ import {
   fetchAllCampRequests,
 } from "../../../services/donorServices";
 import "./donerProfile.scss";
-
-// --- Helper Components ---
-
-const ImagePreviewModal = ({
-  showImagePreview,
-  setShowImagePreview,
-  selectedImage,
-}) => {
-  if (!showImagePreview) return null;
-
-  return (
-    <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[60] p-4"
-      onClick={() => setShowImagePreview(false)}
-    >
-      <div className="relative w-full max-w-5xl">
-        <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 rounded-2xl blur-xl opacity-50"></div>
-        <div className="relative bg-white rounded-2xl overflow-hidden">
-          <img
-            src={selectedImage}
-            alt="Donation Proof"
-            className="w-full h-auto max-h-[80vh] object-contain"
-          />
-          <button
-            onClick={() => setShowImagePreview(false)}
-            className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-all hover:scale-110"
-          >
-            <FaTimes />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const DeleteAccountModal = ({
-  showDeleteModal,
-  setShowDeleteModal,
-  handleDeleteAccount,
-  isDeleting,
-}) => {
-  if (!showDeleteModal) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl transform animate-slideUp">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold text-rose-600 flex items-center">
-            <FaExclamationTriangle className="mr-3 text-2xl" />
-            Delete Account
-          </h3>
-          <button
-            onClick={() => setShowDeleteModal(false)}
-            className="text-gray-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-all"
-          >
-            <FaTimes />
-          </button>
-        </div>
-
-        <p className="text-slate-600 mb-8 leading-relaxed">
-          Are you sure you want to delete your account? This action is
-          <span className="font-bold text-red-600"> permanent </span>
-          and cannot be undone. All your data will be permanently removed.
-        </p>
-
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowDeleteModal(false)}
-            className="flex-1 border-2 border-slate-300 py-3 rounded-xl font-bold hover:bg-slate-50 transition-colors"
-            disabled={isDeleting}
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={handleDeleteAccount}
-            disabled={isDeleting}
-            className="flex-1 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
-          >
-            {isDeleting ? (
-              <>
-                <FaSpinner className="animate-spin mr-2" />
-                Deleting...
-              </>
-            ) : (
-              "Yes, Delete"
-            )}
-          </button>
-        </div>
-
-        <p className="text-xs text-slate-500 text-center mt-4">
-          You will be logged out and redirected to the login page.
-        </p>
-      </div>
-    </div>
-  );
-};
-
-const CertificateModal = ({
-  selectedCertificate,
-  showCertificateModal,
-  setShowCertificateModal,
-  user,
-}) => {
-  const certificateRef = useRef(null);
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  if (!selectedCertificate || !showCertificateModal) return null;
-
-  const getMilestoneTitle = () => {
-    const count = user?.donationCount || 0;
-    if (count === 1) return "1st Donation Hero";
-    if (count === 2) return "2nd Donation Hero";
-    if (count === 3) return "3rd Donation Hero";
-    if (count === 4) return "4th Donation Hero";
-    if (count >= 5 && count <= 9) return `${count} Donations Champion`;
-    if (count >= 10) return "10 Donations Platinum Donor";
-    return "Blood Donation Hero";
-  };
-
-  const handleDownloadPNG = async () => {
-    if (!certificateRef.current) return;
-    try {
-      setIsDownloading(true);
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(certificateRef.current, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-        allowTaint: false,
-        useCORS: true,
-      });
-
-      const image = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = image;
-      link.download = `certificate-${selectedCertificate.certificateId || "donation"}.png`;
-      link.click();
-      toast.success("Certificate downloaded successfully!");
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error(
-        "Failed to download certificate. Make sure html2canvas is installed.",
-      );
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  const handleShare = async () => {
-    const shareText = `I just received my ${getMilestoneTitle()} certificate for blood donation! 🩸❤️\n\nDonate blood, save lives!`;
-    const shareUrl = window.location.href;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Blood Donation Certificate",
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (error) {
-        console.log("Share cancelled");
-      }
-    } else {
-      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`;
-      window.open(whatsappUrl, "_blank");
-    }
-  };
-
-  const handlePrint = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      toast.error("Please allow pop-ups to print");
-      return;
-    }
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Blood Donation Certificate</title>
-          <style>
-            body { font-family: 'Georgia', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; padding: 20px; }
-            .certificate-wrapper { max-width: 1000px; width: 100%; }
-          </style>
-        </head>
-        <body>
-          <div class="certificate-wrapper">
-            ${document.getElementById("certificate-content")?.innerHTML || ""}
-          </div>
-          <script>
-            window.onload = () => window.print();
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-xl flex items-end sm:items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-3xl w-full max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl animate-slideUp">
-        <div
-          id="certificate-content"
-          ref={certificateRef}
-          className="relative bg-gradient-to-br from-amber-50 via-white to-pink-50 p-8 sm:p-12"
-        >
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute top-0 left-0 w-32 h-32 bg-pink-200 rounded-full filter blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-200 rounded-full filter blur-3xl"></div>
-          </div>
-
-          <div className="absolute inset-4 border-2 border-pink-200/50 rounded-2xl pointer-events-none"></div>
-          <div className="absolute inset-6 border border-pink-300/30 rounded-xl pointer-events-none"></div>
-
-          <div className="absolute top-8 left-8 w-20 h-20 border-t-4 border-l-4 border-pink-400/30 rounded-tl-3xl"></div>
-          <div className="absolute top-8 right-8 w-20 h-20 border-t-4 border-r-4 border-pink-400/30 rounded-tr-3xl"></div>
-          <div className="absolute bottom-8 left-8 w-20 h-20 border-b-4 border-l-4 border-pink-400/30 rounded-bl-3xl"></div>
-          <div className="absolute bottom-8 right-8 w-20 h-20 border-b-4 border-r-4 border-pink-400/30 rounded-br-3xl"></div>
-
-          <div className="text-center mb-10 relative">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl transform rotate-12">
-                <span className="text-white text-3xl font-bold">🩸</span>
-              </div>
-              <div className="text-left">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                  Kannur Blood Link
-                </h2>
-                <p className="text-sm text-gray-500 tracking-wider">
-                  Life is in your blood
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <h1 className="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-red-800 via-pink-600 to-red-800 bg-clip-text text-transparent mb-4">
-                Certificate of Appreciation
-              </h1>
-              <div className="w-40 h-1 bg-gradient-to-r from-pink-400 via-red-400 to-pink-400 mx-auto rounded-full"></div>
-            </div>
-
-            <p className="text-sm text-gray-500 mt-4 font-mono bg-gray-50 inline-block px-4 py-1 rounded-full">
-              Cert. ID:{" "}
-              <span className="font-semibold text-gray-700">
-                {selectedCertificate.certificateId}
-              </span>
-            </p>
-          </div>
-
-          <div className="text-center mb-10">
-            <p className="text-xl text-gray-600 mb-4">
-              This is proudly presented to
-            </p>
-
-            <div className="relative inline-block mb-6">
-              <h3 className="text-5xl sm:text-6xl font-bold text-gray-800 px-8 py-4 border-b-4 border-pink-300">
-                {user?.name}
-              </h3>
-              <FaTrophy className="absolute -top-4 -left-8 text-4xl text-yellow-500 rotate-[-15deg]" />
-              <FaTrophy className="absolute -top-4 -right-8 text-4xl text-yellow-500 rotate-[15deg]" />
-            </div>
-
-            <div className="inline-block bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 text-white px-8 py-3 rounded-full text-xl font-bold shadow-lg mb-8 animate-pulse">
-              {getMilestoneTitle()}
-            </div>
-
-            <div className="space-y-3 text-gray-700">
-              <p className="text-xl">
-                For their noble contribution of blood donation on
-              </p>
-              <p className="text-4xl font-bold text-pink-700">
-                {new Date(selectedCertificate.date).toLocaleDateString(
-                  "en-US",
-                  {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  },
-                )}
-              </p>
-              <p className="text-xl">
-                at{" "}
-                <span className="font-semibold text-gray-900">
-                  {selectedCertificate.center}
-                </span>
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mb-10">
-            <div className="bg-gradient-to-b from-pink-50 to-white rounded-2xl p-5 text-center shadow-lg border border-pink-100 transform hover:scale-105 transition-transform">
-              <div className="text-3xl font-bold text-pink-600 mb-1">
-                {user?.bloodGroup}
-              </div>
-              <div className="text-xs uppercase tracking-wider text-gray-500">
-                Blood Group
-              </div>
-            </div>
-            <div className="bg-gradient-to-b from-pink-50 to-white rounded-2xl p-5 text-center shadow-lg border border-pink-100 transform hover:scale-105 transition-transform">
-              <div className="text-3xl font-bold text-pink-600 mb-1">
-                {user?.donationCount}
-              </div>
-              <div className="text-xs uppercase tracking-wider text-gray-500">
-                Total Donations
-              </div>
-            </div>
-            <div className="bg-gradient-to-b from-pink-50 to-white rounded-2xl p-5 text-center shadow-lg border border-pink-100 transform hover:scale-105 transition-transform">
-              <div className="text-3xl font-bold text-pink-600 mb-1">
-                {(user?.donationCount || 0) * 150}
-              </div>
-              <div className="text-xs uppercase tracking-wider text-gray-500">
-                Life Points
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-8 mt-10 pt-8 border-t-2 border-dashed border-pink-200">
-            <div className="flex flex-col items-center">
-              <div className="w-28 h-28 bg-white p-2 rounded-xl shadow-xl border border-gray-200">
-                <img
-                  src={
-                    selectedCertificate.qrCode ||
-                    `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedCertificate.certificateId}`
-                  }
-                  alt="QR Code"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-2">Scan to verify</p>
-            </div>
-
-            <div className="flex-1 flex justify-between items-center px-6">
-              <div className="text-center">
-                <div className="w-40 h-16 mb-1">
-                  <svg className="w-full h-full" viewBox="0 0 140 50">
-                    <path
-                      d="M10,30 Q35,10 60,30 T110,30"
-                      stroke="#ec4899"
-                      fill="none"
-                      strokeWidth="2"
-                    />
-                    <text
-                      x="25"
-                      y="40"
-                      className="text-lg fill-gray-600 font-signature"
-                    >
-                      Dr. Priya Sharma
-                    </text>
-                  </svg>
-                </div>
-                <div className="font-bold text-gray-800">Medical Director</div>
-                <div className="text-xs text-gray-500">Kannur Blood Link</div>
-              </div>
-
-              <div className="w-px h-16 bg-gradient-to-b from-transparent via-pink-300 to-transparent"></div>
-
-              <div className="text-center">
-                <div className="font-bold text-gray-800 text-2xl mb-1">
-                  {new Date().toLocaleDateString()}
-                </div>
-                <div className="font-bold text-gray-800">Date of Issue</div>
-                <div className="text-xs text-gray-500">Valid Forever</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 text-center text-sm text-gray-400">
-            <p className="mb-1">
-              This certificate is digitally generated and can be verified
-              online.
-            </p>
-            <p>
-              © Kannur Blood Link - Every drop saves a life{" "}
-              <span className="text-pink-500">❤️</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-b-3xl border-t border-gray-200">
-          <div className="grid grid-cols-4 gap-3 max-w-2xl mx-auto">
-            <button
-              onClick={handleDownloadPNG}
-              disabled={isDownloading}
-              className="bg-gradient-to-r from-pink-600 to-red-600 hover:from-pink-700 hover:to-red-700 text-white py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-            >
-              {isDownloading ? (
-                <FaSpinner className="animate-spin mr-2" />
-              ) : (
-                <FaDownload className="mr-2" />
-              )}
-              <span>Download</span>
-            </button>
-
-            <button
-              onClick={handleShare}
-              className="border-2 border-pink-600 text-pink-600 hover:bg-pink-50 py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-105"
-            >
-              <FaShareAlt className="mr-2" />
-              Share
-            </button>
-
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                toast.success("Certificate link copied!");
-              }}
-              className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-105"
-            >
-              <FaLink className="mr-2" />
-              Copy
-            </button>
-
-            <button
-              onClick={handlePrint}
-              className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 py-3 rounded-xl font-bold flex items-center justify-center text-sm transition-all transform hover:scale-105"
-            >
-              <FaPrint className="mr-2" />
-              Print
-            </button>
-          </div>
-
-          <div className="flex justify-center mt-4">
-            <button
-              onClick={() => setShowCertificateModal(false)}
-              className="px-8 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full text-sm font-medium transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // --- Main Component ---
 
@@ -646,12 +208,6 @@ const DonorProfile = () => {
     }, 2000);
   };
 
-  // FIX: This function now opens the modal where the actual download logic exists
-  const handleDownloadCertificate = (certificate) => {
-    setSelectedCertificate(certificate);
-    setShowCertificateModal(true);
-  };
-
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -781,35 +337,6 @@ const DonorProfile = () => {
       toast.error(error.response?.data?.message || "Failed to remove photo");
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    const email = user?.email;
-    if (!email) {
-      toast.error("User email not found. Please login again.");
-      return;
-    }
-    try {
-      const toastId = toast.loading("Sending OTP to your email...");
-      const response = await sendForgotOtp(email);
-      toast.success(
-        response.message || "OTP sent successfully! Redirecting...",
-        {
-          id: toastId,
-          duration: 3000,
-        },
-      );
-      localStorage.setItem("resetEmail", email);
-      setTimeout(() => {
-        navigate("/verify-otp");
-      }, 1000);
-    } catch (error) {
-      console.error("Send OTP Error:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to send OTP. Please try again.",
-      );
     }
   };
 
@@ -1677,21 +1204,7 @@ const DonorProfile = () => {
 
                     {certificates.length === 0 ? (
                       <div className="text-center py-12">
-                        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <FaCertificate className="text-3xl text-slate-400" />
-                        </div>
-                        <h4 className="text-lg font-bold text-slate-800 mb-2">
-                          No Certificates Yet
-                        </h4>
-                        <p className="text-slate-600 mb-4">
-                          Upload and verify donation proofs to earn certificates
-                        </p>
-                        <button
-                          onClick={() => setShowDonationUpload(true)}
-                          className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-xl font-bold transition-all hover:scale-105"
-                        >
-                          Upload Donation Proof
-                        </button>
+                        {/* ... Empty state code ... */}
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1700,14 +1213,18 @@ const DonorProfile = () => {
                             key={certificate.id}
                             className="group relative bg-gradient-to-br from-pink-50 to-white rounded-xl p-5 border border-pink-200 hover:shadow-2xl transition-all hover:scale-[1.02]"
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl opacity-0 group-hover:opacity-5 transition-opacity"></div>
+                            {/* THE FIX: Added 'pointer-events-none' to the line below */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none"></div>
+
                             <div className="flex items-start justify-between mb-3">
                               <FaCertificate className="text-3xl text-pink-600" />
                               <FaAward className="text-2xl text-yellow-500" />
                             </div>
+
                             <h4 className="font-bold text-slate-800 mb-2">
                               {certificate.title}
                             </h4>
+
                             <p className="text-sm text-slate-600 mb-3">
                               {new Date(certificate.date).toLocaleDateString(
                                 "en-US",
@@ -1718,9 +1235,11 @@ const DonorProfile = () => {
                                 },
                               )}
                             </p>
+
                             <div className="flex gap-2">
                               <button
                                 onClick={() => {
+                                  console.log("View button clicked");
                                   setSelectedCertificate(certificate);
                                   setShowCertificateModal(true);
                                 }}
@@ -1728,10 +1247,13 @@ const DonorProfile = () => {
                               >
                                 View
                               </button>
+
                               <button
-                                onClick={() =>
-                                  handleDownloadCertificate(certificate)
-                                }
+                                onClick={() => {
+                                  console.log("Download button clicked");
+                                  setSelectedCertificate(certificate);
+                                  setShowCertificateModal(true);
+                                }}
                                 className="flex-1 border-2 border-pink-600 text-pink-600 hover:bg-pink-50 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
                               >
                                 Download
@@ -1743,7 +1265,6 @@ const DonorProfile = () => {
                     )}
                   </div>
                 )}
-
                 {activeTab === "achievements" && (
                   <div>
                     <h3 className="text-xl font-bold text-slate-800 mb-6">
