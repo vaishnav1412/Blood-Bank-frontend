@@ -143,3 +143,26 @@ export const replyToContact = async (id, replyMessage) => {
 
   return response.data;
 };
+
+export const getAllDonations = async () => {
+  const response = await adminPublicAxios.get("/admin/donations");
+  return response.data;
+};
+
+export const rejectDonation = async (donationId, reason) => {
+  const response = await adminPublicAxios.put(`/admin/donations/${donationId}`, {
+    status: "rejected",
+    adminRemarks: reason,
+  });
+
+  return response.data;
+};
+
+export const verifyDonation = async (donationId) => {
+  const response = await adminPublicAxios.put(`/admin/donations/${donationId}`, {
+    status: "verified",
+    adminRemarks: "Verified by admin",
+  });
+
+  return response.data;
+};

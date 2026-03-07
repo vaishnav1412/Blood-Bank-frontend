@@ -27,8 +27,7 @@ import {
   FaQuoteLeft,
   FaUsers,
   FaPlay,
-  FaRegFileImage,
-  FaRegFileVideo,
+ 
 } from "react-icons/fa";
 import "./gallery-management.scss";
 import {
@@ -36,7 +35,7 @@ import {
   getGalleryItems,
   updateGalleryMedia,
   deleteGalleryMedia,
-} from "../../../services/adminServices";
+} from "../../../../services/adminServices";
 
 // Helper hook for responsive design
 function useWindowSize() {

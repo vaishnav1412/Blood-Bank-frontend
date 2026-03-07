@@ -29,7 +29,7 @@ import {
   getContactMessages,
   updateContactStatus,
   replyToContact,
-} from "../../../services/adminServices";
+} from "../../../../services/adminServices";
 
 export default function ContactManagement() {
   const [activeTab, setActiveTab] = useState("all");

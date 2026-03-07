@@ -26,7 +26,7 @@ const DonateBloodRegisterPage = () => {
     dob: "",
     weight: "",
     platelet: "",
-    donationCount: "",
+    latestDonatedDate: "",
     taluk: "",
     district: "",
     mobile: "",
@@ -41,6 +41,8 @@ const DonateBloodRegisterPage = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
+    console.log("submit");
+    
     e.preventDefault();
     if (loading) return;
     const formValidationErrors = validateDonorRegisterForm(formData);

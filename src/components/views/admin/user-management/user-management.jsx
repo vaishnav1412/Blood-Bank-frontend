@@ -25,9 +25,9 @@ import {
 import { FaTint } from "react-icons/fa";
 import "./user-management.scss";
 
-import { fetchAllUsers ,blockUser,unblockUser} from "../../../services/adminServices";
+import { fetchAllUsers ,blockUser,unblockUser} from "../../../../services/adminServices";
 import { useEffect } from "react";
-import AddDonorModal from "../../sections/add-doner-modal/add-doner-modal";
+import AddDonorModal from "../../../sections/add-doner-modal/add-doner-modal";
 
 // Loading Skeleton Component
 const UserCardSkeleton = () => (

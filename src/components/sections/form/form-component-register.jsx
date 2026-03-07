@@ -21,6 +21,7 @@ const FormComponentRegister = ({
   const [availableTaluks, setAvailableTaluks] = useState([]);
   const [focusedFields, setFocusedFields] = useState({});
 
+
   const handleFocus = (fieldName) => {
     setFocusedFields((prev) => ({ ...prev, [fieldName]: true }));
   };
@@ -29,12 +30,15 @@ const FormComponentRegister = ({
     setFocusedFields((prev) => ({ ...prev, [fieldName]: false }));
   };
 
+  // Get today's date in YYYY-MM-DD format for max attribute
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <WrapperSection>
       {/* Form Container */}
       <div className="form-wrapper w-full max-w-4xl mx-auto relative md:-mt-[490px] -mt-[150px] bg-gradient-to-br ">
         {/* Animated gradient background */}
-        <div className="absolute -inset-1  rounded-2xl blur-xl opacity-75 animate-gradient-xy"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 via-purple-400 to-pink-600 rounded-2xl blur-xl opacity-75 animate-gradient-xy"></div>
         
         {/* Floating particles effect */}
         <div className="absolute inset-0 overflow-hidden rounded-2xl">
@@ -190,7 +194,7 @@ const FormComponentRegister = ({
                   className={`${registerSelectStyles} transition-all duration-300 border-2 ${
                     focusedFields.bloodGroup
                       ? "border-pink-400 shadow-lg shadow-pink-100"
-                      : "border-slate-300 hover:border-pink-300"
+                      : "border-slate-400 hover:border-pink-300"
                   } ${formData.bloodGroup ? "text-slate-800" : "text-slate-500"}`}
                   value={formData.bloodGroup || ""}
                   onChange={(e) =>
@@ -244,6 +248,7 @@ const FormComponentRegister = ({
                   onFocus={() => handleFocus("dob")}
                   onBlur={() => handleBlur("dob")}
                   placeholder=" "
+                  max={today}
                 />
                 <label
                   htmlFor="dob"
@@ -270,6 +275,8 @@ const FormComponentRegister = ({
                   name="weight"
                   id="weight"
                   required
+                  min="30"
+                  max="200"
                   className={`${registerInputStyles} transition-all duration-300 border-2 ${
                     errors?.weight
                       ? "border-rose-400 focus:border-rose-600"
@@ -345,43 +352,42 @@ const FormComponentRegister = ({
                 )}
               </div>
 
-              {/* Donation Count */}
+              {/* Last Donated Date - REPLACED Donation Count */}
               <div className="relative group">
                 <input
-                  type="number"
-                  name="donationCount"
-                  id="donationCount"
-                  min="0"
-                  required
+                  type="date"
+                  name="lastDonationDate"
+                  id="lastDonationDate"
                   className={`${registerInputStyles} transition-all duration-300 border-2 ${
-                    errors?.donationCount
+                    errors?.latestDonatedDate
                       ? "border-rose-400 focus:border-rose-600"
-                      : focusedFields.donationCount
+                      : focusedFields.latestDonatedDate
                       ? "border-pink-400 shadow-lg shadow-pink-100"
                       : "border-slate-400 hover:border-pink-300"
-                  }`}
-                  value={formData.donationCount || ""}
+                  } ${formData.latestDonatedDate ? "text-slate-800" : "text-slate-500"}`}
+                  value={formData.latestDonatedDate || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, donationCount: e.target.value })
+                    setFormData({ ...formData, latestDonatedDate: e.target.value })
                   }
-                  onFocus={() => handleFocus("donationCount")}
-                  onBlur={() => handleBlur("donationCount")}
+                  onFocus={() => handleFocus("lastDonationDate")}
+                  onBlur={() => handleBlur("lastDonationDate")}
                   placeholder=" "
+                  max={today}
                 />
                 <label
-                  htmlFor="donationCount"
+                  htmlFor="lastDonationDate"
                   className={`absolute left-4 transition-all duration-200 pointer-events-none ${
-                    formData.donationCount || focusedFields.donationCount
+                    formData.latestDonatedDate|| focusedFields.latestDonatedDate
                       ? "-top-2.5 text-xs bg-white px-1 text-pink-600 font-medium"
                       : "top-3.5 text-base text-slate-500"
                   }`}
                 >
-                  Previous Donations *
+                  Last Donated Date *
                 </label>
-                {errors?.donationCount && (
+                {errors?.lastDonationDate && (
                   <p className="error-message text-rose-600 text-xs mt-1.5 ml-1 flex items-center gap-1">
                     <span className="w-1 h-1 bg-rose-600 rounded-full"></span>
-                    {errors.donationCount}
+                    {errors.lastDonationDate}
                   </p>
                 )}
               </div>
@@ -810,7 +816,7 @@ FormComponentRegister.propTypes = {
     dob: PropTypes.string,
     weight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     platelet: PropTypes.string,
-    donationCount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    latestDonatedDate: PropTypes.string, // Changed from donationCount
     district: PropTypes.string,
     taluk: PropTypes.string,
     mobile: PropTypes.string,

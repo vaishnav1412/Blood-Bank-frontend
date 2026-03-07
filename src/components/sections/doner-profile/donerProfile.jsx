@@ -480,13 +480,13 @@ const DonorProfile = () => {
     );
   }
 
-  const latestDonation = allDonations?.[0];
+  const latestDonation = user?.latestDonatedDate;
 
   let nextEligibleDate = null;
   let remainingDays = 0;
 
-  if (latestDonation?.donationDate) {
-    const lastDate = new Date(latestDonation.donationDate);
+  if (latestDonation) {
+    const lastDate = new Date(latestDonation);
 
     nextEligibleDate = new Date(lastDate);
     nextEligibleDate.setDate(lastDate.getDate() + 90);
@@ -499,8 +499,8 @@ const DonorProfile = () => {
 
   let progress = 0;
 
-  if (latestDonation?.donationDate) {
-    const lastDate = new Date(latestDonation.donationDate);
+  if (latestDonation) {
+    const lastDate = new Date(latestDonation);
     const today = new Date();
 
     const passedDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
@@ -676,7 +676,7 @@ const DonorProfile = () => {
                   {[
                     {
                       label: "Donations",
-                      value: user?.donationCount,
+                      value: user?.donationCount || 0,
                       icon: <FaHeartbeat />,
                       color: "from-pink-500 to-pink-600",
                     },
@@ -690,7 +690,7 @@ const DonorProfile = () => {
                       label: "Blood",
                       value: user?.bloodGroup,
                       icon: <FaTint />,
-                      color: "from-red-500 to-red-600",
+                      color: "from-emerald-500 to-emerald-600",
                     },
                   ].map((stat, index) => (
                     <div

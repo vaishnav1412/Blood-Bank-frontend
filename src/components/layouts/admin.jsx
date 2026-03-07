@@ -2,14 +2,14 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Sidebar from "../sidebar/sidebar";
 import PageLoader from "../common/PageLoader";
-import AdminProtectedRoute from "../../routes/AdminProtectedRoute";
 
-const Dashboard = lazy(() => import("../views/admin/dashboard"));
-const UserManagement = lazy(() => import("../views/admin/user-management"));
-const AdminHostBloodDrive = lazy(() => import("../views/admin/host-blood-drive"));
-const GalleryManagement = lazy(() => import("../views/admin/gallery-management"));
-const ContactManagement = lazy(() => import("../views/admin/contactus-management"));
 
+const Dashboard = lazy(() => import("../views/admin/dashboard/dashboard"));
+const UserManagement = lazy(() => import("../views/admin/user-management/user-management"));
+const AdminHostBloodDrive = lazy(() => import("../views/admin/host-blood-drive/host-blood-drive"));
+const GalleryManagement = lazy(() => import("../views/admin/gallery-management/gallery-management"));
+const ContactManagement = lazy(() => import("../views/admin/contactus-management/contactus-management"));
+const DonationManagement = lazy(() => import("../views/admin/donation-management/donation-management"));
 export default function Admin() {
  
   return (
@@ -24,6 +24,7 @@ export default function Admin() {
               <Route path="camp-management" element={<AdminHostBloodDrive />} />
               <Route path="gallery-management" element={<GalleryManagement />} />
               <Route path="contact-management" element={<ContactManagement />} />
+               <Route path="donation-management" element={<DonationManagement />} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Routes>
           </Suspense>

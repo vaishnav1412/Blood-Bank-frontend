@@ -13,6 +13,7 @@ import {
   FiSettings,
   FiHelpCircle,
   FiPieChart,
+  FiDroplet, // Added for Donation Management
 } from "react-icons/fi";
 import logo from "../../../public/HemoCell Logo black.png";
 import "./sidebar.scss";
@@ -78,6 +79,7 @@ export default function Sidebar() {
             <FiHome className="nav-icon" />
             <span>Dashboard</span>
           </Link>
+
           <Link
             to="/admin/user-management"
             className={`nav-item ${currentPath.includes("user-management") ? "active" : ""}`}
@@ -85,6 +87,16 @@ export default function Sidebar() {
             <FiUsers className="nav-icon" />
             <span>User Management</span>
           </Link>
+
+          {/* Donation Management - New Item */}
+          <Link
+            to="/admin/donation-management"
+            className={`nav-item ${currentPath.includes("donation-management") ? "active" : ""}`}
+          >
+            <FiDroplet className="nav-icon" />
+            <span>Donation Management</span>
+          </Link>
+
           <Link
             to="/admin/camp-management"
             className={`nav-item ${currentPath.includes("camp-management") ? "active" : ""}`}
@@ -92,6 +104,7 @@ export default function Sidebar() {
             <FiCalendar className="nav-icon" />
             <span>Camp Management</span>
           </Link>
+
           <Link
             to="/admin/gallery-management"
             className={`nav-item ${currentPath.includes("gallery-management") ? "active" : ""}`}
@@ -99,6 +112,7 @@ export default function Sidebar() {
             <FiImage className="nav-icon" />
             <span>Gallery Management</span>
           </Link>
+
           <Link
             to="/admin/contact-management"
             className={`nav-item ${currentPath.includes("contact-management") ? "active" : ""}`}
@@ -131,6 +145,7 @@ export default function Sidebar() {
             <span>Help</span>
           </Link>
         </div>
+        
         <button className="logout-btn" onClick={handleLogout}>
           <FiLogOut />
           <span>Logout</span>

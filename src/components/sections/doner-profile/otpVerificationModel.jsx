@@ -147,7 +147,7 @@ const OtpVerificationModal = ({
       setPasswordStrength({
         score: 33,
         label: "Weak",
-        color: "from-red-500 to-red-600",
+        color: "from-rose-500 to-rse-600",
       });
     } else if (score <= 4) {
       setPasswordStrength({
@@ -159,7 +159,7 @@ const OtpVerificationModal = ({
       setPasswordStrength({
         score: 100,
         label: "Strong",
-        color: "from-green-500 to-green-600",
+        color: "from-emerald-500 to-emerald-600",
       });
     }
   };
@@ -300,7 +300,7 @@ const OtpVerificationModal = ({
             <div className="space-y-6">
               {/* OTP Inputs */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
                   Enter 6-Digit OTP
                 </label>
                 <div className="flex justify-between gap-2">
@@ -314,8 +314,8 @@ const OtpVerificationModal = ({
                       onKeyDown={(e) => handleKeyDown(index, e)}
                       className={`w-12 h-14 text-center text-2xl font-bold border-2 rounded-xl focus:ring-0 outline-none transition-all ${
                         errors.otp
-                          ? "border-red-400 focus:border-red-500"
-                          : "border-gray-200 focus:border-pink-400"
+                          ? "border-rose-400 focus:border-rose-500"
+                          : "border-slate-200 focus:border-pink-400"
                       }`}
                       maxLength={1}
                       inputMode="numeric"
@@ -323,7 +323,7 @@ const OtpVerificationModal = ({
                   ))}
                 </div>
                 {errors.otp && (
-                  <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                  <p className="text-rose-500 text-xs mt-2 flex items-center gap-1">
                     <FaExclamationTriangle />
                     {errors.otp}
                   </p>
@@ -332,9 +332,9 @@ const OtpVerificationModal = ({
 
               {/* Timer & Resend */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-slate-600">
                   <FaClock
-                    className={timer > 0 ? "text-pink-600" : "text-red-500"}
+                    className={timer > 0 ? "text-pink-600" : "text-rose-500"}
                   />
                   <span>
                     {timer > 0 ? (
@@ -345,7 +345,7 @@ const OtpVerificationModal = ({
                         </span>
                       </>
                     ) : (
-                      <span className="text-red-500">Code expired</span>
+                      <span className="text-rose-500">Code expired</span>
                     )}
                   </span>
                 </div>
@@ -387,7 +387,7 @@ const OtpVerificationModal = ({
             <div className="space-y-5">
               {/* New Password */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   New Password
                 </label>
                 <div className="relative">
@@ -397,15 +397,15 @@ const OtpVerificationModal = ({
                     onChange={(e) => setNewPassword(e.target.value)}
                     className={`w-full p-3 pr-10 border-2 rounded-xl focus:ring-0 outline-none transition-all ${
                       errors.newPassword
-                        ? "border-red-400 focus:border-red-500"
-                        : "border-gray-200 focus:border-pink-400"
+                        ? "border-rose-400 focus:border-rose-500"
+                        : "border-slate-200 focus:border-pink-400"
                     }`}
                     placeholder="Enter new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
@@ -415,7 +415,7 @@ const OtpVerificationModal = ({
                 {newPassword && (
                   <div className="mt-2">
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-gray-600">Strength:</span>
+                      <span className="text-slate-600">Strength:</span>
                       <span
                         className={`font-bold bg-gradient-to-r ${passwordStrength.color} text-transparent bg-clip-text`}
                       >
@@ -434,7 +434,7 @@ const OtpVerificationModal = ({
 
               {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -444,15 +444,15 @@ const OtpVerificationModal = ({
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={`w-full p-3 pr-10 border-2 rounded-xl focus:ring-0 outline-none transition-all ${
                       errors.confirmPassword
-                        ? "border-red-400 focus:border-red-500"
-                        : "border-gray-200 focus:border-pink-400"
+                        ? "border-rose-400 focus:border-rose-500"
+                        : "border-slate-200 focus:border-pink-400"
                     }`}
                     placeholder="Confirm new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
@@ -461,7 +461,7 @@ const OtpVerificationModal = ({
 
               {/* Password Requirements */}
               <div className="bg-gradient-to-br from-pink-50 to-purple-50 p-4 rounded-xl border border-pink-200">
-                <h4 className="font-bold text-gray-800 text-sm mb-2 flex items-center gap-2">
+                <h4 className="font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
                   <FaShieldAlt className="text-pink-600" />
                   Password Requirements
                 </h4>
@@ -484,13 +484,13 @@ const OtpVerificationModal = ({
                       <li
                         key={i}
                         className={`flex items-center gap-2 ${
-                          met ? "text-green-600" : "text-gray-500"
+                          met ? "text-emerald-600" : "text-slate-500"
                         }`}
                       >
                         {met ? (
-                          <FaCheckCircle className="text-green-500 text-xs" />
+                          <FaCheckCircle className="text-emerald-500 text-xs" />
                         ) : (
-                          <span className="w-1 h-1 bg-gray-400 rounded-full" />
+                          <span className="w-1 h-1 bg-slate-400 rounded-full" />
                         )}
                         {req}
                       </li>
@@ -501,7 +501,7 @@ const OtpVerificationModal = ({
 
               {/* Error Messages */}
               {(errors.newPassword || errors.confirmPassword) && (
-                <div className="text-red-500 text-xs space-y-1">
+                <div className="text-rose-500 text-xs space-y-1">
                   {errors.newPassword && (
                     <p className="flex items-center gap-1">
                       <FaExclamationTriangle />

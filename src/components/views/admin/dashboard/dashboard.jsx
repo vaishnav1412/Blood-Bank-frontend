@@ -6,15 +6,12 @@ import {
   FiAward,
   FiTrendingUp,
   FiClock,
-  FiCheckCircle,
-  FiAlertCircle,
-  FiMapPin,
   FiUserPlus,
   FiActivity,
 } from "react-icons/fi";
 import { FaTint, FaHeartbeat, FaHandHoldingHeart } from "react-icons/fa";
 import "./dashboard.scss";
-import { fetchBloodGroupCount,fetchDashboardStats } from "../../../services/adminServices";
+import { fetchBloodGroupCount,fetchDashboardStats } from "../../../../services/adminServices";
 
 export default function Dashboard() {
   const [greeting, setGreeting] = useState("");
