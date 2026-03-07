@@ -166,3 +166,14 @@ export const verifyDonation = async (donationId) => {
 
   return response.data;
 };
+
+export const getBloodDriveApplications = async () => {
+  const response = await adminPublicAxios.get("/admin/blood-drive-applications");
+  return response.data;
+};
+
+
+export const updateBloodDriveApplication = async (id, data) => {
+  const response = await adminPublicAxios.put(`/admin/blood-drive-applications/${id}`, data);
+  return response.data;
+};

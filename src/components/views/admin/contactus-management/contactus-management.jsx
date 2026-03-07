@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   FiMail,
   FiPhone,
@@ -20,6 +20,10 @@ import {
   FiUserX,
   FiCornerUpRight,
   FiAlertCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+  FiChevronsRight,
 } from "react-icons/fi";
 import { FaReply } from "react-icons/fa";
 import Papa from "papaparse";
@@ -49,8 +53,7 @@ export default function ContactManagement() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
-
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Priority derivation from subject
   const derivePriorityFromSubject = (subject) => {
@@ -87,7 +90,6 @@ export default function ContactManagement() {
       const response = await getContactMessages();
 
       if (response.success) {
-        // Process messages to add derived priority if not present
         const processedData = response.data.map((msg) => ({
           ...msg,
           priority: msg.priority || derivePriorityFromSubject(msg.subject),
@@ -223,14 +225,12 @@ export default function ContactManagement() {
   // Filter logic
   const filteredMessages = useMemo(() => {
     return messages.filter((message) => {
-      // Category filter
       if (
         activeTab !== "all" &&
         getCategoryFromSubject(message.subject) !== activeTab
       )
         return false;
 
-      // Status filter
       if (statusFilter !== "all") {
         if (statusFilter === "unread" && message.status !== "unread")
           return false;
@@ -242,7 +242,6 @@ export default function ContactManagement() {
           return false;
       }
 
-      // Search query
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
@@ -255,14 +254,46 @@ export default function ContactManagement() {
       }
       return true;
     });
-  }, [messages, activeTab, statusFilter, searchQuery]); // dependencies
+  }, [messages, activeTab, statusFilter, searchQuery]);
 
-  // Pagination
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, statusFilter, searchQuery, itemsPerPage]);
+
+  // Pagination calculations
   const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
-  const paginatedMessages = filteredMessages.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredMessages.length);
+  const paginatedMessages = filteredMessages.slice(startIndex, endIndex);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = useCallback(() => {
+    const delta = window.innerWidth < 640 ? 1 : 2;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+
+    range.forEach((i) => {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    });
+
+    return rangeWithDots;
+  }, [currentPage, totalPages]);
 
   // Handlers
   const handleSelectMessage = (id) => {
@@ -282,7 +313,6 @@ export default function ContactManagement() {
   };
 
   const handleExport = () => {
-    // Prepare the data to be exported
     const dataToExport = filteredMessages.map((message) => ({
       "Sender Name": message.name,
       Email: message.email,
@@ -294,17 +324,12 @@ export default function ContactManagement() {
       "Date Submitted": new Date(message.createdAt).toLocaleString(),
     }));
 
-    // Convert the data to CSV
     const csv = Papa.unparse(dataToExport);
-
-    // Create a Blob with the CSV data
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-
-    // Create a link to download the file
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "contact_messages.csv"; // Set your desired filename
-    link.click(); // Trigger the download
+    link.download = "contact_messages.csv";
+    link.click();
   };
 
   const handleMarkAsRead = async (id) => {
@@ -350,13 +375,17 @@ export default function ContactManagement() {
       const response = await deleteContactMessages(selectedMessages);
 
       if (response.success) {
-        // Remove deleted messages from state
         setMessages((prev) =>
           prev.filter((msg) => !selectedMessages.includes(msg._id)),
         );
 
         setSelectedMessages([]);
         setShowDeleteModal(false);
+        
+        // Adjust current page if necessary
+        if (paginatedMessages.length === 0 && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        }
       } else {
         setError(response.message || "Failed to delete messages");
       }
@@ -385,7 +414,6 @@ export default function ContactManagement() {
       const response = await replyToContact(selectedMessage._id, replyText);
 
       if (response.success) {
-        // Update UI instantly
         setMessages((prev) =>
           prev.map((msg) =>
             msg._id === selectedMessage._id
@@ -405,13 +433,11 @@ export default function ContactManagement() {
           ),
         );
 
-        // Show success toast
         setSuccessMessage({
           message: "Reply sent successfully!",
           email: selectedMessage.email,
         });
 
-        // Auto-hide after 5 seconds
         setTimeout(() => setSuccessMessage(null), 5000);
 
         setShowReplyModal(false);
@@ -424,24 +450,36 @@ export default function ContactManagement() {
     }
   };
 
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
   const getTimeAgo = (timestamp) => {
     if (!timestamp) return "N/A";
     const now = new Date();
     const then = new Date(timestamp);
-    const diffMs = now - then; // Difference in milliseconds
-    const diffMinutes = Math.floor(diffMs / (1000 * 60)); // Convert to minutes
+    const diffMs = now - then;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
     if (diffMinutes < 60) {
-      return diffMinutes === 1 ? "1m ago" : `${diffMinutes}m ago`; // Show minutes if less than 60 minutes
+      return diffMinutes === 1 ? "1m ago" : `${diffMinutes}m ago`;
     }
-    const diffHours = Math.floor(diffMinutes / 60); // Convert to hours
+    const diffHours = Math.floor(diffMinutes / 60);
     if (diffHours < 24) {
-      return `${diffHours}h ago`; // Show hours if less than 24 hours
+      return `${diffHours}h ago`;
     }
-    const diffDays = Math.floor(diffHours / 24); // Convert to days
+    const diffDays = Math.floor(diffHours / 24);
     if (diffDays < 7) {
-      return `${diffDays}d ago`; // Show days if less than 7 days
+      return `${diffDays}d ago`;
     }
-    return then.toLocaleDateString(); // Show the full date if it's more than 7 days
+    return then.toLocaleDateString();
   };
 
   const getPriorityBadge = (priority) => {
@@ -473,7 +511,7 @@ export default function ContactManagement() {
     );
   };
 
-  // Modal Components
+  // Modal Components (keep your existing modal components)
   const MessageDetailModal = ({ message, onClose }) => {
     if (!message) return null;
 
@@ -515,7 +553,6 @@ export default function ContactManagement() {
               </div>
             </div>
 
-            {/* Message Metadata */}
             <div className="message-metadata">
               <span className="metadata-item">
                 <FiClock /> Submitted:{" "}
@@ -533,7 +570,6 @@ export default function ContactManagement() {
               <p>{message.message}</p>
             </div>
 
-            {/* Replies Section */}
             {message.replies && message.replies.length > 0 && (
               <div className="replies-section">
                 <h5>Replies ({message.replies.length})</h5>
@@ -578,6 +614,96 @@ export default function ContactManagement() {
     );
   };
 
+  const ReplyModal = ({
+    message,
+    replyText,
+    setReplyText,
+    selectedTemplate,
+    handleTemplateSelect,
+    handleSendReply,
+    isSubmitting,
+    quickResponses,
+    onClose,
+  }) => {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div
+          className="modal-content reply-modal"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="modal-drag-handle" />
+          <div className="modal-header">
+            <h3>Reply to {message?.name}</h3>
+            <button className="close-btn" onClick={onClose}>
+              <FiX />
+            </button>
+          </div>
+          <div className="modal-body">
+            <div className="quick-templates">
+              <label>Quick Templates</label>
+              <select
+                onChange={(e) => handleTemplateSelect(Number(e.target.value))}
+                value={selectedTemplate}
+              >
+                <option value="">Select a quick response...</option>
+                {quickResponses.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="original-message">
+              <div className="original-header">
+                <strong>Original Message:</strong>
+                <span className="original-subject">{message?.subject}</span>
+              </div>
+              <p className="original-preview">
+                {message?.message?.substring(0, 150)}...
+              </p>
+            </div>
+
+            <div className="reply-form">
+              <div className="form-group">
+                <label>Your Reply</label>
+                <textarea
+                  placeholder="Type your reply..."
+                  rows="6"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="reply-to-info">
+              <span>
+                <FiMail /> To: {message?.email}
+              </span>
+              {message?.phone && (
+                <span>
+                  <FiPhone /> {message.phone}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button className="btn-cancel" onClick={onClose}>
+              Cancel
+            </button>
+            <button
+              className="btn-send"
+              onClick={handleSendReply}
+              disabled={!replyText.trim() || isSubmitting}
+            >
+              <FiSend /> {isSubmitting ? "Sending..." : "Send Reply"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const DeleteModal = () => (
     <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
       <div
@@ -612,6 +738,87 @@ export default function ContactManagement() {
       </div>
     </div>
   );
+
+  // Pagination Component - Defined inside but will be used below
+  const Pagination = () => {
+    const pageNumbers = getPageNumbers();
+
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="pagination-container">
+        <div className="pagination-info">
+          <span>
+            Showing <strong>{startIndex + 1}</strong> to{" "}
+            <strong>{endIndex}</strong> of{" "}
+            <strong>{filteredMessages.length}</strong> results
+          </span>
+        </div>
+
+        <div className="pagination-controls">
+          <button
+            className="page-btn"
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            title="First page"
+          >
+            <FiChevronsLeft />
+          </button>
+          <button
+            className="page-btn"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            title="Previous page"
+          >
+            <FiChevronLeft />
+          </button>
+
+          {pageNumbers.map((page, index) => (
+            page === '...' ? (
+              <span key={`dots-${index}`} className="page-dots">...</span>
+            ) : (
+              <button
+                key={page}
+                className={`page-btn ${currentPage === page ? 'active' : ''}`}
+                onClick={() => handlePageChange(page)}
+              >
+                {page}
+              </button>
+            )
+          ))}
+
+          <button
+            className="page-btn"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            title="Next page"
+          >
+            <FiChevronRight />
+          </button>
+          <button
+            className="page-btn"
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            title="Last page"
+          >
+            <FiChevronsRight />
+          </button>
+        </div>
+
+        <div className="items-per-page">
+          <span>Show:</span>
+          <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+          <span>per page</span>
+        </div>
+      </div>
+    );
+  };
 
   if (loading && messages.length === 0) {
     return (
@@ -986,30 +1193,8 @@ export default function ContactManagement() {
         )}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            className="page-nav"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            ←
-          </button>
-          <span className="page-info">
-            {currentPage} of {totalPages}
-          </span>
-          <button
-            className="page-nav"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-          >
-            →
-          </button>
-        </div>
-      )}
+      {/* Pagination - Now properly placed and visible */}
+      {filteredMessages.length > 0 && <Pagination />}
 
       {/* Modals */}
       {showMessageModal && (
@@ -1039,97 +1224,3 @@ export default function ContactManagement() {
     </div>
   );
 }
-
-const ReplyModal = ({
-  message,
-  replyText,
-  setReplyText,
-  selectedTemplate,
-  handleTemplateSelect,
-  handleSendReply,
-  isSubmitting,
-  quickResponses,
-  onClose,
-}) => {
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-content reply-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-drag-handle" />
-        <div className="modal-header">
-          <h3>Reply to {message?.name}</h3>
-          <button className="close-btn" onClick={onClose}>
-            <FiX />
-          </button>
-        </div>
-        <div className="modal-body">
-          {/* Quick Templates */}
-          <div className="quick-templates">
-            <label>Quick Templates</label>
-            <select
-              onChange={(e) => handleTemplateSelect(Number(e.target.value))}
-              value={selectedTemplate}
-            >
-              <option value="">Select a quick response...</option>
-              {quickResponses.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Original Message Preview */}
-          <div className="original-message">
-            <div className="original-header">
-              <strong>Original Message:</strong>
-              <span className="original-subject">{message?.subject}</span>
-            </div>
-            <p className="original-preview">
-              {message?.message?.substring(0, 150)}...
-            </p>
-          </div>
-
-          {/* Reply Input */}
-          <div className="reply-form">
-            <div className="form-group">
-              <label>Your Reply</label>
-              <textarea
-                placeholder="Type your reply..."
-                rows="6"
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Reply Info */}
-          <div className="reply-to-info">
-            <span>
-              <FiMail /> To: {message?.email}
-            </span>
-            {message?.phone && (
-              <span>
-                <FiPhone /> {message.phone}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button className="btn-cancel" onClick={onClose}>
-            Cancel
-          </button>
-          <button
-            className="btn-send"
-            onClick={handleSendReply}
-            disabled={!replyText.trim() || isSubmitting}
-          >
-            <FiSend /> {isSubmitting ? "Sending..." : "Send Reply"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};

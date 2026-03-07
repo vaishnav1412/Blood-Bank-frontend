@@ -929,3 +929,141 @@
     }
   }
 }
+
+// Add/modify these styles in your existing SCSS
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    border-radius: 2rem;
+    color: white;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+    position: relative;
+    overflow: hidden;
+
+    svg {
+      font-size: 1rem;
+      transition: transform 0.5s ease;
+    }
+
+    // Shimmer effect
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      transition: left 0.7s ease;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+      
+      &::before {
+        left: 100%;
+      }
+
+      svg {
+        transform: rotate(180deg);
+      }
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+    }
+
+    // Spinning animation when refreshing
+    &.refreshing {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      pointer-events: none;
+      opacity: 0.9;
+
+      svg {
+        animation: spin 1s linear infinite;
+      }
+
+      &::before {
+        animation: shimmer 1.5s infinite;
+      }
+    }
+  }
+
+  .export-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 2rem;
+    color: #475569;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+    svg {
+      color: #ef4444;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover {
+      background: #f8fafc;
+      border-color: #ef4444;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 12px -3px rgba(239, 68, 68, 0.2);
+
+      svg {
+        transform: scale(1.1);
+      }
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Add these animation keyframes
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+// Add this to your main component for the refreshing state

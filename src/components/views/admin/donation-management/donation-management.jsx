@@ -26,10 +26,201 @@ import {
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 import "./donation-management.scss";
-import { getAllDonations ,rejectDonation,verifyDonation} from "../../../../services/adminServices";
+import { getAllDonations, rejectDonation, verifyDonation } from "../../../../services/adminServices";
+
+// --- MOVED MODALS OUTSIDE TO PREVENT RE-RENDER / FOCUS ISSUES ---
+
+const ImagePreviewModal = ({ show, onClose, image }) => {
+  if (!show) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="image-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="close-btn" onClick={onClose}>
+          <FiX />
+        </button>
+        <img src={image} alt="Donation Proof" />
+      </div>
+    </div>
+  );
+};
+
+const VerifyModal = ({ show, onClose, onConfirm }) => {
+  if (!show) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+        <FiCheckCircle className="modal-icon success" />
+        <h2>Verify Donation</h2>
+        <p>Are you sure you want to verify this donation?</p>
+        <p className="warning-text">
+          This will update the donor's donation count and certificate status.
+        </p>
+        <div className="modal-actions">
+          <button className="cancel-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="confirm-btn success" onClick={onConfirm}>
+            Yes, Verify
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RejectModal = ({ show, onClose, reason, setReason, onConfirm }) => {
+  if (!show) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="reject-modal" onClick={(e) => e.stopPropagation()}>
+        <FiAlertCircle className="modal-icon warning" />
+        <h2>Reject Donation</h2>
+        <p>Please provide a reason for rejection:</p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="e.g., Image unclear, Invalid document, Duplicate entry..."
+          rows={4}
+          autoFocus
+        />
+        <div className="modal-actions">
+          <button
+            className="cancel-btn"
+            onClick={() => {
+              onClose();
+              setReason("");
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            className="confirm-btn warning"
+            onClick={onConfirm}
+            disabled={!reason.trim()}
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DetailsModal = ({ show, onClose, donation, onVerify, onReject, onViewImage }) => {
+  if (!show || !donation) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="details-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Donation Details</h2>
+          <button className="close-btn" onClick={onClose}>
+            <FiX />
+          </button>
+        </div>
+
+        <div className="modal-content">
+          <div className="donor-info-section">
+            <h3>
+              <FiUser /> Donor Information
+            </h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <label>Name</label>
+                <p>{donation.donorId.name}</p>
+              </div>
+              <div className="info-item">
+                <label>Blood Group</label>
+                <p className="blood-group">{donation.bloodGroup}</p>
+              </div>
+              <div className="info-item">
+                <label>Mobile</label>
+                <p>{donation.donorId.mobile}</p>
+              </div>
+              <div className="info-item">
+                <label>Email</label>
+                <p>{donation.donorId.email}</p>
+              </div>
+              <div className="info-item">
+                <label>District</label>
+                <p>{donation.donorId.district}</p>
+              </div>
+              <div className="info-item">
+                <label>Taluk</label>
+                <p>{donation.donorId.taluk}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="donation-info-section">
+            <h3>
+              <FiDroplet /> Donation Information
+            </h3>
+            <div className="info-grid">
+              <div className="info-item">
+                <label>Donation Date</label>
+                <p>{format(new Date(donation.donationDate), "PPP")}</p>
+              </div>
+              <div className="info-item">
+                <label>Donation Center</label>
+                <p>{donation.donationCenter}</p>
+              </div>
+              <div className="info-item">
+                <label>Units Donated</label>
+                <p>{donation.units}</p>
+              </div>
+              <div className="info-item">
+                <label>Submitted On</label>
+                <p>{format(new Date(donation.createdAt), "PPP")}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="proof-section">
+            <h3>Donation Proof</h3>
+            <div className="proof-image" onClick={() => onViewImage(donation.proofImage)}>
+              <img src={donation.proofImage} alt="Donation Proof" />
+              <div className="image-overlay">
+                <FiEye /> Click to view
+              </div>
+            </div>
+          </div>
+
+          {donation.adminRemarks && (
+            <div className="remarks-section">
+              <h3>
+                <FiMessageSquare /> Admin Remarks
+              </h3>
+              <p>{donation.adminRemarks}</p>
+            </div>
+          )}
+
+          <div className="action-buttons">
+            {donation.status === "pending" && (
+              <>
+                <button className="verify-btn" onClick={onVerify}>
+                  <FiCheckCircle /> Verify
+                </button>
+                <button className="reject-btn" onClick={onReject}>
+                  <FiXCircle /> Reject
+                </button>
+              </>
+            )}
+            <button className="close-btn" onClick={onClose}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// --- MAIN COMPONENT ---
+
 const DonationManagement = () => {
   const [donations, setDonations] = useState([]);
-
   const [filteredDonations, setFilteredDonations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDonation, setSelectedDonation] = useState(null);
@@ -56,28 +247,24 @@ const DonationManagement = () => {
 
   const itemsPerPage = 10;
 
-  // Mock data - Replace with API calls
   useEffect(() => {
     fetchDonations();
   }, []);
 
   const fetchDonations = async () => {
-  setLoading(true);
-
-  try {
-    const data = await getAllDonations();
-
-    setDonations(data);
-    setFilteredDonations(data);
-    calculateStats(data);
-
-  } catch (error) {
-    console.error("Error fetching donations:", error);
-    toast.error("Failed to fetch donations");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const data = await getAllDonations();
+      setDonations(data);
+      setFilteredDonations(data);
+      calculateStats(data);
+    } catch (error) {
+      console.error("Error fetching donations:", error);
+      toast.error("Failed to fetch donations");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const calculateStats = (data) => {
     const stats = {
@@ -89,11 +276,9 @@ const DonationManagement = () => {
     setStats(stats);
   };
 
-  // Filter and search logic
   useEffect(() => {
     let filtered = [...donations];
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (d) =>
@@ -103,17 +288,14 @@ const DonationManagement = () => {
       );
     }
 
-    // Status filter
     if (filters.status !== "all") {
       filtered = filtered.filter((d) => d.status === filters.status);
     }
 
-    // Blood group filter
     if (filters.bloodGroup !== "all") {
       filtered = filtered.filter((d) => d.bloodGroup === filters.bloodGroup);
     }
 
-    // Date range filter
     if (filters.dateRange !== "all") {
       const now = new Date();
       const today = new Date(now.setHours(0, 0, 0, 0));
@@ -139,291 +321,140 @@ const DonationManagement = () => {
     setCurrentPage(1);
   }, [searchTerm, filters, donations]);
 
-
   const handleVerify = async () => {
-  if (!selectedDonation) {
-    toast.error("No donation selected");
-    return;
-  }
+    if (!selectedDonation) {
+      toast.error("No donation selected");
+      return;
+    }
 
-  try {
-    await verifyDonation(selectedDonation._id);
+    try {
+      await verifyDonation(selectedDonation._id);
 
-    const updatedDonations = donations.map((d) =>
-      d._id === selectedDonation._id
-        ? { ...d, status: "verified", adminRemarks: "Verified by admin" }
-        : d
-    );
+      const updatedDonations = donations.map((d) =>
+        d._id === selectedDonation._id
+          ? { ...d, status: "verified", adminRemarks: "Verified by admin" }
+          : d
+      );
 
-    setDonations(updatedDonations);
-    setFilteredDonations(updatedDonations);
-    calculateStats(updatedDonations);
+      setDonations(updatedDonations);
+      setFilteredDonations(updatedDonations);
+      calculateStats(updatedDonations);
 
-    toast.success("Donation verified successfully!");
+      toast.success("Donation verified successfully!");
 
-    setShowVerifyModal(false);
-    setSelectedDonation(null);
-
-  } catch (error) {
-    console.error("Error verifying donation:", error);
-    toast.error("Failed to verify donation");
-  }
-};
-
- const handleReject = async () => {
-  if (!rejectReason.trim()) {
-    toast.error("Please provide a reason for rejection");
-    return;
-  }
-
-  try {
-    await rejectDonation(selectedDonation._id, rejectReason);
-
-    const updatedDonations = donations.map((d) =>
-      d._id === selectedDonation._id
-        ? { ...d, status: "rejected", adminRemarks: rejectReason }
-        : d
-    );
-
-    setDonations(updatedDonations);
-    setFilteredDonations(updatedDonations);
-    calculateStats(updatedDonations);
-
-    toast.success("Donation rejected successfully!");
-
-    setShowRejectModal(false);
-    setRejectReason("");
-    setSelectedDonation(null);
-
-  } catch (error) {
-    console.error("Error rejecting donation:", error);
-    toast.error("Failed to reject donation");
-  }
-};
-
-
-
-  const exportData = () => {
-    // Implement export functionality
+      setShowVerifyModal(false);
+      setSelectedDonation(null);
+    } catch (error) {
+      console.error("Error verifying donation:", error);
+      toast.error("Failed to verify donation");
+    }
   };
 
-  // Pagination
+  const handleReject = async () => {
+    if (!rejectReason.trim()) {
+      toast.error("Please provide a reason for rejection");
+      return;
+    }
+
+    try {
+      await rejectDonation(selectedDonation._id, rejectReason);
+
+      const updatedDonations = donations.map((d) =>
+        d._id === selectedDonation._id
+          ? { ...d, status: "rejected", adminRemarks: rejectReason }
+          : d
+      );
+
+      setDonations(updatedDonations);
+      setFilteredDonations(updatedDonations);
+      calculateStats(updatedDonations);
+
+      toast.success("Donation rejected successfully!");
+
+      setShowRejectModal(false);
+      setRejectReason("");
+      setSelectedDonation(null);
+    } catch (error) {
+      console.error("Error rejecting donation:", error);
+      toast.error("Failed to reject donation");
+    }
+  };
+
+  const exportData = () => {
+    if (filteredDonations.length === 0) {
+      toast.error("No data available to export");
+      return;
+    }
+
+    const headers = [
+      "Donor Name",
+      "Email",
+      "Mobile",
+      "Blood Group",
+      "Donation Date",
+      "Donation Center",
+      "Units",
+      "Status",
+      "District",
+      "Taluk",
+      "Submitted On",
+    ];
+
+    const escapeCsvCell = (cell) => {
+      if (cell === null || cell === undefined) return "";
+      const str = String(cell);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const csvRows = filteredDonations.map((d) => [
+      escapeCsvCell(d.donorId?.name),
+      escapeCsvCell(d.donorId?.email),
+      escapeCsvCell(d.donorId?.mobile),
+      escapeCsvCell(d.bloodGroup),
+      escapeCsvCell(format(new Date(d.donationDate), "yyyy-MM-dd")),
+      escapeCsvCell(d.donationCenter),
+      escapeCsvCell(d.units),
+      escapeCsvCell(d.status),
+      escapeCsvCell(d.donorId?.district),
+      escapeCsvCell(d.donorId?.taluk),
+      escapeCsvCell(format(new Date(d.createdAt), "yyyy-MM-dd")),
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...csvRows.map((row) => row.join(",")),
+    ].join("\r\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `donations_export_${format(new Date(), "yyyy-MM-dd")}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("Export successful!");
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredDonations.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredDonations.length / itemsPerPage);
 
-  // Image Preview Modal
-  const ImagePreviewModal = () => (
-    <div
-      className="modal-overlay"
-      onClick={() => setShowImageModal(false)}
-    >
-      <div className="image-modal" onClick={(e) => e.stopPropagation()}>
-        <button
-          className="close-btn"
-          onClick={() => setShowImageModal(false)}
-        >
-          <FiX />
-        </button>
-        <img src={selectedImage} alt="Donation Proof" />
-      </div>
-    </div>
-  );
-
-  // Details Modal
-  const DetailsModal = () => (
-    <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
-      <div className="details-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Donation Details</h2>
-          <button
-            className="close-btn"
-            onClick={() => setShowDetailsModal(false)}
-          >
-            <FiX />
-          </button>
-        </div>
-
-        {selectedDonation && (
-          <div className="modal-content">
-            <div className="donor-info-section">
-              <h3>
-                <FiUser /> Donor Information
-              </h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <label>Name</label>
-                  <p>{selectedDonation.donorId.name}</p>
-                </div>
-                <div className="info-item">
-                  <label>Blood Group</label>
-                  <p className="blood-group">{selectedDonation.bloodGroup}</p>
-                </div>
-                <div className="info-item">
-                  <label>Mobile</label>
-                  <p>{selectedDonation.donorId.mobile}</p>
-                </div>
-                <div className="info-item">
-                  <label>Email</label>
-                  <p>{selectedDonation.donorId.email}</p>
-                </div>
-                <div className="info-item">
-                  <label>District</label>
-                  <p>{selectedDonation.donorId.district}</p>
-                </div>
-                <div className="info-item">
-                  <label>Taluk</label>
-                  <p>{selectedDonation.donorId.taluk}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="donation-info-section">
-              <h3>
-                <FiDroplet /> Donation Information
-              </h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <label>Donation Date</label>
-                  <p>{format(new Date(selectedDonation.donationDate), "PPP")}</p>
-                </div>
-                <div className="info-item">
-                  <label>Donation Center</label>
-                  <p>{selectedDonation.donationCenter}</p>
-                </div>
-                <div className="info-item">
-                  <label>Units Donated</label>
-                  <p>{selectedDonation.units}</p>
-                </div>
-                <div className="info-item">
-                  <label>Submitted On</label>
-                  <p>{format(new Date(selectedDonation.createdAt), "PPP")}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="proof-section">
-              <h3>Donation Proof</h3>
-              <div
-                className="proof-image"
-                onClick={() => {
-                  setSelectedImage(selectedDonation.proofImage);
-                  setShowImageModal(true);
-                }}
-              >
-                <img src={selectedDonation.proofImage} alt="Donation Proof" />
-                <div className="image-overlay">
-                  <FiEye /> Click to view
-                </div>
-              </div>
-            </div>
-
-            {selectedDonation.adminRemarks && (
-              <div className="remarks-section">
-                <h3>
-                  <FiMessageSquare /> Admin Remarks
-                </h3>
-                <p>{selectedDonation.adminRemarks}</p>
-              </div>
-            )}
-
-            <div className="action-buttons">
-              {selectedDonation.status === "pending" && (
-                <>
-                  <button
-                    className="verify-btn"
-                    onClick={() => {
-                      setShowDetailsModal(false);
-                      setShowVerifyModal(true);
-                    }}
-                  >
-                    <FiCheckCircle /> Verify
-                  </button>
-                  <button
-  className="reject-btn"
-  onClick={() => {
-   
-    setShowDetailsModal(false);
-    setShowRejectModal(true);
-  }}
->
-  <FiXCircle /> Reject
-</button>
-                </>
-              )}
-              <button
-                className="close-btn"
-                onClick={() => setShowDetailsModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  // Verify Modal
-  const VerifyModal = () => (
-    <div className="modal-overlay" onClick={() => setShowVerifyModal(false)}>
-      <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-        <FiCheckCircle className="modal-icon success" />
-        <h2>Verify Donation</h2>
-        <p>Are you sure you want to verify this donation?</p>
-        <p className="warning-text">
-          This will update the donor's donation count and certificate status.
-        </p>
-        <div className="modal-actions">
-          <button
-            className="cancel-btn"
-            onClick={() => setShowVerifyModal(false)}
-          >
-            Cancel
-          </button>
-          <button className="confirm-btn success" onClick={handleVerify}>
-            Yes, Verify
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Reject Modal
-  const RejectModal = () => (
-    <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
-      <div className="reject-modal" onClick={(e) => e.stopPropagation()}>
-        <FiAlertCircle className="modal-icon warning" />
-        <h2>Reject Donation</h2>
-        <p>Please provide a reason for rejection:</p>
-        <textarea
-          value={rejectReason}
-          onChange={(e) => setRejectReason(e.target.value)}
-          placeholder="e.g., Image unclear, Invalid document, Duplicate entry..."
-          rows={4}
-        />
-        <div className="modal-actions">
-          <button
-            className="cancel-btn"
-            onClick={() => {
-              setShowRejectModal(false);
-              setRejectReason("");
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            className="confirm-btn warning"
-            onClick={handleReject}
-            disabled={!rejectReason.trim()}
-          >
-            Reject
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  // Helper to open image modal
+  const handleViewImage = (image) => {
+    setSelectedImage(image);
+    setShowImageModal(true);
+  };
 
   return (
     <div className="donation-management">
@@ -714,11 +745,41 @@ const DonationManagement = () => {
         </div>
       )}
 
-      {/* Modals */}
-      {showDetailsModal && <DetailsModal />}
-      {showVerifyModal && <VerifyModal />}
-      {showRejectModal && <RejectModal />}
-      {showImageModal && <ImagePreviewModal />}
+      {/* Modals - Using the External Components */}
+      <DetailsModal
+        show={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        donation={selectedDonation}
+        onVerify={() => {
+          setShowDetailsModal(false);
+          setShowVerifyModal(true);
+        }}
+        onReject={() => {
+          setShowDetailsModal(false);
+          setShowRejectModal(true);
+        }}
+        onViewImage={handleViewImage}
+      />
+      
+      <VerifyModal
+        show={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        onConfirm={handleVerify}
+      />
+
+      <RejectModal
+        show={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        reason={rejectReason}
+        setReason={setRejectReason}
+        onConfirm={handleReject}
+      />
+
+      <ImagePreviewModal
+        show={showImageModal}
+        onClose={() => setShowImageModal(false)}
+        image={selectedImage}
+      />
     </div>
   );
 };
