@@ -188,3 +188,10 @@ export const searchDonors = async (filters = {}) => {
 };
 
 
+
+export const getGalleryItems = async () => {
+  const res = await publicAxios.get("/api/v1/donor/gallery");
+  return res.data;
+};
+
+

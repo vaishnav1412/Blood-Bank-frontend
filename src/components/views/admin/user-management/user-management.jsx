@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   FiUsers,
   FiSearch,
@@ -11,7 +11,6 @@ import {
   FiUserX,
   FiEye,
   FiDownload,
-  FiAward,
   FiPhone,
   FiCalendar,
   FiMapPin,
@@ -21,12 +20,13 @@ import {
   FiPlus,
   FiFileText,
   FiRefreshCw,
+  FiMail,
+  FiDroplet,
 } from "react-icons/fi";
 import { FaTint } from "react-icons/fa";
 import "./user-management.scss";
 
-import { fetchAllUsers ,blockUser,unblockUser} from "../../../../services/adminServices";
-import { useEffect } from "react";
+import { fetchAllUsers, blockUser, unblockUser } from "../../../../services/adminServices";
 import AddDonorModal from "../../../sections/add-doner-modal/add-doner-modal";
 
 // Loading Skeleton Component
@@ -72,10 +72,360 @@ const Toast = ({ message, type, onClose }) => {
 
   return (
     <div className={`toast-notification ${type}`}>
-      {type === 'success' && <FiCheckCircle />}
-      {type === 'error' && <FiXCircle />}
-      {type === 'info' && <FiClock />}
+      {type === "success" && <FiCheckCircle />}
+      {type === "error" && <FiXCircle />}
+      {type === "info" && <FiClock />}
       <span>{message}</span>
+    </div>
+  );
+};
+
+// View User Modal Component
+const ViewUserModal = ({ user, onClose }) => {
+  if (!user) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content view-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>
+            <FiEye className="modal-icon" />
+            User Details
+          </h3>
+          <button className="close-btn" onClick={onClose}>
+            <FiXCircle />
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <div className="view-profile-header">
+            <img src={user.avatar} alt={user.name} className="view-avatar" />
+            <div className="view-name-section">
+              <h2>{user.name}</h2>
+              <span className={`status-badge large ${user.status}`}>
+                {user.status === "active" ? <FiUserCheck /> : <FiUserX />}
+                {user.status}
+              </span>
+            </div>
+          </div>
+
+          <div className="view-section">
+            <h4>Contact Information</h4>
+            <div className="view-grid">
+              <div className="view-item">
+                <FiMail className="view-icon" />
+                <div>
+                  <label>Email</label>
+                  <span>{user.email}</span>
+                </div>
+              </div>
+              <div className="view-item">
+                <FiPhone className="view-icon" />
+                <div>
+                  <label>Phone</label>
+                  <span>{user.phone}</span>
+                </div>
+              </div>
+              <div className="view-item full-width">
+                <FiMapPin className="view-icon" />
+                <div>
+                  <label>Location</label>
+                  <span>{user.location}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="view-section">
+            <h4>Donation Details</h4>
+            <div className="view-grid">
+              <div className="view-item">
+                <FaTint className="view-icon blood" />
+                <div>
+                  <label>Blood Group</label>
+                  <span className="blood-group-text">{user.bloodGroup}</span>
+                </div>
+              </div>
+              <div className="view-item">
+                <FiDroplet className="view-icon" />
+                <div>
+                  <label>Total Donations</label>
+                  <span>{user.totalDonations}</span>
+                </div>
+              </div>
+              <div className="view-item">
+                <FiCalendar className="view-icon" />
+                <div>
+                  <label>Last Donation</label>
+                  <span>{user.lastDonation || "N/A"}</span>
+                </div>
+              </div>
+              <div className="view-item">
+                <FiCalendar className="view-icon" />
+                <div>
+                  <label>Registered On</label>
+                  <span>{user.registeredDate}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="view-section">
+            <h4>Status & Verification</h4>
+            <div className="view-status-row">
+              <div className="view-status-item">
+                <label>Verification</label>
+                {user.verificationStatus === "verified" ? (
+                  <span className="status-badge verified">
+                    <FiCheckCircle /> Verified
+                  </span>
+                ) : user.verificationStatus === "pending" ? (
+                  <span className="status-badge pending">
+                    <FiClock /> Pending
+                  </span>
+                ) : (
+                  <span className="status-badge rejected">
+                    <FiXCircle /> Rejected
+                  </span>
+                )}
+              </div>
+              
+              {user.isBlocked && (
+                <div className="view-status-item">
+                  <label>Account Status</label>
+                  <span className="status-badge blocked">
+                    <FiUserX /> Blocked
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="close-action-btn" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Filter Modal Component
+const FilterModal = ({ onClose, filters, setFilters, setCurrentPage }) => {
+  const [localFilters, setLocalFilters] = useState(filters);
+
+  const handleApply = () => {
+    setFilters(localFilters);
+    setCurrentPage(1);
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content filter-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>
+            <FiFilter className="modal-icon" />
+            Filter Users
+          </h3>
+          <button className="close-btn" onClick={onClose}>
+            <FiXCircle />
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <div className="filter-group">
+            <label>Blood Group</label>
+            <select
+              value={localFilters.bloodGroup}
+              onChange={(e) =>
+                setLocalFilters({ ...localFilters, bloodGroup: e.target.value })
+              }
+            >
+              <option value="">All Blood Groups</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Location</label>
+            <input
+              type="text"
+              placeholder="Enter district or taluk"
+              value={localFilters.location}
+              onChange={(e) =>
+                setLocalFilters({ ...localFilters, location: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Verification Status</label>
+            <select
+              value={localFilters.verificationStatus}
+              onChange={(e) =>
+                setLocalFilters({ ...localFilters, verificationStatus: e.target.value })
+              }
+            >
+              <option value="">All</option>
+              <option value="verified">Verified</option>
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Date Range</label>
+            <select
+              value={localFilters.dateRange}
+              onChange={(e) =>
+                setLocalFilters({ ...localFilters, dateRange: e.target.value })
+              }
+            >
+              <option value="">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button
+            className="clear-btn"
+            onClick={() =>
+              setLocalFilters({
+                bloodGroup: "",
+                location: "",
+                verificationStatus: "",
+                dateRange: "",
+              })
+            }
+          >
+            Clear All
+          </button>
+          <button className="apply-btn" onClick={handleApply}>
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Verification Modal
+const VerificationModal = ({ user, onClose, onVerify, onReject }) => {
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  if (!user) return null;
+
+  const handleVerify = async () => {
+    setIsVerifying(true);
+    await onVerify(user.id);
+    setIsVerifying(false);
+  };
+
+  const handleReject = async () => {
+    setIsVerifying(true);
+    await onReject(user.id);
+    setIsVerifying(false);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content verification-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>
+            <FiShield className="modal-icon" />
+            Verify Donation Proof
+          </h3>
+          <button className="close-btn" onClick={onClose} disabled={isVerifying}>
+            <FiXCircle />
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <div className="user-info-summary">
+            <img src={user.avatar} alt={user.name} className="user-avatar" />
+            <div>
+              <h4>{user.name}</h4>
+              <p className="user-email">{user.email}</p>
+              <span className="blood-badge">{user.bloodGroup}</span>
+            </div>
+          </div>
+
+          <div className="proof-section">
+            <h5>Donation Proof Details</h5>
+            <div className="proof-details">
+              <div className="proof-item">
+                <FiCalendar className="proof-icon" />
+                <span>Date: {user.donationProof?.date}</span>
+              </div>
+              <div className="proof-item">
+                <FiMapPin className="proof-icon" />
+                <span>Center: {user.donationProof?.center}</span>
+              </div>
+              <div className="proof-item">
+                <FiFileText className="proof-icon" />
+                <span>Document: {user.donationProof?.document}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="proof-image-preview">
+            <img
+              src="https://via.placeholder.com/400x300"
+              alt="Proof Document"
+              className="proof-image"
+            />
+            <div className="image-actions">
+              <button className="image-action-btn" disabled={isVerifying}>
+                <FiEye /> View Full
+              </button>
+              <button className="image-action-btn" disabled={isVerifying}>
+                <FiDownload /> Download
+              </button>
+            </div>
+          </div>
+
+          <div className="verification-actions">
+            <button
+              className="verify-btn"
+              onClick={handleVerify}
+              disabled={isVerifying}
+            >
+              {isVerifying ? (
+                <FiRefreshCw className="spinning" />
+              ) : (
+                <FiCheckCircle />
+              )}
+              {isVerifying ? "Verifying..." : "Verify & Mark as Donated"}
+            </button>
+            <button
+              className="reject-btn"
+              onClick={handleReject}
+              disabled={isVerifying}
+            >
+              {isVerifying ? (
+                <FiRefreshCw className="spinning" />
+              ) : (
+                <FiXCircle />
+              )}
+              {isVerifying ? "Rejecting..." : "Reject"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -85,7 +435,7 @@ export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [users, setUsers] = useState([]);
@@ -95,6 +445,10 @@ export default function UserManagement() {
   const [itemsPerPage] = useState(10);
   const [toast, setToast] = useState(null);
   const [showAddDonorModal, setShowAddDonorModal] = useState(false);
+  
+  // State for Global Stats (to fix the pagination stats bug)
+  const [totalUserCount, setTotalUserCount] = useState(0);
+
   // Filter states
   const [filters, setFilters] = useState({
     bloodGroup: "",
@@ -103,511 +457,185 @@ export default function UserManagement() {
     dateRange: "",
   });
 
-  // Memoized stats for better performance
-  const stats = useMemo(() => ({
-    totalUsers: users.length,
-    activeUsers: users.filter((u) => u.status === "active").length,
-    pendingVerification: users.filter((u) => u.verificationStatus === "pending").length,
-    blockedUsers: users.filter((u) => u.status === "blocked").length,
-    totalDonations: users.reduce((acc, u) => acc + u.totalDonations, 0),
-  }), [users]);
+  // Memoized stats using the global totalUserCount
+  const stats = useMemo(
+    () => ({
+      totalUsers: totalUserCount, // Uses the correct global count
+      activeUsers: users.filter((u) => u.status === "active").length, // Represents current page
+      pendingVerification: users.filter((u) => u.verificationStatus === "pending").length, // Represents current page
+      blockedUsers: users.filter((u) => u.status === "blocked").length, // Represents current page
+      totalDonations: users.reduce((acc, u) => acc + u.totalDonations, 0),
+    }),
+    [users, totalUserCount]
+  );
 
+  const handleDonorAdded = () => {
+    showToast("Donor added successfully", "success");
+    loadUsers(searchQuery, activeTab, currentPage);
+  };
 
-const handleDonorAdded = () => {
-  showToast('Donor added successfully', 'success');
-  // Refresh the user list
-  loadUsers(searchQuery, activeTab, currentPage);
-};
-
-
-
-
-
-  // Show toast message
-  const showToast = (message, type = 'info') => {
+  const showToast = (message, type = "info") => {
     setToast({ message, type });
   };
 
-  // Handle block/unblock with optimistic updates
-  const handleBlockUser = async (userId) => {
-  // Save previous state for rollback
-  const previousUsers = [...users];
+  const handleVerifyDonation = (userId) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId
+          ? {
+              ...user,
+              verificationStatus: "verified",
+              verified: true,
+              status: "active",
+              totalDonations: user.totalDonations + 1,
+              lastDonation: new Date().toISOString().split("T")[0],
+            }
+          : user
+      )
+    );
+    setShowVerifyModal(false);
+    showToast("Donation verified successfully", "success");
+  };
 
-  // 🔥 Optimistic UI Update
-  setUsers((prevUsers) =>
-    prevUsers.map((user) =>
-      user.id === userId
-        ? {
-            ...user,
-            status: "blocked",
-            isBlocked: true,
-            blockReason: "Admin action",
-          }
-        : user
-    )
-  );
-
-  try {
-    await blockUser(userId, "Admin action");
-
-    showToast("User blocked successfully", "success");
-
-  } catch (error) {
-    console.error("Block error:", error);
-
-    // 🔄 Rollback if failed
-    setUsers(previousUsers);
-
-    showToast("Failed to block user", "error");
-  }
-};
-
-  const handleUnblockUser = async (userId) => {
-  const previousUsers = [...users];
-
-  // Optimistic update
-  setUsers((prevUsers) =>
-    prevUsers.map((user) =>
-      user.id === userId
-        ? {
-            ...user,
-            status: "active",
-            isBlocked: false,
-            blockReason: null,
-          }
-        : user
-    )
-  );
-
-  try {
-    await unblockUser(userId);
-
-    showToast("User unblocked successfully", "success");
-
-  } catch (error) {
-    console.error("Unblock error:", error);
-
-    setUsers(previousUsers);
-
-    showToast("Failed to unblock user", "error");
-  }
-};
   const handleRejectDonation = (userId) => {
-    setUsers(prevUsers =>
+    setUsers((prevUsers) =>
       prevUsers.map((user) =>
         user.id === userId
           ? {
               ...user,
               verificationStatus: "rejected",
             }
-          : user,
-      ),
+          : user
+      )
     );
     setShowVerifyModal(false);
-    showToast('Donation proof rejected', 'info');
+    showToast("Donation proof rejected", "info");
   };
 
-  // Handle certificate generation
-  const handleGenerateCertificate = (userId) => {
-    const user = users.find((u) => u.id === userId);
-    showToast(`Certificate generated for ${user.name}`, 'success');
-    setShowCertificateModal(false);
-  };
+  const handleBlockUser = async (userId) => {
+    const previousUsers = [...users];
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId
+          ? { ...user, status: "blocked", isBlocked: true, blockReason: "Admin action" }
+          : user
+      )
+    );
 
-  // Load users with loading states
-  const loadUsers = useCallback(async (search = "", tab = "all", page = 1, showRefresh = false) => {
     try {
-      if (showRefresh) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
-      }
-
-      const data = await fetchAllUsers({
-        search,
-        tab,
-        page,
-        limit: itemsPerPage,
-        ...filters, // Include filters in API call
-      });
-      
-      const usersData = data.users || data;
-      const total = data.totalPages || Math.ceil((data.totalUsers || usersData.length) / itemsPerPage);
-      
-      setTotalPages(total);
-      
-      const formattedUsers = usersData.map((user) => ({
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.mobile,
-        bloodGroup: user.bloodGroup,
-        location: `${user.district || ''}, ${user.taluk || ''}`,
-        registeredDate: user.createdAt?.split("T")[0],
-        lastDonation: user.latestDonatedDate
-          ? user.latestDonatedDate.split("T")[0]
-          : null,
-        totalDonations: user.donationCount || 0,
-        status: user.isBlocked
-          ? "blocked"
-          : user.isVerified
-          ? "active"
-          : "pending",
-        verified: user.isVerified,
-        verificationStatus: user.isVerified ? "verified" : "pending",
-        isBlocked: user.isBlocked || false,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=ef4444&color=fff`,
-        donationProof: user.donationProof || {
-          date: user.latestDonatedDate?.split("T")[0] || new Date().toISOString().split("T")[0],
-          center: user.donationCenter || "City Blood Bank",
-          document: user.documentName || "donation_certificate.pdf"
-        }
-      }));
-      
-      setUsers(formattedUsers);
-      
-      if (showRefresh) {
-        showToast('Data refreshed successfully', 'success');
-      }
+      await blockUser(userId, "Admin action");
+      showToast("User blocked successfully", "success");
     } catch (error) {
-      console.error("User fetch error:", error);
-      showToast('Failed to load users', 'error');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      console.error("Block error:", error);
+      setUsers(previousUsers);
+      showToast("Failed to block user", "error");
     }
-  }, [itemsPerPage, filters]);
+  };
 
-  // Debounced search with cleanup
+  const handleUnblockUser = async (userId) => {
+    const previousUsers = [...users];
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId
+          ? { ...user, status: "active", isBlocked: false, blockReason: null }
+          : user
+      )
+    );
+
+    try {
+      await unblockUser(userId);
+      showToast("User unblocked successfully", "success");
+    } catch (error) {
+      console.error("Unblock error:", error);
+      setUsers(previousUsers);
+      showToast("Failed to unblock user", "error");
+    }
+  };
+
+  const loadUsers = useCallback(
+    async (search = "", tab = "all", page = 1, showRefresh = false) => {
+      try {
+        if (showRefresh) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
+
+        const data = await fetchAllUsers({
+          search,
+          tab,
+          page,
+          limit: itemsPerPage,
+          ...filters,
+        });
+
+        // Handle the response structure properly
+        const usersData = data.users || data;
+        const totalUsersCount = data.totalUsers || usersData.length;
+        const total = data.totalPages || Math.ceil(totalUsersCount / itemsPerPage);
+
+        setTotalPages(total);
+        setTotalUserCount(totalUsersCount); // Update global count for stats
+
+        const formattedUsers = usersData.map((user) => ({
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.mobile,
+          bloodGroup: user.bloodGroup,
+          location: `${user.district || ""}, ${user.taluk || ""}`,
+          registeredDate: user.createdAt?.split("T")[0],
+          lastDonation: user.latestDonatedDate
+            ? user.latestDonatedDate.split("T")[0]
+            : null,
+          totalDonations: user.donationCount || 0,
+          status: user.isBlocked ? "blocked" : user.isVerified ? "active" : "pending",
+          verified: user.isVerified,
+          verificationStatus: user.isVerified ? "verified" : "pending",
+          isBlocked: user.isBlocked || false,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            user.name
+          )}&background=ef4444&color=fff`,
+          donationProof: user.donationProof || {
+            date: user.latestDonatedDate?.split("T")[0] || new Date().toISOString().split("T")[0],
+            center: user.donationCenter || "City Blood Bank",
+            document: user.documentName || "donation_certificate.pdf",
+          },
+        }));
+
+        setUsers(formattedUsers);
+
+        if (showRefresh) {
+          showToast("Data refreshed successfully", "success");
+        }
+      } catch (error) {
+        console.error("User fetch error:", error);
+        showToast("Failed to load users", "error");
+      } finally {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [itemsPerPage, filters]
+  );
+
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       loadUsers(searchQuery, activeTab, currentPage);
-    }, 300); // Reduced to 300ms for better responsiveness
+    }, 300);
 
     return () => clearTimeout(delayDebounce);
   }, [searchQuery, activeTab, currentPage, loadUsers]);
 
-  // Refresh handler
   const handleRefresh = () => {
     loadUsers(searchQuery, activeTab, currentPage, true);
   };
 
-  // Filter Modal Component
-  const FilterModal = ({ onClose }) => {
-    const [localFilters, setLocalFilters] = useState(filters);
-
-    const handleApply = () => {
-      setFilters(localFilters);
-      setCurrentPage(1);
-      onClose();
-    };
-
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div
-          className="modal-content filter-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-header">
-            <h3>
-              <FiFilter className="modal-icon" />
-              Filter Users
-            </h3>
-            <button className="close-btn" onClick={onClose}>
-              <FiXCircle />
-            </button>
-          </div>
-
-          <div className="modal-body">
-            <div className="filter-group">
-              <label>Blood Group</label>
-              <select
-                value={localFilters.bloodGroup}
-                onChange={(e) =>
-                  setLocalFilters({ ...localFilters, bloodGroup: e.target.value })
-                }
-              >
-                <option value="">All Blood Groups</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>Location</label>
-              <input
-                type="text"
-                placeholder="Enter district or taluk"
-                value={localFilters.location}
-                onChange={(e) =>
-                  setLocalFilters({ ...localFilters, location: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="filter-group">
-              <label>Verification Status</label>
-              <select
-                value={localFilters.verificationStatus}
-                onChange={(e) =>
-                  setLocalFilters({ ...localFilters, verificationStatus: e.target.value })
-                }
-              >
-                <option value="">All</option>
-                <option value="verified">Verified</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>Date Range</label>
-              <select
-                value={localFilters.dateRange}
-                onChange={(e) =>
-                  setLocalFilters({ ...localFilters, dateRange: e.target.value })
-                }
-              >
-                <option value="">All Time</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="modal-footer">
-            <button
-              className="clear-btn"
-              onClick={() =>
-                setLocalFilters({
-                  bloodGroup: "",
-                  location: "",
-                  verificationStatus: "",
-                  dateRange: "",
-                })
-              }
-            >
-              Clear All
-            </button>
-            <button className="apply-btn" onClick={handleApply}>
-              Apply Filters
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Verification Modal
-  const VerificationModal = ({ user, onClose }) => {
-    const [isVerifying, setIsVerifying] = useState(false);
-
-    if (!user) return null;
-
-    const handleVerify = async () => {
-      setIsVerifying(true);
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 500));
-      handleVerifyDonation(user.id);
-      setIsVerifying(false);
-    };
-
-    const handleReject = async () => {
-      setIsVerifying(true);
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 500));
-      handleRejectDonation(user.id);
-      setIsVerifying(false);
-    };
-
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div
-          className="modal-content verification-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-header">
-            <h3>
-              <FiShield className="modal-icon" />
-              Verify Donation Proof
-            </h3>
-            <button className="close-btn" onClick={onClose} disabled={isVerifying}>
-              <FiXCircle />
-            </button>
-          </div>
-
-          <div className="modal-body">
-            <div className="user-info-summary">
-              <img src={user.avatar} alt={user.name} className="user-avatar" />
-              <div>
-                <h4>{user.name}</h4>
-                <p className="user-email">{user.email}</p>
-                <span className="blood-badge">{user.bloodGroup}</span>
-              </div>
-            </div>
-
-            <div className="proof-section">
-              <h5>Donation Proof Details</h5>
-              <div className="proof-details">
-                <div className="proof-item">
-                  <FiCalendar className="proof-icon" />
-                  <span>Date: {user.donationProof?.date}</span>
-                </div>
-                <div className="proof-item">
-                  <FiMapPin className="proof-icon" />
-                  <span>Center: {user.donationProof?.center}</span>
-                </div>
-                <div className="proof-item">
-                  <FiFileText className="proof-icon" />
-                  <span>Document: {user.donationProof?.document}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="proof-image-preview">
-              <img
-                src="https://via.placeholder.com/400x300"
-                alt="Proof Document"
-                className="proof-image"
-              />
-              <div className="image-actions">
-                <button className="image-action-btn" disabled={isVerifying}>
-                  <FiEye /> View Full
-                </button>
-                <button className="image-action-btn" disabled={isVerifying}>
-                  <FiDownload /> Download
-                </button>
-              </div>
-            </div>
-
-            <div className="verification-actions">
-              <button
-                className="verify-btn"
-                onClick={handleVerify}
-                disabled={isVerifying}
-              >
-                {isVerifying ? (
-                  <FiRefreshCw className="spinning" />
-                ) : (
-                  <FiCheckCircle />
-                )}
-                {isVerifying ? 'Verifying...' : 'Verify & Mark as Donated'}
-              </button>
-              <button
-                className="reject-btn"
-                onClick={handleReject}
-                disabled={isVerifying}
-              >
-                {isVerifying ? (
-                  <FiRefreshCw className="spinning" />
-                ) : (
-                  <FiXCircle />
-                )}
-                {isVerifying ? 'Rejecting...' : 'Reject'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Certificate Modal
-  const CertificateModal = ({ user, onClose }) => {
-    const [isGenerating, setIsGenerating] = useState(false);
-
-    if (!user) return null;
-
-    const handleGenerate = async () => {
-      setIsGenerating(true);
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      handleGenerateCertificate(user.id);
-      setIsGenerating(false);
-    };
-
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div
-          className="modal-content certificate-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-header">
-            <h3>
-              <FiAward className="modal-icon" />
-              Generate Certificate
-            </h3>
-            <button className="close-btn" onClick={onClose} disabled={isGenerating}>
-              <FiXCircle />
-            </button>
-          </div>
-
-          <div className="modal-body">
-            <div className="certificate-preview">
-              <div className="certificate-template">
-                <div className="certificate-header">
-                  <h2>Certificate of Appreciation</h2>
-                  <p>Presented to</p>
-                </div>
-                <div className="certificate-name">{user.name}</div>
-                <div className="certificate-details">
-                  <p>For their noble contribution of blood donation</p>
-                  <p className="certificate-date">
-                    {new Date().toLocaleDateString()}
-                  </p>
-                  <div className="certificate-blood">{user.bloodGroup}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="certificate-options">
-              <label className="option-label">
-                <input type="checkbox" defaultChecked disabled={isGenerating} /> 
-                Include Donation Details
-              </label>
-              <label className="option-label">
-                <input type="checkbox" defaultChecked disabled={isGenerating} /> 
-                Add QR Code
-              </label>
-              <label className="option-label">
-                <input type="checkbox" disabled={isGenerating} /> 
-                Send via Email
-              </label>
-            </div>
-
-            <div className="certificate-actions">
-              <button
-                className="generate-btn"
-                onClick={handleGenerate}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <FiRefreshCw className="spinning" />
-                ) : (
-                  <FiAward />
-                )}
-                {isGenerating ? 'Generating...' : 'Generate Certificate'}
-              </button>
-              <button className="preview-btn" disabled={isGenerating}>
-                <FiEye />
-                Preview
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Show loading skeletons
   if (isLoading) {
     return (
       <div className="user-management">
@@ -617,9 +645,7 @@ const handleDonorAdded = () => {
               <FiUsers className="title-icon" />
               User Management
             </h1>
-            <p className="page-subtitle">
-              Manage donors, verify donations, and issue certificates
-            </p>
+            <p className="page-subtitle">Manage donors, verify donations, and issue certificates</p>
           </div>
         </div>
         <div className="stats-grid">
@@ -644,44 +670,29 @@ const handleDonorAdded = () => {
 
   return (
     <div className="user-management">
-      {/* Toast Notification */}
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
 
-      {/* Header with Refresh Button */}
-     <div className="header-section">
-  <div>
-    <h1 className="page-title">
-      <FiUsers className="title-icon" />
-      User Management
-    </h1>
-    <p className="page-subtitle">
-      Manage donors, verify donations, and issue certificates
-    </p>
-  </div>
-  <div className="header-actions">
-    <button 
-      className="refresh-btn" 
-      onClick={handleRefresh}
-      disabled={isRefreshing}
-    >
-      <FiRefreshCw className={isRefreshing ? "spinning" : ""} />
-      {isRefreshing ? 'Refreshing...' : 'Refresh'}
-    </button>
-    <button 
-      className="add-user-btn"
-      onClick={() => setShowAddDonorModal(true)}
-    >
-      <FiPlus />
-      Add New Donor
-    </button>
-  </div>
-</div>
+      <div className="header-section">
+        <div>
+          <h1 className="page-title">
+            <FiUsers className="title-icon" />
+            User Management
+          </h1>
+          <p className="page-subtitle">Manage donors and verify donations</p>
+        </div>
+        <div className="header-actions">
+          <button className="refresh-btn" onClick={handleRefresh} disabled={isRefreshing}>
+            <FiRefreshCw className={isRefreshing ? "spinning" : ""} />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </button>
+          <button className="add-user-btn" onClick={() => setShowAddDonorModal(true)}>
+            <FiPlus />
+            Add New Donor
+          </button>
+        </div>
+      </div>
 
       {/* Stats Cards */}
       <div className="stats-grid">
@@ -796,28 +807,23 @@ const handleDonorAdded = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
-              <button 
-                className="clear-search"
-                onClick={() => setSearchQuery("")}
-              >
+              <button className="clear-search" onClick={() => setSearchQuery("")}>
                 <FiXCircle />
               </button>
             )}
           </div>
           <button
-            className={`filter-btn ${Object.values(filters).some(v => v) ? 'active' : ''}`}
+            className={`filter-btn ${Object.values(filters).some((v) => v) ? "active" : ""}`}
             onClick={() => setShowFilterModal(true)}
           >
             <FiFilter />
             Filter
-            {Object.values(filters).some(v => v) && (
-              <span className="filter-badge" />
-            )}
+            {Object.values(filters).some((v) => v) && <span className="filter-badge" />}
           </button>
         </div>
       </div>
 
-      {/* Users Grid with Refresh Overlay */}
+      {/* Users Grid */}
       <div className="users-grid-container">
         {isRefreshing && (
           <div className="refresh-overlay">
@@ -825,8 +831,8 @@ const handleDonorAdded = () => {
             <span>Refreshing data...</span>
           </div>
         )}
-        
-        <div className={`users-grid ${isRefreshing ? 'refreshing' : ''}`}>
+
+        <div className={`users-grid ${isRefreshing ? "refreshing" : ""}`}>
           {users.length === 0 ? (
             <div className="no-users">
               <FiUsers size={48} />
@@ -836,7 +842,6 @@ const handleDonorAdded = () => {
           ) : (
             users.map((user) => (
               <div key={user.id} className={`user-card ${user.status}`}>
-                {/* Card Header */}
                 <div className="card-header">
                   <div className="user-avatar">
                     <img src={user.avatar} alt={user.name} />
@@ -851,7 +856,6 @@ const handleDonorAdded = () => {
                   </button>
                 </div>
 
-                {/* User Details */}
                 <div className="user-details">
                   <div className="detail-row">
                     <FiPhone className="detail-icon" />
@@ -873,7 +877,6 @@ const handleDonorAdded = () => {
                   )}
                 </div>
 
-                {/* Blood Group & Donations */}
                 <div className="user-stats">
                   <div className="blood-group">{user.bloodGroup}</div>
                   <div className="donation-count">
@@ -882,7 +885,6 @@ const handleDonorAdded = () => {
                   </div>
                 </div>
 
-                {/* Verification Status */}
                 <div className="verification-status">
                   {user.verificationStatus === "verified" ? (
                     <span className="status-badge verified">
@@ -905,7 +907,6 @@ const handleDonorAdded = () => {
                   )}
                 </div>
 
-                {/* Action Buttons */}
                 <div className="user-actions">
                   {user.verificationStatus === "pending" && (
                     <button
@@ -916,22 +917,20 @@ const handleDonorAdded = () => {
                       }}
                     >
                       <FiShield />
-                      Verify Donation
+                      Verify
                     </button>
                   )}
 
-                  {user.verified && user.totalDonations > 0 && (
-                    <button
-                      className="action-btn certificate"
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setShowCertificateModal(true);
-                      }}
-                    >
-                      <FiAward />
-                      Certificate
-                    </button>
-                  )}
+                  <button
+                    className="action-btn view"
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowViewModal(true);
+                    }}
+                  >
+                    <FiEye />
+                    View
+                  </button>
 
                   {!user.isBlocked ? (
                     <button
@@ -950,11 +949,6 @@ const handleDonorAdded = () => {
                       Unblock
                     </button>
                   )}
-
-                  <button className="action-btn view">
-                    <FiEye />
-                    View
-                  </button>
                 </div>
               </div>
             ))
@@ -962,31 +956,47 @@ const handleDonorAdded = () => {
         </div>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination - Logic: totalPages > 1 ensures it hides if <= 10 users */}
       {totalPages > 1 && (
         <div className="pagination">
           <button
             className="page-nav"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1 || isRefreshing}
           >
             <FiChevronLeft />
           </button>
 
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i}
-              className={`page-btn ${currentPage === i + 1 ? "active" : ""}`}
-              onClick={() => setCurrentPage(i + 1)}
-              disabled={isRefreshing}
-            >
-              {i + 1}
-            </button>
-          ))}
+          {[...Array(totalPages)].map((_, i) => {
+            const pageNumber = i + 1;
+            // Show limited page numbers with ellipsis
+            if (
+              pageNumber === 1 ||
+              pageNumber === totalPages ||
+              (pageNumber >= currentPage - 2 && pageNumber <= currentPage + 2)
+            ) {
+              return (
+                <button
+                  key={i}
+                  className={`page-btn ${currentPage === pageNumber ? "active" : ""}`}
+                  onClick={() => handlePageChange(pageNumber)}
+                  disabled={isRefreshing}
+                >
+                  {pageNumber}
+                </button>
+              );
+            } else if (
+              pageNumber === currentPage - 3 ||
+              pageNumber === currentPage + 3
+            ) {
+              return <span key={i} className="page-ellipsis">...</span>;
+            }
+            return null;
+          })}
 
           <button
             className="page-nav"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || isRefreshing}
           >
             <FiChevronRight />
@@ -996,28 +1006,30 @@ const handleDonorAdded = () => {
 
       {/* Modals */}
       {showFilterModal && (
-        <FilterModal onClose={() => setShowFilterModal(false)} />
+        <FilterModal
+          onClose={() => setShowFilterModal(false)}
+          filters={filters}
+          setFilters={setFilters}
+          setCurrentPage={setCurrentPage}
+        />
       )}
 
       {showVerifyModal && (
         <VerificationModal
           user={selectedUser}
           onClose={() => setShowVerifyModal(false)}
+          onVerify={handleVerifyDonation}
+          onReject={handleRejectDonation}
         />
       )}
 
-      {showCertificateModal && (
-        <CertificateModal
-          user={selectedUser}
-          onClose={() => setShowCertificateModal(false)}
-        />
+      {showViewModal && (
+        <ViewUserModal user={selectedUser} onClose={() => setShowViewModal(false)} />
       )}
+
       {showAddDonorModal && (
-  <AddDonorModal
-    onClose={() => setShowAddDonorModal(false)}
-    onSuccess={handleDonorAdded}
-  />
-)}
+        <AddDonorModal onClose={() => setShowAddDonorModal(false)} onSuccess={handleDonorAdded} />
+      )}
     </div>
   );
 }

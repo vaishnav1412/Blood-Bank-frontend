@@ -21,13 +21,13 @@ import {
   FiChevronRight,
   FiMessageSquare,
   FiFilm,
+  FiRefreshCw,
 } from "react-icons/fi";
 import {
   FaHeart,
   FaQuoteLeft,
   FaUsers,
   FaPlay,
- 
 } from "react-icons/fa";
 import "./gallery-management.scss";
 import {
@@ -40,9 +40,9 @@ import {
 // Helper hook for responsive design
 function useWindowSize() {
   const [windowSize, setWindowSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    width: typeof window !== "undefined" ? window.innerWidth : 0,
   });
-  
+
   useEffect(() => {
     function handleResize() {
       setWindowSize({ width: window.innerWidth });
@@ -54,6 +54,924 @@ function useWindowSize() {
   return windowSize;
 }
 
+// --- MOVED COMPONENTS OUTSIDE TO PREVENT RE-RENDER BLINKING ---
+
+// Loading Skeleton
+const GallerySkeleton = () => (
+  <div className="gallery-view grid">
+    {[1, 2, 3, 4].map((i) => (
+      <div key={i} className="gallery-item skeleton">
+        <div className="item-image skeleton-box" />
+        <div className="item-info">
+          <div className="skeleton-text" />
+          <div className="skeleton-text-small" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+// Delete Modal
+const DeleteModal = ({ count, onClose, onConfirm }) => (
+  <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-content delete-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="delete-icon">
+        <FiTrash2 />
+      </div>
+      <h3>Delete Items</h3>
+      <p>Are you sure you want to delete {count} item(s)?</p>
+      <div className="modal-actions">
+        <button className="btn-cancel" onClick={onClose}>
+          Cancel
+        </button>
+        <button className="btn-delete" onClick={onConfirm}>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Preview Modal
+const PreviewModal = ({ item, onClose, onEdit }) => {
+  if (!item) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content preview-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-drag-handle" />
+        <div className="modal-header">
+          <h3>{item.title}</h3>
+          <button className="close-btn" onClick={onClose}>
+            <FiX />
+          </button>
+        </div>
+
+        <div className="preview-content">
+          {item.type === "photo" && (
+            <div className="preview-image-container">
+              <img src={item.image} alt={item.title} className="preview-image" />
+            </div>
+          )}
+          {item.type === "video" && (
+            <div className="preview-video-container">
+              <video controls className="preview-video">
+                <source src={item.videoUrl} type="video/mp4" />
+              </video>
+            </div>
+          )}
+          {item.type === "quote" && (
+            <div className="quote-preview">
+              <FaQuoteLeft className="quote-icon" />
+              <p className="quote-text">"{item.content}"</p>
+              <p className="quote-author">— {item.author}</p>
+            </div>
+          )}
+
+          <div className="preview-details">
+            <div className="detail-row">
+              <FiCalendar /> {new Date(item.date).toLocaleDateString()}
+            </div>
+            {item.location && (
+              <div className="detail-row">
+                <FiMapPin /> {item.location}
+              </div>
+            )}
+            <div className="detail-stats">
+              <span>
+                <FiHeart /> {item.likes || 0}
+              </span>
+              <span>
+                <FiEye /> {item.views || 0}
+              </span>
+              {item.comments !== undefined && (
+                <span>
+                  <FiMessageSquare /> {item.comments}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="preview-actions">
+          <button
+            className="btn-edit"
+            onClick={() => {
+              onClose();
+              onEdit(item);
+            }}
+          >
+            <FiEdit2 /> Edit
+          </button>
+          <button className="btn-share">
+            <FiShare2 /> Share
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Upload Modal - Now manages its own state to prevent parent re-render
+const UploadModal = ({ show, onClose, onSuccess, showToast }) => {
+  const [uploadData, setUploadData] = useState({
+    title: "",
+    description: "",
+    category: "donation-drive",
+    type: "photo",
+    date: new Date().toISOString().split("T")[0],
+    location: "",
+    tags: "",
+    content: "",
+    author: "",
+    featured: false,
+    status: "draft",
+  });
+  
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (show) {
+      resetUpload();
+    }
+  }, [show]);
+
+  const resetUpload = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    setUploadData({
+      title: "",
+      description: "",
+      category: "donation-drive",
+      type: "photo",
+      date: new Date().toISOString().split("T")[0],
+      location: "",
+      tags: "",
+      content: "",
+      author: "",
+      featured: false,
+      status: "draft",
+    });
+    setUploadProgress(0);
+    setIsUploading(false);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+      "video/mp4",
+      "video/quicktime",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      showToast("Only JPG, PNG, MP4, and MOV files are allowed", "error");
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      showToast("File size must be below 50MB", "error");
+      return;
+    }
+
+    setSelectedFile(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFilePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadData.title.trim()) {
+      showToast("Title is required", "error");
+      return;
+    }
+    if (uploadData.type !== "quote" && !selectedFile) {
+      showToast("Please select a file", "error");
+      return;
+    }
+    if (uploadData.type === "quote" && !uploadData.content.trim()) {
+      showToast("Quote content is required", "error");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => Math.min(prev + 10, 90));
+      }, 200);
+
+      const formData = new FormData();
+
+      if (selectedFile) formData.append("media", selectedFile);
+
+      formData.append("title", uploadData.title);
+      formData.append("description", uploadData.description || "");
+      formData.append("category", uploadData.category);
+      formData.append("type", uploadData.type);
+      formData.append("date", uploadData.date);
+      formData.append("location", uploadData.location || "");
+      formData.append("featured", uploadData.featured ? "true" : "false");
+      formData.append("status", uploadData.status);
+
+      const tagsArray = uploadData.tags
+        ? uploadData.tags.split(",").map((t) => t.trim()).filter((t) => t)
+        : [];
+      formData.append("tags", JSON.stringify(tagsArray));
+
+      if (uploadData.type === "quote") {
+        formData.append("content", uploadData.content);
+        formData.append("author", uploadData.author || "");
+      }
+
+      const response = await uploadGalleryMedia(formData);
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (response.success) {
+        onSuccess(response.data);
+        onClose();
+        showToast("Upload successful", "success");
+      } else {
+        showToast(response.message || "Upload failed", "error");
+      }
+    } catch (error) {
+      console.error("Upload Error:", error);
+      showToast(error.response?.data?.message || "Something went wrong", "error");
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="modal-overlay" onClick={() => !isUploading && onClose()}>
+      <div className="modal-content upload-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-drag-handle" />
+        <div className="modal-header">
+          <h3>
+            <FiUpload className="modal-icon" /> Upload New Media
+          </h3>
+          <button className="close-btn" onClick={() => !isUploading && onClose()} disabled={isUploading}>
+            <FiX />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {/* File Upload Area */}
+          {uploadData.type !== "quote" && (
+            <div className="file-upload-section">
+              {!selectedFile ? (
+                <div className="upload-area">
+                  <input type="file" accept="image/*,video/*" onChange={handleFileSelect} id="file-upload" disabled={isUploading} />
+                  <label htmlFor="file-upload" className="upload-label">
+                    <FiUpload className="upload-icon" />
+                    <div className="upload-text">
+                      <span className="primary-text">Click to upload or drag and drop</span>
+                      <span className="secondary-text">JPG, PNG, MP4 or MOV (Max 50MB)</span>
+                    </div>
+                  </label>
+                </div>
+              ) : (
+                <div className="file-preview">
+                  <div className="preview-header">
+                    <span className="file-name">
+                      {selectedFile.type.startsWith("image/") ? <FiImage /> : <FiFilm />}
+                      {selectedFile.name}
+                    </span>
+                    <button type="button" className="remove-file" onClick={handleRemoveFile} disabled={isUploading}>
+                      <FiX />
+                    </button>
+                  </div>
+                  <div className="preview-content">
+                    {selectedFile.type.startsWith("image/") ? (
+                      <div className="image-preview-container">
+                        <img src={filePreview} alt="Preview" className="image-preview" />
+                      </div>
+                    ) : (
+                      <div className="video-preview-container">
+                        <video controls className="video-preview">
+                          <source src={filePreview} type={selectedFile.type} />
+                        </video>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Quote Preview */}
+          {uploadData.type === "quote" && uploadData.content && (
+            <div className="quote-preview-section">
+              <div className="quote-preview">
+                <FaQuoteLeft className="quote-icon" />
+                <p className="quote-text">"{uploadData.content}"</p>
+                {uploadData.author && <p className="quote-author">— {uploadData.author}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Form Fields */}
+          <div className="form-grid">
+            <div className="form-group full-width">
+              <label>Title *</label>
+              <input
+                type="text"
+                value={uploadData.title}
+                onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
+                placeholder="Enter a descriptive title"
+                required
+                disabled={isUploading}
+              />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Type</label>
+                <select
+                  value={uploadData.type}
+                  onChange={(e) => {
+                    setUploadData({ ...uploadData, type: e.target.value });
+                    setSelectedFile(null);
+                  }}
+                  disabled={isUploading}
+                >
+                  <option value="photo">📷 Photo</option>
+                  <option value="video">🎥 Video</option>
+                  <option value="quote">💬 Quote</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  value={uploadData.category}
+                  onChange={(e) => setUploadData({ ...uploadData, category: e.target.value })}
+                  disabled={isUploading}
+                >
+                  <option value="donation-drive">🚗 Donation Drive</option>
+                  <option value="volunteer">👥 Volunteers</option>
+                  <option value="recognition">🏆 Recognition</option>
+                  <option value="motivational">💪 Motivational</option>
+                  <option value="campaign">📢 Campaign</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group full-width">
+              <label>Description</label>
+              <textarea
+                rows="3"
+                value={uploadData.description}
+                onChange={(e) => setUploadData({ ...uploadData, description: e.target.value })}
+                placeholder="Add a description..."
+                disabled={isUploading}
+              />
+            </div>
+
+            {uploadData.type === "quote" && (
+              <>
+                <div className="form-group full-width">
+                  <label>Quote Content *</label>
+                  <textarea
+                    rows="3"
+                    value={uploadData.content}
+                    onChange={(e) => setUploadData({ ...uploadData, content: e.target.value })}
+                    placeholder="Enter the quote..."
+                    required
+                    disabled={isUploading}
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Author</label>
+                  <input
+                    type="text"
+                    value={uploadData.author}
+                    onChange={(e) => setUploadData({ ...uploadData, author: e.target.value })}
+                    placeholder="Who said this?"
+                    disabled={isUploading}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Date</label>
+                <input
+                  type="date"
+                  value={uploadData.date}
+                  onChange={(e) => setUploadData({ ...uploadData, date: e.target.value })}
+                  disabled={isUploading}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  value={uploadData.location}
+                  onChange={(e) => setUploadData({ ...uploadData, location: e.target.value })}
+                  placeholder="Location"
+                  disabled={isUploading}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Status</label>
+                <select
+                  value={uploadData.status}
+                  onChange={(e) => setUploadData({ ...uploadData, status: e.target.value })}
+                  disabled={isUploading}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group full-width">
+              <label>Tags (comma separated)</label>
+              <input
+                type="text"
+                value={uploadData.tags}
+                onChange={(e) => setUploadData({ ...uploadData, tags: e.target.value })}
+                placeholder="e.g., blood-donation, camp, volunteers"
+                disabled={isUploading}
+              />
+            </div>
+
+            <div className="form-group checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={uploadData.featured}
+                  onChange={(e) => setUploadData({ ...uploadData, featured: e.target.checked })}
+                  disabled={isUploading}
+                />
+                <span className="checkbox-text">Mark as Featured</span>
+              </label>
+            </div>
+          </div>
+
+          {isUploading && (
+            <div className="upload-progress">
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${uploadProgress}%` }} />
+              </div>
+              <span className="progress-text">{uploadProgress < 100 ? "Uploading..." : "Processing..."}</span>
+            </div>
+          )}
+
+          <div className="modal-footer">
+            <button type="button" className="btn-cancel" onClick={onClose} disabled={isUploading}>
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className="btn-upload"
+              disabled={isUploading || (uploadData.type !== "quote" && !selectedFile)}
+            >
+              {isUploading ? (
+                <>
+                  <span className="spinner" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <FiUpload /> Upload
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Edit Modal - Manages its own state
+const EditModal = ({ show, item, onClose, onUpdate, onDelete, showToast }) => {
+  const [editData, setEditData] = useState({});
+  const [newMediaFile, setNewMediaFile] = useState(null);
+  const [newMediaPreview, setNewMediaPreview] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Populate form when item changes
+  useEffect(() => {
+    if (item) {
+      setEditData({
+        title: item.title || "",
+        description: item.description || "",
+        category: item.category || "donation-drive",
+        type: item.type || "photo",
+        date: item?.date ? new Date(item.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        location: item.location || "",
+        tags: item?.tags?.join(", ") || "",
+        content: item.content || "",
+        author: item.author || "",
+        featured: item.featured || false,
+        status: item.status || "draft",
+      });
+      setNewMediaFile(null);
+      setNewMediaPreview(null);
+      setShowDeleteConfirm(false);
+    }
+  }, [item]);
+
+  const handleEditFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "video/mp4", "video/quicktime"];
+    if (!allowedTypes.includes(file.type)) {
+      showToast("Invalid file type", "error");
+      return;
+    }
+
+    setNewMediaFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewMediaPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearNewMedia = () => {
+    setNewMediaFile(null);
+    setNewMediaPreview(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!editData.title.trim()) {
+      showToast("Title is required", "error");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      const formData = new FormData();
+      formData.append("title", editData.title);
+      formData.append("description", editData.description || "");
+      formData.append("category", editData.category);
+      formData.append("type", editData.type);
+      formData.append("date", editData.date);
+      formData.append("location", editData.location || "");
+      formData.append("featured", editData.featured ? "true" : "false");
+      formData.append("status", editData.status);
+
+      const tagsArray = editData.tags ? editData.tags.split(",").map((t) => t.trim()).filter((t) => t) : [];
+      formData.append("tags", JSON.stringify(tagsArray));
+
+      if (editData.type === "quote") {
+        formData.append("content", editData.content);
+        formData.append("author", editData.author || "");
+      }
+
+      if (newMediaFile) {
+        formData.append("media", newMediaFile);
+      }
+
+      const response = await updateGalleryMedia(item._id, formData);
+
+      if (response.success) {
+        onUpdate(response.data);
+        onClose();
+        showToast("Item updated successfully", "success");
+      } else {
+        showToast("Update failed", "error");
+      }
+    } catch (error) {
+      console.error("Update Error:", error);
+      showToast(error.response?.data?.message || "Something went wrong", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setIsSaving(true);
+      const response = await deleteGalleryMedia(item._id);
+
+      if (response.success) {
+        onDelete(item._id);
+        onClose();
+        showToast("Item deleted successfully", "success");
+      } else {
+        showToast("Delete failed", "error");
+      }
+    } catch (error) {
+      console.error("Delete Error:", error);
+      showToast(error.response?.data?.message || "Something went wrong", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!show || !item) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content edit-modal upload-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-drag-handle" />
+        <div className="modal-header">
+          <h3>
+            <FiEdit2 className="modal-icon" /> Edit {item.type === "quote" ? "Story" : "Media"}
+          </h3>
+          <button className="close-btn" onClick={onClose} disabled={isSaving}>
+            <FiX />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {/* Media Section */}
+          {editData.type !== "quote" && (
+            <div className="file-upload-section">
+              <div className="file-preview">
+                <div className="preview-header">
+                  <span className="file-name">
+                    {editData.type === "photo" ? <FiImage /> : <FiFilm />}
+                    {newMediaFile ? "New Media Preview" : "Current Media"}
+                  </span>
+                  {newMediaFile && (
+                    <button type="button" className="remove-file" onClick={clearNewMedia}>
+                      <FiX /> Cancel Change
+                    </button>
+                  )}
+                </div>
+                <div className="preview-content">
+                  {newMediaFile ? (
+                    newMediaFile.type.startsWith("image/") ? (
+                      <div className="image-preview-container">
+                        <img src={newMediaPreview} alt="New Preview" className="image-preview" />
+                      </div>
+                    ) : (
+                      <div className="video-preview-container">
+                        <video controls className="video-preview">
+                          <source src={newMediaPreview} type={newMediaFile.type} />
+                        </video>
+                      </div>
+                    )
+                  ) : (
+                    <>
+                      {editData.type === "photo" && item.image && (
+                        <div className="image-preview-container">
+                          <img src={item.image} alt={editData.title} className="image-preview" />
+                        </div>
+                      )}
+                      {editData.type === "video" && (
+                        <div className="video-preview-container">
+                          <video controls className="video-preview">
+                            <source src={item.videoUrl} type="video/mp4" />
+                          </video>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {!newMediaFile && (
+                <div className="upload-area small">
+                  <input type="file" accept="image/*,video/*" onChange={handleEditFileSelect} id="edit-file-upload" disabled={isSaving} />
+                  <label htmlFor="edit-file-upload" className="upload-label">
+                    <FiUpload /> <span>Click to change media</span>
+                  </label>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Quote Preview */}
+          {editData.type === "quote" && editData.content && (
+            <div className="quote-preview-section">
+              <div className="quote-preview">
+                <FaQuoteLeft className="quote-icon" />
+                <p className="quote-text">"{editData.content}"</p>
+                {editData.author && <p className="quote-author">— {editData.author}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Form Fields */}
+          <div className="form-grid">
+            <div className="form-group full-width">
+              <label>Title *</label>
+              <input
+                type="text"
+                value={editData.title}
+                onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                required
+                disabled={isSaving}
+              />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Type</label>
+                <select value={editData.type} onChange={(e) => setEditData({ ...editData, type: e.target.value })} disabled={isSaving}>
+                  <option value="photo">📷 Photo</option>
+                  <option value="video">🎥 Video</option>
+                  <option value="quote">💬 Quote</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  value={editData.category}
+                  onChange={(e) => setEditData({ ...editData, category: e.target.value })}
+                  disabled={isSaving}
+                >
+                  <option value="donation-drive">🚗 Donation Drive</option>
+                  <option value="volunteer">👥 Volunteers</option>
+                  <option value="recognition">🏆 Recognition</option>
+                  <option value="motivational">💪 Motivational</option>
+                  <option value="campaign">📢 Campaign</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group full-width">
+              <label>Description</label>
+              <textarea
+                rows="3"
+                value={editData.description}
+                onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                disabled={isSaving}
+              />
+            </div>
+
+            {editData.type === "quote" && (
+              <>
+                <div className="form-group full-width">
+                  <label>Quote Content *</label>
+                  <textarea
+                    rows="3"
+                    value={editData.content}
+                    onChange={(e) => setEditData({ ...editData, content: e.target.value })}
+                    required
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Author</label>
+                  <input
+                    type="text"
+                    value={editData.author}
+                    onChange={(e) => setEditData({ ...editData, author: e.target.value })}
+                    disabled={isSaving}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Date</label>
+                <input
+                  type="date"
+                  value={editData.date}
+                  onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                  disabled={isSaving}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  value={editData.location}
+                  onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+                  disabled={isSaving}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Status</label>
+                <select value={editData.status} onChange={(e) => setEditData({ ...editData, status: e.target.value })} disabled={isSaving}>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group full-width">
+              <label>Tags (comma separated)</label>
+              <input
+                type="text"
+                value={editData.tags}
+                onChange={(e) => setEditData({ ...editData, tags: e.target.value })}
+                disabled={isSaving}
+              />
+            </div>
+
+            <div className="form-row checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={editData.featured}
+                  onChange={(e) => setEditData({ ...editData, featured: e.target.checked })}
+                  disabled={isSaving}
+                />
+                <span className="checkbox-text">Mark as Featured</span>
+              </label>
+
+              {!showDeleteConfirm ? (
+                <button type="button" className="delete-trigger-btn" onClick={() => setShowDeleteConfirm(true)} disabled={isSaving}>
+                  <FiTrash2 /> Delete Item
+                </button>
+              ) : (
+                <div className="delete-confirm">
+                  <span className="delete-warning">Delete?</span>
+                  <button type="button" className="delete-confirm-btn" onClick={handleDelete} disabled={isSaving}>
+                    Yes
+                  </button>
+                  <button type="button" className="delete-cancel-btn" onClick={() => setShowDeleteConfirm(false)} disabled={isSaving}>
+                    No
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {(item.views !== undefined || item.likes !== undefined) && (
+              <div className="stats-preview">
+                <h4>Statistics</h4>
+                <div className="stats-row">
+                  {item.views !== undefined && (
+                    <span>
+                      <FiEye /> {item.views} views
+                    </span>
+                  )}
+                  {item.likes !== undefined && (
+                    <span>
+                      <FiHeart /> {item.likes} likes
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn-cancel" onClick={onClose} disabled={isSaving}>
+              Cancel
+            </button>
+
+            <button type="submit" className="btn-save" disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <span className="spinner" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <FiCheck /> Save Changes
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN COMPONENT ---
 export default function GalleryManagement() {
   const { width } = useWindowSize();
   const isMobile = width < 768;
@@ -69,11 +987,55 @@ export default function GalleryManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("newest");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [filePreview, setFilePreview] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [galleryItems, setGalleryItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  // Toast Notification Helper
+  const showToast = (message, type = "info") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Toast Component
+  const Toast = () => {
+    if (!toast) return null;
+    return (
+      <div className={`toast-notification ${toast.type}`}>
+        {toast.type === "success" && <FiCheck />}
+        {toast.type === "error" && <FiX />}
+        {toast.type === "info" && <FiRefreshCw />}
+        <span>{toast.message}</span>
+      </div>
+    );
+  };
+
+  // Fetch Gallery
+  const fetchGallery = async (showRefresh = false) => {
+    try {
+      if (showRefresh) setIsRefreshing(true);
+      else setIsLoading(true);
+
+      const response = await getGalleryItems();
+      if (response.success) {
+        setGalleryItems(response.data);
+        if (showRefresh) showToast("Gallery refreshed successfully", "success");
+      } else {
+        showToast("Failed to fetch gallery", "error");
+      }
+    } catch (error) {
+      console.error("Failed to fetch gallery", error);
+      showToast("Error loading gallery", "error");
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGallery();
+  }, []);
 
   // Categories
   const categories = [
@@ -110,21 +1072,17 @@ export default function GalleryManagement() {
     },
   ];
 
-  // Filter items
+  // Filter & Sort Logic
   const filteredItems = galleryItems.filter((item) => {
-    const matchesCategory =
-      activeFilter === "all" || item.category === activeFilter;
+    const matchesCategory = activeFilter === "all" || item.category === activeFilter;
     const matchesSearch =
       searchQuery === "" ||
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.tags?.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      item.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
-  // Sort items
   const sortedItems = [...filteredItems].sort((a, b) => {
     switch (sortBy) {
       case "newest":
@@ -132,9 +1090,9 @@ export default function GalleryManagement() {
       case "oldest":
         return new Date(a.date) - new Date(b.date);
       case "most-liked":
-        return b.likes - a.likes;
+        return (b.likes || 0) - (a.likes || 0);
       case "most-viewed":
-        return b.views - a.views;
+        return (b.views || 0) - (a.views || 0);
       default:
         return 0;
     }
@@ -143,10 +1101,11 @@ export default function GalleryManagement() {
   // Pagination
   const itemsPerPage = isMobile ? 4 : 8;
   const totalPages = Math.ceil(sortedItems.length / itemsPerPage);
-  const paginatedItems = sortedItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedItems = sortedItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, searchQuery, sortBy]);
 
   // Stats
   const stats = {
@@ -166,1076 +1125,71 @@ export default function GalleryManagement() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleBulkDelete = async () => {
     try {
       if (selectedItems.length === 0) return;
-      const deletePromises = selectedItems.map((id) => deleteGalleryMedia(id));
-      await Promise.all(deletePromises);
-
-      setGalleryItems((prev) =>
-        prev.filter((item) => !selectedItems.includes(item._id))
-      );
+      for (const id of selectedItems) {
+        await deleteGalleryMedia(id);
+      }
+      setGalleryItems((prev) => prev.filter((item) => !selectedItems.includes(item._id)));
       setSelectedItems([]);
       setShowDeleteModal(false);
+      showToast("Items deleted successfully", "success");
     } catch (error) {
       console.error("Bulk Delete Error:", error);
-      alert("Failed to delete selected items");
+      showToast("Failed to delete selected items", "error");
     }
   };
 
-  const handleToggleFeatured = (id) => {
-    setGalleryItems((prev) =>
-      prev.map((item) =>
-        item._id === id ? { ...item, featured: !item.featured } : item
-      )
-    );
-  };
+  const handleToggleFeatured = async (id) => {
+    const item = galleryItems.find((i) => i._id === id);
+    if (!item) return;
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    try {
+      const updatedItem = { ...item, featured: !item.featured };
+      const response = await updateGalleryMedia(id, updatedItem);
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/jpg",
-      "video/mp4",
-      "video/quicktime",
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG, PNG, MP4, and MOV files are allowed");
-      return;
+      if (response.success) {
+        setGalleryItems((prev) => prev.map((i) => (i._id === id ? { ...i, featured: !i.featured } : i)));
+        showToast(`Item ${!item.featured ? "featured" : "unfeatured"}`, "success");
+      }
+    } catch (error) {
+      console.error("Toggle featured error:", error);
+      showToast("Failed to update item", "error");
     }
-
-    if (file.size > 50 * 1024 * 1024) {
-      alert("File size must be below 50MB");
-      return;
-    }
-
-    setSelectedFile(file);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFilePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
   };
 
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setFilePreview(null);
+  // Modal Callback Handlers
+  const handleUploadSuccess = (newItem) => {
+    setGalleryItems((prev) => [newItem, ...prev]);
   };
 
-  useEffect(() => {
-    const fetchGallery = async () => {
-      try {
-        const response = await getGalleryItems();
-        if (response.success) {
-          setGalleryItems(response.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch gallery", error);
-      }
-    };
-
-    fetchGallery();
-  }, []);
-
-  // Upload Modal
-  const UploadModal = () => {
-    const [uploadData, setUploadData] = useState({
-      title: "",
-      description: "",
-      category: "donation-drive",
-      type: "photo",
-      date: new Date().toISOString().split("T")[0],
-      location: "",
-      tags: "",
-      content: "",
-      author: "",
-      featured: false,
-      status: "draft",
-    });
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      if (!uploadData.title.trim()) {
-        alert("Title is required");
-        return;
-      }
-      if (uploadData.type !== "quote" && !selectedFile) {
-        alert("Please select a file");
-        return;
-      }
-      if (uploadData.type === "quote" && !uploadData.content.trim()) {
-        alert("Quote content is required");
-        return;
-      }
-
-      try {
-        setIsUploading(true);
-        setUploadProgress(0);
-        const formData = new FormData();
-
-        if (selectedFile) formData.append("media", selectedFile);
-
-        formData.append("title", uploadData.title);
-        formData.append("description", uploadData.description);
-        formData.append("category", uploadData.category);
-        formData.append("type", uploadData.type);
-        formData.append("date", uploadData.date);
-        formData.append("location", uploadData.location);
-        formData.append("featured", uploadData.featured ? "true" : "false");
-        formData.append("status", uploadData.status);
-
-        const tagsArray = uploadData.tags
-          ? uploadData.tags.split(",").map((t) => t.trim())
-          : [];
-        formData.append("tags", JSON.stringify(tagsArray));
-
-        if (uploadData.type === "quote") {
-          formData.append("content", uploadData.content);
-          formData.append("author", uploadData.author);
-        }
-
-        const response = await uploadGalleryMedia(formData);
-
-        if (response.success) {
-          setGalleryItems((prev) => [response.data, ...prev]);
-          resetUpload();
-          setShowUploadModal(false);
-        } else {
-          alert(response.message || "Upload failed");
-        }
-      } catch (error) {
-        console.error("Upload Error:", error);
-        alert(error.response?.data?.message || "Something went wrong");
-      } finally {
-        setIsUploading(false);
-        setUploadProgress(0);
-      }
-    };
-
-    const resetUpload = () => {
-      setSelectedFile(null);
-      setFilePreview(null);
-      setUploadData({
-        title: "",
-        description: "",
-        category: "donation-drive",
-        type: "photo",
-        date: new Date().toISOString().split("T")[0],
-        location: "",
-        tags: "",
-        content: "",
-        author: "",
-        featured: false,
-        status: "draft",
-      });
-    };
-
-    return (
-      <div
-        className="modal-overlay"
-        onClick={() => !isUploading && setShowUploadModal(false)}
-      >
-        <div
-          className="modal-content upload-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-header">
-            <h3>
-              <FiUpload className="modal-icon" /> Upload New Media
-            </h3>
-            <button
-              className="close-btn"
-              onClick={() => !isUploading && setShowUploadModal(false)}
-              disabled={isUploading}
-            >
-              <FiX />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            {/* Enhanced File Upload Area */}
-            {uploadData.type !== "quote" && (
-              <div className="file-upload-section">
-                {!selectedFile ? (
-                  <div className="upload-zone">
-                    <input
-                      type="file"
-                      accept="image/*,video/*"
-                      onChange={handleFileSelect}
-                      id="file-upload"
-                    />
-                    <label htmlFor="file-upload" className="upload-label">
-                      <div className="upload-icon-circle">
-                        <FiUpload className="upload-icon" />
-                      </div>
-                      <div className="upload-text">
-                        <span className="primary-text">
-                          Click to upload or drag and drop
-                        </span>
-                        <span className="secondary-text">
-                          JPG, PNG, MP4 or MOV (Max 50MB)
-                        </span>
-                      </div>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="file-preview-card">
-                    <div className="preview-header">
-                      <span className="file-name">
-                        {selectedFile.type.startsWith("image/") ? (
-                          <FiImage />
-                        ) : (
-                          <FiFilm />
-                        )}
-                        {selectedFile.name}
-                      </span>
-                      <button
-                        type="button"
-                        className="remove-file-btn"
-                        onClick={handleRemoveFile}
-                        disabled={isUploading}
-                      >
-                        <FiX />
-                      </button>
-                    </div>
-                    <div className="preview-content">
-                      {selectedFile.type.startsWith("image/") ? (
-                        <img
-                          src={filePreview}
-                          alt="Preview"
-                          className="image-preview"
-                        />
-                      ) : (
-                        <video controls className="video-preview">
-                          <source src={filePreview} type={selectedFile.type} />
-                        </video>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Quote Type Preview */}
-            {uploadData.type === "quote" && uploadData.content && (
-              <div className="quote-preview-section">
-                <div className="quote-preview">
-                  <FaQuoteLeft className="quote-icon" />
-                  <p className="quote-text">"{uploadData.content}"</p>
-                  {uploadData.author && (
-                    <p className="quote-author">— {uploadData.author}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Form Fields - Responsive Grid handled by SCSS */}
-            <div className="form-grid">
-              <div className="form-group full-width">
-                <label>Title *</label>
-                <input
-                  type="text"
-                  value={uploadData.title}
-                  onChange={(e) =>
-                    setUploadData({ ...uploadData, title: e.target.value })
-                  }
-                  placeholder="Enter a descriptive title"
-                  required
-                  disabled={isUploading}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Type</label>
-                  <select
-                    value={uploadData.type}
-                    onChange={(e) => {
-                      setUploadData({ ...uploadData, type: e.target.value });
-                      setSelectedFile(null); // Reset file on type change
-                    }}
-                    disabled={isUploading}
-                  >
-                    <option value="photo">📷 Photo</option>
-                    <option value="video">🎥 Video</option>
-                    <option value="quote">💬 Quote</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Category</label>
-                  <select
-                    value={uploadData.category}
-                    onChange={(e) =>
-                      setUploadData({ ...uploadData, category: e.target.value })
-                    }
-                    disabled={isUploading}
-                  >
-                    <option value="donation-drive">🚗 Donation Drive</option>
-                    <option value="volunteer">👥 Volunteers</option>
-                    <option value="recognition">🏆 Recognition</option>
-                    <option value="motivational">💪 Motivational</option>
-                    <option value="campaign">📢 Campaign</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group full-width">
-                <label>Description</label>
-                <textarea
-                  rows="3"
-                  value={uploadData.description}
-                  onChange={(e) =>
-                    setUploadData({
-                      ...uploadData,
-                      description: e.target.value,
-                    })
-                  }
-                  placeholder="Add a description..."
-                  disabled={isUploading}
-                />
-              </div>
-
-              {uploadData.type === "quote" && (
-                <>
-                  <div className="form-group full-width">
-                    <label>Quote Content *</label>
-                    <textarea
-                      rows="3"
-                      value={uploadData.content}
-                      onChange={(e) =>
-                        setUploadData({
-                          ...uploadData,
-                          content: e.target.value,
-                        })
-                      }
-                      placeholder="Enter the quote..."
-                      required
-                      disabled={isUploading}
-                    />
-                  </div>
-
-                  <div className="form-group full-width">
-                    <label>Author</label>
-                    <input
-                      type="text"
-                      value={uploadData.author}
-                      onChange={(e) =>
-                        setUploadData({
-                          ...uploadData,
-                          author: e.target.value,
-                        })
-                      }
-                      placeholder="Who said this?"
-                      disabled={isUploading}
-                    />
-                  </div>
-                </>
-              )}
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Location</label>
-                  <input
-                    type="text"
-                    value={uploadData.location}
-                    onChange={(e) =>
-                      setUploadData({ ...uploadData, location: e.target.value })
-                    }
-                    placeholder="Location"
-                    disabled={isUploading}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Status</label>
-                  <select
-                    value={uploadData.status}
-                    onChange={(e) =>
-                      setUploadData({ ...uploadData, status: e.target.value })
-                    }
-                    disabled={isUploading}
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group full-width">
-                <label>Tags (comma separated)</label>
-                <input
-                  type="text"
-                  value={uploadData.tags}
-                  onChange={(e) =>
-                    setUploadData({ ...uploadData, tags: e.target.value })
-                  }
-                  placeholder="e.g., blood-donation, camp, volunteers"
-                  disabled={isUploading}
-                />
-              </div>
-
-              <div className="form-group checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={uploadData.featured}
-                    onChange={(e) =>
-                      setUploadData({
-                        ...uploadData,
-                        featured: e.target.checked,
-                      })
-                    }
-                    disabled={isUploading}
-                  />
-                  <span className="checkbox-text">Mark as Featured</span>
-                </label>
-              </div>
-            </div>
-
-            {isUploading && (
-              <div className="upload-progress">
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-                <span className="progress-text">
-                  {uploadProgress < 100 ? "Uploading..." : "Processing..."}
-                </span>
-              </div>
-            )}
-
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn-cancel"
-                onClick={() => {
-                  resetUpload();
-                  setShowUploadModal(false);
-                }}
-                disabled={isUploading}
-              >
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                className="btn-upload"
-                disabled={
-                  isUploading || (uploadData.type !== "quote" && !selectedFile)
-                }
-              >
-                {isUploading ? (
-                  <>
-                    <span className="spinner" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <FiUpload /> Upload
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+  const handleUpdateSuccess = (updatedItem) => {
+    setGalleryItems((prev) => prev.map((i) => (i._id === updatedItem._id ? updatedItem : i)));
   };
 
-  // Edit Modal
-  const EditModal = ({ item, onClose }) => {
-    const [editData, setEditData] = useState(() => ({
-      title: item?.title || "",
-      description: item?.description || "",
-      category: item?.category || "donation-drive",
-      type: item?.type || "photo",
-      date: item?.date
-        ? new Date(item.date).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-      location: item?.location || "",
-      tags: item?.tags?.join(", ") || "",
-      content: item?.content || "",
-      author: item?.author || "",
-      featured: item?.featured || false,
-      status: item?.status || "draft",
-    }));
-
-    // Local state for file selection inside Edit Modal
-    const [newMediaFile, setNewMediaFile] = useState(null);
-    const [newMediaPreview, setNewMediaPreview] = useState(null);
-    const [isSaving, setIsSaving] = useState(false);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-    const handleEditFileSelect = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      // Validations
-      const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "video/mp4", "video/quicktime"];
-      if (!allowedTypes.includes(file.type)) {
-        alert("Invalid file type");
-        return;
-      }
-      
-      setNewMediaFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewMediaPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    };
-
-    const clearNewMedia = () => {
-        setNewMediaFile(null);
-        setNewMediaPreview(null);
-    }
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-
-      if (!editData.title.trim()) {
-        alert("Title is required");
-        return;
-      }
-
-      if (editData.type === "quote" && !editData.content.trim()) {
-        alert("Quote content is required");
-        return;
-      }
-
-      try {
-        setIsSaving(true);
-
-        const formData = new FormData();
-
-        formData.append("title", editData.title);
-        formData.append("description", editData.description);
-        formData.append("category", editData.category);
-        formData.append("type", editData.type);
-        formData.append("date", editData.date);
-        formData.append("location", editData.location);
-        formData.append("featured", editData.featured ? "true" : "false");
-        formData.append("status", editData.status);
-
-        const tagsArray = editData.tags
-          ? editData.tags.split(",").map((t) => t.trim())
-          : [];
-
-        formData.append("tags", JSON.stringify(tagsArray));
-
-        if (editData.type === "quote") {
-          formData.append("content", editData.content);
-          formData.append("author", editData.author);
-        }
-
-        // Append new file if selected
-        if (newMediaFile) {
-          formData.append("media", newMediaFile);
-        }
-
-        const response = await updateGalleryMedia(item._id, formData);
-
-        if (response.success) {
-          setGalleryItems((prev) =>
-            prev.map((i) => (i._id === item._id ? response.data : i))
-          );
-          onClose();
-        } else {
-          alert("Update failed");
-        }
-      } catch (error) {
-        console.error("Update Error:", error);
-        alert(error.response?.data?.message || "Something went wrong");
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    const handleDelete = async () => {
-      try {
-        setIsSaving(true);
-        const response = await deleteGalleryMedia(item._id);
-
-        if (response.success) {
-          setGalleryItems((prev) => prev.filter((i) => i._id !== item._id));
-          onClose();
-        } else {
-          alert("Delete failed");
-        }
-      } catch (error) {
-        console.error("Delete Error:", error);
-        alert(error.response?.data?.message || "Something went wrong");
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    if (!item) return null;
-
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div
-          className="modal-content edit-modal upload-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-header">
-            <h3>
-              <FiEdit2 className="modal-icon" /> Edit{" "}
-              {item.type === "quote" ? "Story" : "Media"}
-            </h3>
-            <button className="close-btn" onClick={onClose} disabled={isSaving}>
-              <FiX />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            {/* Media Section */}
-            {editData.type !== "quote" && (
-              <div className="file-upload-section">
-                 
-                 {/* Show Existing or New Preview */}
-                <div className="file-preview-card">
-                   <div className="preview-header">
-                     <span className="file-name">
-                       {editData.type === "photo" ? <FiImage /> : <FiFilm />}
-                       {newMediaFile ? "New Media Preview" : "Current Media"}
-                     </span>
-                     {newMediaFile && (
-                        <button type="button" className="remove-file-btn" onClick={clearNewMedia}>
-                            <FiX /> Cancel Change
-                        </button>
-                     )}
-                   </div>
-                   <div className="preview-content">
-                     {newMediaFile ? (
-                        newMediaFile.type.startsWith("image/") ? (
-                            <img src={newMediaPreview} alt="New Preview" className="image-preview" />
-                        ) : (
-                            <video controls className="video-preview">
-                                <source src={newMediaPreview} type={newMediaFile.type} />
-                            </video>
-                        )
-                     ) : (
-                        <>
-                            {editData.type === "photo" && item.image && (
-                            <img
-                                src={item.image}
-                                alt={editData.title}
-                                className="image-preview"
-                            />
-                            )}
-                            {editData.type === "video" && (
-                            <video controls width="100%">
-                                <source src={item.videoUrl} type="video/mp4" />
-                            </video>
-                            )}
-                        </>
-                     )}
-                   </div>
-                </div>
-
-                {/* Change Media Action */}
-                {!newMediaFile && (
-                    <div className="upload-zone small">
-                        <input 
-                            type="file" 
-                            accept="image/*,video/*" 
-                            onChange={handleEditFileSelect} 
-                            id="edit-file-upload" 
-                        />
-                        <label htmlFor="edit-file-upload" className="upload-label">
-                            <FiUpload /> <span>Click to change media</span>
-                        </label>
-                    </div>
-                )}
-              </div>
-            )}
-
-            {/* Quote Type Preview */}
-            {editData.type === "quote" && editData.content && (
-              <div className="quote-preview-section">
-                <div
-                  className="quote-preview"
-                  style={{ backgroundColor: item.bgColor || "#f3f4f6" }}
-                >
-                  <FaQuoteLeft className="quote-icon" />
-                  <p className="quote-text">"{editData.content}"</p>
-                  {editData.author && (
-                    <p className="quote-author">— {editData.author}</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Form Fields */}
-            <div className="form-grid">
-              <div className="form-group full-width">
-                <label>Title *</label>
-                <input
-                  type="text"
-                  value={editData.title}
-                  onChange={(e) =>
-                    setEditData({ ...editData, title: e.target.value })
-                  }
-                  placeholder="Enter a descriptive title"
-                  required
-                  disabled={isSaving}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Type</label>
-                  <select
-                    value={editData.type}
-                    onChange={(e) =>
-                      setEditData({ ...editData, type: e.target.value })
-                    }
-                    disabled={isSaving}
-                  >
-                    <option value="photo">📷 Photo</option>
-                    <option value="video">🎥 Video</option>
-                    <option value="quote">💬 Quote</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Category</label>
-                  <select
-                    value={editData.category}
-                    onChange={(e) =>
-                      setEditData({ ...editData, category: e.target.value })
-                    }
-                    disabled={isSaving}
-                  >
-                    <option value="donation-drive">🚗 Donation Drive</option>
-                    <option value="volunteer">👥 Volunteers</option>
-                    <option value="recognition">🏆 Recognition</option>
-                    <option value="motivational">💪 Motivational</option>
-                    <option value="campaign">📢 Campaign</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group full-width">
-                <label>Description</label>
-                <textarea
-                  rows="3"
-                  value={editData.description}
-                  onChange={(e) =>
-                    setEditData({ ...editData, description: e.target.value })
-                  }
-                  placeholder="Add a description..."
-                  disabled={isSaving}
-                />
-              </div>
-
-              {editData.type === "quote" && (
-                <>
-                  <div className="form-group full-width">
-                    <label>Quote Content *</label>
-                    <textarea
-                      rows="3"
-                      value={editData.content}
-                      onChange={(e) =>
-                        setEditData({ ...editData, content: e.target.value })
-                      }
-                      placeholder="Enter the quote..."
-                      required
-                      disabled={isSaving}
-                    />
-                  </div>
-
-                  <div className="form-group full-width">
-                    <label>Author</label>
-                    <input
-                      type="text"
-                      value={editData.author}
-                      onChange={(e) =>
-                        setEditData({ ...editData, author: e.target.value })
-                      }
-                      placeholder="Who said this?"
-                      disabled={isSaving}
-                    />
-                  </div>
-                </>
-              )}
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Date</label>
-                  <input
-                    type="date"
-                    value={editData.date}
-                    onChange={(e) =>
-                      setEditData({ ...editData, date: e.target.value })
-                    }
-                    disabled={isSaving}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Location</label>
-                  <input
-                    type="text"
-                    value={editData.location}
-                    onChange={(e) =>
-                      setEditData({ ...editData, location: e.target.value })
-                    }
-                    placeholder="Location"
-                    disabled={isSaving}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Status</label>
-                  <select
-                    value={editData.status}
-                    onChange={(e) =>
-                      setEditData({ ...editData, status: e.target.value })
-                    }
-                    disabled={isSaving}
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group full-width">
-                <label>Tags (comma separated)</label>
-                <input
-                  type="text"
-                  value={editData.tags}
-                  onChange={(e) =>
-                    setEditData({ ...editData, tags: e.target.value })
-                  }
-                  placeholder="e.g., blood-donation, camp, volunteers"
-                  disabled={isSaving}
-                />
-              </div>
-
-              <div className="form-row checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={editData.featured}
-                    onChange={(e) =>
-                      setEditData({ ...editData, featured: e.target.checked })
-                    }
-                    disabled={isSaving}
-                  />
-                  <span className="checkbox-text">Mark as Featured</span>
-                </label>
-
-                {!showDeleteConfirm ? (
-                  <button
-                    type="button"
-                    className="delete-trigger-btn"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    disabled={isSaving}
-                  >
-                    <FiTrash2 /> Delete Item
-                  </button>
-                ) : (
-                  <div className="delete-confirm">
-                    <span className="delete-warning">Delete this item?</span>
-                    <button
-                      type="button"
-                      className="delete-confirm-btn"
-                      onClick={handleDelete}
-                      disabled={isSaving}
-                    >
-                      Yes
-                    </button>
-                    <button
-                      type="button"
-                      className="delete-cancel-btn"
-                      onClick={() => setShowDeleteConfirm(false)}
-                      disabled={isSaving}
-                    >
-                      No
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {(item.views !== undefined || item.likes !== undefined) && (
-                <div className="stats-preview">
-                  <h4>Statistics</h4>
-                  <div className="stats-row">
-                    {item.views !== undefined && (
-                      <span>
-                        <FiEye /> {item.views} views
-                      </span>
-                    )}
-                    {item.likes !== undefined && (
-                      <span>
-                        <FiHeart /> {item.likes} likes
-                      </span>
-                    )}
-                    {item.comments !== undefined && (
-                      <span>
-                        <FiMessageSquare /> {item.comments} comments
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn-cancel"
-                onClick={onClose}
-                disabled={isSaving}
-              >
-                Cancel
-              </button>
-
-              <button type="submit" className="btn-save" disabled={isSaving}>
-                {isSaving ? (
-                  <>
-                    <span className="spinner" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <FiCheck /> Save Changes
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+  const handleDeleteSuccess = (id) => {
+    setGalleryItems((prev) => prev.filter((i) => i._id !== id));
   };
 
-  // Preview Modal
-  const PreviewModal = ({ item, onClose }) => {
-    if (!item) return null;
-
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div
-          className="modal-content preview-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-header">
-            <h3>{item.title}</h3>
-            <button className="close-btn" onClick={onClose}>
-              <FiX />
-            </button>
-          </div>
-
-          <div className="preview-content">
-            {item.type === "photo" && (
-              <div className="preview-image-container">
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="preview-image"
-                />
-              </div>
-            )}
-            {item.type === "video" && (
-              <div className="preview-video-container">
-                <video controls width="100%">
-                  <source src={item.videoUrl} type="video/mp4" />
-                </video>
-              </div>
-            )}
-            {item.type === "quote" && (
-              <div className={`quote-preview ${item.bgColor}`}>
-                <FaQuoteLeft className="quote-icon" />
-                <p className="quote-text">"{item.content}"</p>
-                <p className="quote-author">— {item.author}</p>
-              </div>
-            )}
-
-            <div className="preview-details">
-              <div className="detail-row">
-                <FiCalendar /> {new Date(item.date).toLocaleDateString()}
-              </div>
-              {item.location && (
-                <div className="detail-row">
-                  <FiMapPin /> {item.location}
-                </div>
-              )}
-              <div className="detail-stats">
-                <span>
-                  <FiHeart /> {item.likes}
-                </span>
-                <span>
-                  <FiEye /> {item.views}
-                </span>
-                <span>
-                  <FiMessageSquare /> {item.comments}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="preview-actions">
-            <button
-              className="btn-edit"
-              onClick={() => {
-                onClose();
-                setSelectedImage(item);
-                setShowEditModal(true);
-              }}
-            >
-              <FiEdit2 /> Edit
-            </button>
-            <button className="btn-share">
-              <FiShare2 /> Share
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const handleRefresh = () => {
+    fetchGallery(true);
   };
 
-  // Delete Modal
-  const DeleteModal = () => (
-    <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-      <div
-        className="modal-content delete-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="delete-icon">
-          <FiTrash2 />
-        </div>
-        <h3>Delete Items</h3>
-        <p>Are you sure you want to delete {selectedItems.length} item(s)?</p>
-        <div className="modal-actions">
-          <button
-            className="btn-cancel"
-            onClick={() => setShowDeleteModal(false)}
-          >
-            Cancel
-          </button>
-          <button className="btn-delete" onClick={handleDelete}>
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openEditModal = (item) => {
+    setSelectedImage(item);
+    setShowEditModal(true);
+  };
 
   return (
     <div className="admin-gallery-management">
+      <Toast />
+
       {/* Header */}
       <div className="header-section">
         <div className="header-text">
@@ -1245,32 +1199,50 @@ export default function GalleryManagement() {
           </h1>
           <p className="page-subtitle">Manage photos, videos & stories</p>
         </div>
-        <button className="upload-btn" onClick={() => setShowUploadModal(true)}>
-          <FiPlus /> {isMobile ? "Add" : "Add New"}
-        </button>
+        <div className="header-actions">
+          <button className="refresh-btn" onClick={handleRefresh} disabled={isRefreshing}>
+            <FiRefreshCw className={isRefreshing ? "spinning" : ""} />
+            {!isMobile && (isRefreshing ? "Refreshing..." : "Refresh")}
+          </button>
+          <button className="upload-btn" onClick={() => setShowUploadModal(true)}>
+            <FiPlus /> {isMobile ? "Add" : "Add New"}
+          </button>
+        </div>
       </div>
 
-      {/* Statistics Cards - Responsive Grid */}
+      {/* Statistics Cards */}
       <div className="stats-grid">
         <div className="stat-card total">
+          <div className="stat-icon">
+            <FiImage />
+          </div>
           <div className="stat-info">
             <span className="stat-value">{stats.total}</span>
             <span className="stat-label">Total</span>
           </div>
         </div>
         <div className="stat-card photos">
+          <div className="stat-icon">
+            <FiImage />
+          </div>
           <div className="stat-info">
             <span className="stat-value">{stats.photos}</span>
             <span className="stat-label">Photos</span>
           </div>
         </div>
         <div className="stat-card videos">
+          <div className="stat-icon">
+            <FiFilm />
+          </div>
           <div className="stat-info">
             <span className="stat-value">{stats.videos}</span>
             <span className="stat-label">Videos</span>
           </div>
         </div>
         <div className="stat-card featured">
+          <div className="stat-icon">
+            <FiStar />
+          </div>
           <div className="stat-info">
             <span className="stat-value">{stats.featured}</span>
             <span className="stat-label">Featured</span>
@@ -1278,7 +1250,7 @@ export default function GalleryManagement() {
         </div>
       </div>
 
-      {/* Filters - Responsive Layout */}
+      {/* Filters */}
       <div className="filters-section">
         <div className="filter-controls">
           <div className="search-box">
@@ -1290,10 +1262,7 @@ export default function GalleryManagement() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
-              <button
-                className="clear-search"
-                onClick={() => setSearchQuery("")}
-              >
+              <button className="clear-search" onClick={() => setSearchQuery("")}>
                 <FiX />
               </button>
             )}
@@ -1301,10 +1270,7 @@ export default function GalleryManagement() {
 
           <div className="view-actions">
             <div className="sort-box">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                 <option value="newest">Newest</option>
                 <option value="oldest">Oldest</option>
                 <option value="most-liked">Most Liked</option>
@@ -1314,16 +1280,10 @@ export default function GalleryManagement() {
 
             {!isMobile && (
               <div className="view-toggle">
-                <button
-                  className={`view-btn ${viewMode === "grid" ? "active" : ""}`}
-                  onClick={() => setViewMode("grid")}
-                >
+                <button className={`view-btn ${viewMode === "grid" ? "active" : ""}`} onClick={() => setViewMode("grid")}>
                   <FiImage />
                 </button>
-                <button
-                  className={`view-btn ${viewMode === "list" ? "active" : ""}`}
-                  onClick={() => setViewMode("list")}
-                >
+                <button className={`view-btn ${viewMode === "list" ? "active" : ""}`} onClick={() => setViewMode("list")}>
                   <FiFolder />
                 </button>
               </div>
@@ -1331,7 +1291,6 @@ export default function GalleryManagement() {
           </div>
         </div>
 
-        {/* Category Filters - Scrollable on mobile */}
         <div className="category-filters">
           {categories.map((category) => (
             <button
@@ -1351,128 +1310,101 @@ export default function GalleryManagement() {
       {selectedItems.length > 0 && (
         <div className="bulk-actions">
           <div className="bulk-info">
-            <span className="selected-count">
-              {selectedItems.length} selected
-            </span>
+            <span className="selected-count">{selectedItems.length} selected</span>
           </div>
           <div className="bulk-buttons">
             <button className="bulk-btn featured" onClick={() => {}}>
               <FiStar /> Feature
             </button>
-            <button
-              className="bulk-btn delete"
-              onClick={() => setShowDeleteModal(true)}
-            >
+            <button className="bulk-btn delete" onClick={() => setShowDeleteModal(true)}>
               <FiTrash2 /> Delete
             </button>
-            <button
-              className="bulk-btn clear"
-              onClick={() => setSelectedItems([])}
-            >
+            <button className="bulk-btn clear" onClick={() => setSelectedItems([])}>
               <FiX /> Clear
             </button>
           </div>
         </div>
       )}
 
-      {/* Gallery Grid - Responsive handled by class */}
-      <div className={`gallery-view ${viewMode}`}>
-        {paginatedItems.map((item) => (
-          <div key={item._id} className={`gallery-item ${item.type}`}>
-            {/* Selection Checkbox */}
-            <div
-              className="item-checkbox"
-              onClick={() => handleSelectItem(item._id)}
-            >
-              <input
-                type="checkbox"
-                checked={selectedItems.includes(item._id)}
-                onChange={() => {}}
-              />
-            </div>
-
-            {/* Status Badge */}
-            <div className={`status-badge ${item.status}`}>
-              {item.status === "published" ? <FiCheck /> : <FiClock />}
-            </div>
-
-            {/* Featured Badge */}
-            {item.featured && (
-              <div className="featured-badge">
-                <FiStar />
+      {/* Gallery Grid */}
+      {isLoading ? (
+        <GallerySkeleton />
+      ) : (
+        <div className={`gallery-view ${viewMode}`}>
+          {paginatedItems.map((item) => (
+            <div key={item._id} className={`gallery-item ${item.type}`}>
+              <div className="item-checkbox" onClick={() => handleSelectItem(item._id)}>
+                <input type="checkbox" checked={selectedItems.includes(item._id)} onChange={() => {}} />
               </div>
-            )}
 
-            {/* Quick Actions - Visible on hover or mobile touch */}
-            <div className="quick-actions">
-              <button
-                onClick={() => handleToggleFeatured(item._id)}
-                title="Toggle Featured"
-              >
-                <FiStar />
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedImage(item);
-                  setShowPreviewModal(true);
-                }}
-                title="Preview"
-              >
-                <FiEye />
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedImage(item);
-                  setShowEditModal(true);
-                }}
-                title="Edit"
-              >
-                <FiEdit2 />
-              </button>
-            </div>
-
-            {/* Item Preview */}
-            {item.type === "photo" && (
-              <div className="item-image">
-                <img src={item.image} alt={item.title} />
+              <div className={`status-badge ${item.status}`}>
+                {item.status === "published" ? <FiCheck /> : <FiClock />}
               </div>
-            )}
-            {item.type === "video" && (
-              <div className="item-image video-thumb">
-                <video>
-                  <source src={item.videoUrl} type="video/mp4" />
-                </video>
-                <div className="play-icon-overlay">
+
+              {item.featured && (
+                <div className="featured-badge">
+                  <FiStar />
+                </div>
+              )}
+
+              <div className="quick-actions">
+                <button onClick={() => handleToggleFeatured(item._id)} title="Toggle Featured">
+                  <FiStar />
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedImage(item);
+                    setShowPreviewModal(true);
+                  }}
+                  title="Preview"
+                >
+                  <FiEye />
+                </button>
+                <button onClick={() => openEditModal(item)} title="Edit">
+                  <FiEdit2 />
+                </button>
+              </div>
+
+              {item.type === "photo" && (
+                <div className="item-image">
+                  <img src={item.image} alt={item.title} />
+                </div>
+              )}
+              {item.type === "video" && (
+                <div className="item-image video-thumb">
+                  <video>
+                    <source src={item.videoUrl} type="video/mp4" />
+                  </video>
+                  <div className="play-icon-overlay">
                     <FaPlay />
+                  </div>
+                </div>
+              )}
+              {item.type === "quote" && (
+                <div className="item-quote">
+                  <FaQuoteLeft className="quote-icon" />
+                  <p className="quote-text">"{item.content?.substring(0, 60)}..."</p>
+                </div>
+              )}
+
+              <div className="item-info">
+                <h4 className="item-title">{item.title}</h4>
+                <div className="item-meta">
+                  <span>
+                    <FiHeart /> {item.likes || 0}
+                  </span>
+                  <span>
+                    <FiEye /> {item.views || 0}
+                  </span>
                 </div>
               </div>
-            )}
-            {item.type === "quote" && (
-              <div className={`item-quote ${item.bgColor}`}>
-                <FaQuoteLeft className="quote-icon" />
-                <p className="quote-text">
-                  "{item.content?.substring(0, 60)}..."
-                </p>
-              </div>
-            )}
-
-            <div className="item-info">
-              <h4 className="item-title">{item.title}</h4>
-              <div className="item-meta">
-                <span>
-                  <FiHeart /> {item.likes}
-                </span>
-                <span>
-                  <FiEye /> {item.views}
-                </span>
-              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* No Results */}
-      {paginatedItems.length === 0 && (
+      {!isLoading && paginatedItems.length === 0 && (
         <div className="no-results">
           <FiImage className="no-results-icon" />
           <h3>No items found</h3>
@@ -1481,13 +1413,9 @@ export default function GalleryManagement() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPages > 1 && !isLoading && (
         <div className="pagination">
-          <button
-            className="page-nav"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-          >
+          <button className="page-nav" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
             <FiChevronLeft />
           </button>
 
@@ -1495,27 +1423,32 @@ export default function GalleryManagement() {
             {currentPage} / {totalPages}
           </span>
 
-          <button
-            className="page-nav"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-          >
+          <button className="page-nav" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
             <FiChevronRight />
           </button>
         </div>
       )}
 
       {/* Modals */}
-      {showUploadModal && <UploadModal />}
-      {showEditModal && (
-        <EditModal
-          item={selectedImage}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedImage(null);
-          }}
-        />
-      )}
+      <UploadModal
+        show={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onSuccess={handleUploadSuccess}
+        showToast={showToast}
+      />
+
+      <EditModal
+        show={showEditModal}
+        item={selectedImage}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedImage(null);
+        }}
+        onUpdate={handleUpdateSuccess}
+        onDelete={handleDeleteSuccess}
+        showToast={showToast}
+      />
+
       {showPreviewModal && (
         <PreviewModal
           item={selectedImage}
@@ -1523,9 +1456,17 @@ export default function GalleryManagement() {
             setShowPreviewModal(false);
             setSelectedImage(null);
           }}
+          onEdit={openEditModal}
         />
       )}
-      {showDeleteModal && <DeleteModal />}
+
+      {showDeleteModal && (
+        <DeleteModal
+          count={selectedItems.length}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleBulkDelete}
+        />
+      )}
     </div>
   );
 }
