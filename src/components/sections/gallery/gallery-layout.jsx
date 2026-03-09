@@ -4,7 +4,6 @@ import {
   FaImages,
   FaUsers,
   FaAward,
-  FaArrowRight,
   FaPlay,
   FaInstagram,
   FaShareAlt,
@@ -29,7 +28,8 @@ import {
 } from "react-icons/fa";
 import "./donation-gallery.scss";
 import WrapperSection from "../wrapper-section/wrapper-section-component";
-import { getGalleryItems } from "../../../services/donorServices";
+import { getGalleryItems, likeGalleryItem ,commentOnItem} from "../../../services/donorServices";
+
 
 // --- HELPER FUNCTIONS ---
 
@@ -43,6 +43,67 @@ const getVideoThumbnail = (item) => {
 };
 
 // --- SUB-COMPONENTS ---
+
+// Add this new component for auth warning modal
+const AuthWarningModal = ({ show, onClose, action }) => {
+  if (!show) return null;
+  
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="auth-warning-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}><FaTimes /></button>
+        <div className="warning-icon">🔒</div>
+        <h3>Login Required</h3>
+        <p>Please log in to {action} this item.</p>
+        <div className="warning-actions">
+          <button className="warning-btn cancel" onClick={onClose}>Cancel</button>
+          <button className="warning-btn login" onClick={() => {
+            // Redirect to login page
+            window.location.href = '/login';
+          }}>Log In</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Gallery Stats Header Component
+const GalleryStatsHeader = ({ totalLikes, totalComments, totalViews, totalItems }) => {
+  return (
+    <div className="gallery-stats-header">
+      <div className="stats-container">
+        <div className="stat-item">
+          <FaHeart className="stat-icon" />
+          <div className="stat-info">
+            <span className="stat-value">{totalLikes.toLocaleString()}</span>
+            <span className="stat-label">Total Likes</span>
+          </div>
+        </div>
+        <div className="stat-item">
+          <FaRegCommentDots className="stat-icon" />
+          <div className="stat-info">
+            <span className="stat-value">{totalComments.toLocaleString()}</span>
+            <span className="stat-label">Comments</span>
+          </div>
+        </div>
+        <div className="stat-item">
+          <FaEye className="stat-icon" />
+          <div className="stat-info">
+            <span className="stat-value">{totalViews.toLocaleString()}</span>
+            <span className="stat-label">Views</span>
+          </div>
+        </div>
+        <div className="stat-item">
+          <FaImages className="stat-icon" />
+          <div className="stat-info">
+            <span className="stat-value">{totalItems}</span>
+            <span className="stat-label">Total Items</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const GallerySkeleton = () => (
   <div className="gallery-grid">
@@ -99,9 +160,25 @@ const ShareModal = ({ show, item, onClose }) => {
   );
 };
 
-const CommentsModal = ({ show, item, onClose, onSubmit, commentText, setCommentText }) => {
+const CommentsModal = ({ show, item, onClose, onSubmit, commentText, setCommentText, isAuthenticated, showAuthWarning }) => {
   if (!show || !item) return null;
   const comments = item.comments || [];
+
+  const handleCommentSubmit = () => {
+    if (!isAuthenticated) {
+      showAuthWarning('comment');
+      return;
+    }
+    onSubmit(item._id || item.id);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && isAuthenticated) {
+      onSubmit(item._id || item.id);
+    } else if (e.key === "Enter" && !isAuthenticated) {
+      showAuthWarning('comment');
+    }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -133,18 +210,38 @@ const CommentsModal = ({ show, item, onClose, onSubmit, commentText, setCommentT
             type="text"
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Write a comment..."
-            onKeyPress={(e) => e.key === "Enter" && onSubmit(item._id || item.id)}
+            placeholder={isAuthenticated ? "Write a comment..." : "Login to comment..."}
+            onKeyPress={handleKeyPress}
+            disabled={!isAuthenticated}
           />
-          <button className="send-btn" onClick={() => onSubmit(item._id || item.id)}>Send</button>
+          <button 
+            className={`send-btn ${!isAuthenticated ? 'disabled' : ''}`} 
+            onClick={handleCommentSubmit}
+            disabled={!isAuthenticated}
+          >
+            Send
+          </button>
         </div>
+        {!isAuthenticated && (
+          <p className="login-prompt" style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+            Please <a href="/login" style={{ color: '#4CAF50' }}>login</a> to comment
+          </p>
+        )}
       </div>
     </div>
   );
 };
 
-const FullscreenViewer = ({ show, item, onClose, onPrev, onNext, isLiked, onLike }) => {
+const FullscreenViewer = ({ show, item, onClose, onPrev, onNext, isLiked, onLike, isAuthenticated, showAuthWarning }) => {
   if (!show || !item) return null;
+
+  const handleLikeClick = () => {
+    if (!isAuthenticated) {
+      showAuthWarning('like');
+      return;
+    }
+    onLike(item._id || item.id);
+  };
 
   return (
     <div className="fullscreen-viewer">
@@ -167,7 +264,7 @@ const FullscreenViewer = ({ show, item, onClose, onPrev, onNext, isLiked, onLike
              controls 
              autoPlay 
              playsInline
-             muted // Required for autoplay in most browsers
+             muted
            />
         ) : (
            <img src={item.image} alt={item.title} className="viewer-image" />
@@ -180,7 +277,10 @@ const FullscreenViewer = ({ show, item, onClose, onPrev, onNext, isLiked, onLike
           <p>{item.description}</p>
         </div>
         <div className="viewer-actions">
-          <button className={`action ${isLiked ? 'active' : ''}`} onClick={onLike}>
+          <button 
+            className={`action ${isLiked ? 'active' : ''} ${!isAuthenticated ? 'disabled' : ''}`} 
+            onClick={handleLikeClick}
+          >
             <FaHeart /> <span>{item.likes || 0}</span>
           </button>
         </div>
@@ -201,16 +301,45 @@ const GalleryItem = memo(({
   onSave, 
   onFullscreen, 
   onShare,
-  onComment 
+  onComment,
+  isAuthenticated,
+  showAuthWarning
 }) => {
   
   const transformStyle = isHovered
     ? `perspective(1000px) rotateX(${mousePosition.y * 0.5}deg) rotateY(${mousePosition.x * 0.5}deg) translateY(-10px)`
     : "none";
 
+  const handleLikeClick = (e) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      showAuthWarning('like');
+      return;
+    }
+    onLike(item._id || item.id);
+  };
+
+  const handleCommentClick = (e) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      showAuthWarning('comment');
+      return;
+    }
+    onComment(item);
+  };
+
+  const handleSaveClick = (e) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      showAuthWarning('save');
+      return;
+    }
+    onSave(item._id || item.id);
+  };
+
   return (
     <div
-      className={`gallery-item ${item.type}-item`}
+      className={`gallery-item ${item.type}-item ${!isAuthenticated ? 'unauthenticated' : ''}`}
       onMouseEnter={() => onHover(item._id || item.id)}
       onMouseLeave={() => onHover(null)}
       style={{ transform: transformStyle }}
@@ -223,13 +352,22 @@ const GalleryItem = memo(({
             <div className="media-overlay">
               <div className="overlay-gradient" />
               <div className="quick-actions">
-                <button className={`action-btn ${isLiked ? 'active' : ''}`} onClick={() => onLike(item._id || item.id)}>
+                <button 
+                  className={`action-btn ${isLiked ? 'active' : ''} ${!isAuthenticated ? 'disabled' : ''}`} 
+                  onClick={handleLikeClick}
+                >
                   <FaHeart /> <span>{item.likes || 0}</span>
                 </button>
-                <button className="action-btn" onClick={() => onComment(item)}>
+                <button 
+                  className={`action-btn ${!isAuthenticated ? 'disabled' : ''}`} 
+                  onClick={handleCommentClick}
+                >
                   <FaRegCommentDots /> <span>{item.comments?.length || 0}</span>
                 </button>
-                <button className={`action-btn ${isSaved ? 'active' : ''}`} onClick={() => onSave(item._id || item.id)}>
+                <button 
+                  className={`action-btn ${isSaved ? 'active' : ''} ${!isAuthenticated ? 'disabled' : ''}`} 
+                  onClick={handleSaveClick}
+                >
                   {isSaved ? <FaBookmark /> : <FaRegBookmark />}
                 </button>
               </div>
@@ -250,16 +388,27 @@ const GalleryItem = memo(({
             </div>
             
             <div className="item-footer">
-              <button className={`footer-btn ${isLiked ? 'liked' : ''}`} onClick={() => onLike(item._id || item.id)}>
+              <button 
+                className={`footer-btn ${isLiked ? 'liked' : ''} ${!isAuthenticated ? 'disabled' : ''}`} 
+                onClick={handleLikeClick}
+              >
                 {isLiked ? <FaSolidHeart /> : <FaHeart />} <span>{item.likes || 0}</span>
               </button>
-              <button className="footer-btn" onClick={() => onComment(item)}>
+              <button 
+                className={`footer-btn ${!isAuthenticated ? 'disabled' : ''}`} 
+                onClick={handleCommentClick}
+              >
                 <FaRegCommentDots /> <span>{item.comments?.length || 0}</span>
               </button>
               <button className="footer-btn" onClick={() => onShare(item)}>
                 <FaShareAlt />
               </button>
             </div>
+            {!isAuthenticated && (
+              <div className="login-overlay">
+                <p>Login to interact</p>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -274,23 +423,32 @@ const GalleryItem = memo(({
             loading="lazy"
           />
 
-          {/* 1. Overlay comes FIRST in code, so it is behind the indicator */}
           <div className="media-overlay" style={{ background: "rgba(0,0,0,0.3)" }}>
              <div className="quick-actions">
-                <button className={`action-btn ${isLiked ? 'active' : ''}`} onClick={() => onLike(item._id || item.id)}>
+                <button 
+                  className={`action-btn ${isLiked ? 'active' : ''} ${!isAuthenticated ? 'disabled' : ''}`} 
+                  onClick={handleLikeClick}
+                >
                   <FaHeart /> <span>{item.likes || 0}</span>
                 </button>
-                <button className="action-btn" onClick={() => onComment(item)}>
+                <button 
+                  className={`action-btn ${!isAuthenticated ? 'disabled' : ''}`} 
+                  onClick={handleCommentClick}
+                >
                   <FaRegCommentDots />
                 </button>
               </div>
           </div>
 
-          {/* 2. Indicator comes LAST in code, so it sits ON TOP and is clickable */}
           <div className="video-indicator" onClick={() => onFullscreen(item)}>
             <FaPlay />
           </div>
           
+          {!isAuthenticated && (
+            <div className="login-overlay">
+              <p>Login to interact</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -301,6 +459,11 @@ const GalleryItem = memo(({
           <blockquote>"{item.content}"</blockquote>
           <cite>— {item.author}</cite>
           <button className="share-quote" onClick={() => onShare(item)}><FaShareAlt /></button>
+          {!isAuthenticated && (
+            <div className="login-overlay">
+              <p>Login to interact</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -333,6 +496,7 @@ const DonationGallery = () => {
   const [savedItems, setSavedItems] = useState(new Set());
   const [hoveredItem, setHoveredItem] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Modal States
   const [selectedImage, setSelectedImage] = useState(null);
@@ -341,6 +505,24 @@ const DonationGallery = () => {
   const [shareItem, setShareItem] = useState(null);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [showAuthWarning, setShowAuthWarning] = useState(false);
+  const [pendingAction, setPendingAction] = useState('');
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      setIsAuthenticated(!!token);
+    };
+    
+    checkAuth();
+    
+    // Optional: Listen for storage changes (if token changes in another tab)
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
+
+  const [likingItems, setLikingItems] = useState(new Set());
 
   // Fetch Data
   const fetchGallery = async () => {
@@ -349,9 +531,20 @@ const DonationGallery = () => {
       const response = await getGalleryItems();
 
       if (response?.success) {
-        setGalleryItems(response.data);
+        const normalizedData = response.data.map(item => ({
+          ...item,
+          likes: Array.isArray(item.likes) ? item.likes.length : (item.likes || 0),
+          comments: Array.isArray(item.comments) ? item.comments : [],
+        }));
+        
+        setGalleryItems(normalizedData);
       } else if (Array.isArray(response)) {
-        setGalleryItems(response);
+         const normalizedData = response.map(item => ({
+          ...item,
+          likes: Array.isArray(item.likes) ? item.likes.length : (item.likes || 0),
+          comments: Array.isArray(item.comments) ? item.comments : [],
+        }));
+        setGalleryItems(normalizedData);
       } else {
         throw new Error("Invalid API response");
       }
@@ -368,6 +561,13 @@ const DonationGallery = () => {
     fetchGallery();
   }, []);
 
+  // Calculate total stats
+  const totalStats = galleryItems.reduce((acc, item) => ({
+    likes: acc.likes + (item.likes || 0),
+    comments: acc.comments + (item.comments?.length || 0),
+    views: acc.views + (item.views || 0)
+  }), { likes: 0, comments: 0, views: 0 });
+
   // Mouse Parallax Effect
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -381,25 +581,57 @@ const DonationGallery = () => {
   }, []);
 
   // Handlers
-  const handleLike = useCallback(async (id) => {
-    const newLiked = new Set(likedImages);
-    const isLiked = newLiked.has(id);
-    
-    if (isLiked) newLiked.delete(id);
-    else newLiked.add(id);
-    setLikedImages(newLiked);
-    
-    setGalleryItems(prev => prev.map(item => 
-      item._id === id ? { ...item, likes: (item.likes || 0) + (isLiked ? -1 : 1) } : item
-    ));
-  }, [likedImages]);
+  const handleAuthWarning = (action) => {
+    setPendingAction(action);
+    setShowAuthWarning(true);
+  };
+
+  const handleLike = async (id) => {
+    if (!isAuthenticated) {
+      handleAuthWarning('like');
+      return;
+    }
+
+    try {
+      const res = await likeGalleryItem(id);
+
+      setGalleryItems(prev =>
+        prev.map(item =>
+          item._id === id
+            ? { ...item, likes: res.likes }
+            : item
+        )
+      );
+
+      // Update liked images set
+      const newLiked = new Set(likedImages);
+      if (newLiked.has(id)) {
+        newLiked.delete(id);
+      } else {
+        newLiked.add(id);
+      }
+      setLikedImages(newLiked);
+
+    } catch (error) {
+      console.error("Like failed", error);
+      if (error.response?.status === 401) {
+        setIsAuthenticated(false);
+        handleAuthWarning('like');
+      }
+    }
+  };
 
   const handleSave = useCallback((id) => {
+    if (!isAuthenticated) {
+      handleAuthWarning('save');
+      return;
+    }
+    
     const newSaved = new Set(savedItems);
     if (newSaved.has(id)) newSaved.delete(id);
     else newSaved.add(id);
     setSavedItems(newSaved);
-  }, [savedItems]);
+  }, [savedItems, isAuthenticated]);
 
   const handleShare = useCallback((item) => {
     setShareItem(item);
@@ -412,21 +644,57 @@ const DonationGallery = () => {
   }, []);
 
   const handleComment = useCallback((item) => {
+    if (!isAuthenticated) {
+      handleAuthWarning('comment');
+      return;
+    }
     setSelectedImage(item);
     setShowComments(true);
-  }, []);
+  }, [isAuthenticated]);
 
   const handleCommentSubmit = async (id) => {
-    if(!commentText.trim()) return;
-    
-    const newComment = { id: Date.now(), text: commentText, user: "You", time: "Just now" };
-    setGalleryItems(prev => prev.map(item => 
-      item._id === id ? { ...item, comments: [...(item.comments || []), newComment] } : item
-    ));
-    
-    setSelectedImage(prev => prev && prev._id === id ? { ...prev, comments: [...(prev.comments || []), newComment] } : prev);
-    
+    if (!isAuthenticated) {
+      handleAuthWarning('comment');
+      return;
+    }
+
+    if (!commentText.trim()) return;
+
+    const text = commentText;
+
+    // optimistic update
+    const newComment = {
+      id: Date.now(),
+      text,
+      user: "You",
+      time: "Just now"
+    };
+
+    setGalleryItems(prev =>
+      prev.map(item =>
+        item._id === id
+          ? { ...item, comments: [...(item.comments || []), newComment] }
+          : item
+      )
+    );
+
+    setSelectedImage(prev =>
+      prev && prev._id === id
+        ? { ...prev, comments: [...(prev.comments || []), newComment] }
+        : prev
+    );
+
     setCommentText("");
+
+    try {
+      await commentOnItem(id, text);
+    } catch (error) {
+      console.error("Comment failed", error);
+      if (error.response?.status === 401) {
+        setIsAuthenticated(false);
+        handleAuthWarning('comment');
+      }
+    }
   };
 
   const handleNav = (direction) => {
@@ -453,7 +721,7 @@ const DonationGallery = () => {
 
   return (
     <WrapperSection>
-      <div className="donation-gallery bg-white/60 rounded-2xl md:-mt-[480px] -mt-[500px]">
+      <div className="donation-gallery bg-gradient-to-br from-white/70 to-pink-50 rounded-2xl md:-mt-[480px] -mt-[500px]">
         <div className="gallery-background light">
           <div className="bg-gradient-light" />
         </div>
@@ -468,6 +736,16 @@ const DonationGallery = () => {
               <p className="description">Witness the moments that save lives.</p>
             </div>
           </div>
+
+          {/* Add Gallery Stats Header */}
+          {!loading && galleryItems.length > 0 && (
+            <GalleryStatsHeader 
+              totalLikes={totalStats.likes}
+              totalComments={totalStats.comments}
+              totalViews={totalStats.views}
+              totalItems={galleryItems.length}
+            />
+          )}
 
           <div className="gallery-filters">
             {filters.map((filter) => (
@@ -508,6 +786,8 @@ const DonationGallery = () => {
                       onFullscreen={handleFullscreen}
                       onShare={handleShare}
                       onComment={handleComment}
+                      isAuthenticated={isAuthenticated}
+                      showAuthWarning={handleAuthWarning}
                     />
                   </div>
                 ))
@@ -530,7 +810,9 @@ const DonationGallery = () => {
           onPrev={() => handleNav('prev')}
           onNext={() => handleNav('next')}
           isLiked={selectedImage && likedImages.has(selectedImage._id || selectedImage.id)}
-          onLike={() => selectedImage && handleLike(selectedImage._id || selectedImage.id)}
+          onLike={handleLike}
+          isAuthenticated={isAuthenticated}
+          showAuthWarning={handleAuthWarning}
         />
 
         <ShareModal 
@@ -546,6 +828,14 @@ const DonationGallery = () => {
           onSubmit={handleCommentSubmit}
           commentText={commentText}
           setCommentText={setCommentText}
+          isAuthenticated={isAuthenticated}
+          showAuthWarning={handleAuthWarning}
+        />
+
+        <AuthWarningModal 
+          show={showAuthWarning}
+          onClose={() => setShowAuthWarning(false)}
+          action={pendingAction}
         />
       </div>
     </WrapperSection>

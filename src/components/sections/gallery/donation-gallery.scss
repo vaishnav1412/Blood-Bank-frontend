@@ -1347,3 +1347,192 @@
     }
   }
 }
+
+
+// Gallery Stats Header
+.gallery-stats-header {
+  margin: 2rem 0 1rem;
+  padding: 1.5rem;
+ background: linear-gradient(
+  135deg,
+  rgba(255, 255, 255, 0.7) 0%,
+  rgba(255, 255, 255, 0.6) 100%
+);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+
+  .stats-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: #4b5563;
+
+      .stat-icon {
+        font-size: 2rem;
+        opacity: 0.9;
+      }
+
+      .stat-info {
+        display: flex;
+        flex-direction: column;
+
+        .stat-value {
+          font-size: 1.8rem;
+          font-weight: 700;
+          line-height: 1.2;
+        }
+
+        .stat-label {
+          font-size: 0.9rem;
+          opacity: 0.9;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+  }
+}
+
+// Auth Warning Modal
+.auth-warning-modal {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  text-align: center;
+
+  .warning-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+
+  p {
+    color: #666;
+    margin-bottom: 2rem;
+  }
+
+  .warning-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+
+    .warning-btn {
+      padding: 0.75rem 2rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+
+      &.cancel {
+        background: #f0f0f0;
+        color: #666;
+
+        &:hover {
+          background: #e0e0e0;
+        }
+      }
+
+      &.login {
+        background: rgb(236, 72, 153);
+        color: white;
+
+        &:hover {
+          background: rgb(219, 39, 119);
+        }
+      }
+    }
+  }
+}
+
+// Disabled states for unauthenticated users
+.gallery-item.unauthenticated {
+  .action-btn,
+  .footer-btn {
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      
+      &:hover {
+        transform: none;
+        background: transparent;
+      }
+    }
+  }
+
+  .login-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 10;
+
+    p {
+      color: white;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.9rem;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+  }
+
+  &:hover .login-overlay {
+    opacity: 1;
+    
+    p {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Update existing styles for disabled buttons
+.comment-input {
+  .send-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    
+    &:hover {
+      background: #4CAF50;
+    }
+  }
+}
+
+.fullscreen-viewer {
+  .action.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    
+    &:hover {
+      transform: none;
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}

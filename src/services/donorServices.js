@@ -195,3 +195,14 @@ export const getGalleryItems = async () => {
 };
 
 
+export const likeGalleryItem = async (id) => {
+  const res = await axiosInstance.patch(`/api/v1/donor/gallery/like/${id}`);
+  return res.data;
+};
+
+export const commentOnItem = async (id, text) => {
+  const res = await axiosInstance.post(`/api/v1/donor/gallery/comment/${id}`, {
+    text
+  });
+  return res.data;
+};

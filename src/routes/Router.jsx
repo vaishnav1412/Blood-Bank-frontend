@@ -13,14 +13,14 @@ import AdminProtectedRoute from "./AdminProtectedRoute";
 
 // --- LAZY LOADING (Note: Corrected spelling to 'Donor') ---
 const DonorLogin = lazy(
-  () => import("../components/pages/doner-login/doner-login"),
+  () => import("../components/pages/donor-login/donor-login"),
 );
 const ForgotEmailPage = lazy(
   () =>
     import("../components/pages/forgot-password-email/forgot-password-email"),
 );
 const DonorRegister = lazy(
-  () => import("../components/pages/doner-register/doner-register"),
+  () => import("../components/pages/donor-register/donor-register"),
 );
 const HomePage = lazy(() => import("../components/pages/home/home-page"));
 const PublicHomePage = lazy(
@@ -34,7 +34,7 @@ const NeedBloodPage = lazy(
   () => import("../components/pages/need-blood/need-blood-page"),
 );
 const BloodDonorProfile = lazy(
-  () => import("../components/pages/blood-doner-profile/bloodDonerProfile"),
+  () => import("../components/pages/donor-profile/donor-profile"),
 );
 const Gallery = lazy(() => import("../components/pages/gallery/gallery"));
 const ContactPage = lazy(

@@ -103,7 +103,6 @@ const SearchBloodStockComponent = ({
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
         
-        // Handle special cases
         if (sortConfig.key === 'lastDonation') {
           aValue = a.lastDonation ? new Date(a.lastDonation) : new Date(0);
           bValue = b.lastDonation ? new Date(b.lastDonation) : new Date(0);
@@ -313,7 +312,7 @@ Can you please help? Your timely response could save a life.
 
   return (
     <WrapperSection>
-      <div className={`${classHint} search-wrapper md:-mt-[480px] -mt-[680px] w-full max-w-7xl mx-auto relative`}>
+      <div className={`${classHint} search-wrapper md:-mt-[480px] -mt-[480px] w-full max-w-7xl mx-auto relative`}>
         {/* Animated gradient background */}
         <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 via-purple-400 to-pink-600 rounded-3xl blur-xl opacity-75 animate-gradient-xy"></div>
         
@@ -330,7 +329,7 @@ Can you please help? Your timely response could save a life.
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-pink-500 to-purple-400 rounded-b-full"></div>
 
           {/* Hero Section */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 md:mb-12">
             <GroupedHeadingComponent
               subheadingText={subheadingText}
               headingText={headingText}
@@ -338,7 +337,8 @@ Can you please help? Your timely response could save a life.
               position="center"
             />
             
-            <div className="mt-6 flex flex-wrap justify-center gap-4">
+            {/* Responsive Stats Grid */}
+            <div className="mt-6 grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 md:gap-4">
               <div className="stats-card">
                 <FaUsers className="stats-icon" />
                 <div>
@@ -372,7 +372,7 @@ Can you please help? Your timely response could save a life.
 
           {/* Search Form */}
           <div className="search-form-container">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <h3 className="form-title">
                 <FaSearch className="title-icon" />
                 Find Blood Donors
@@ -380,7 +380,7 @@ Can you please help? Your timely response could save a life.
               
               <button
                 onClick={handleEmergencyRequest}
-                className="emergency-button"
+                className="emergency-button w-full sm:w-auto"
               >
                 <FaExclamationTriangle className="mr-2" />
                 Emergency Request
@@ -529,14 +529,14 @@ Can you please help? Your timely response could save a life.
                 <p>Try expanding your search area or use emergency request.</p>
                 <button
                   onClick={handleEmergencyRequest}
-                  className="emergency-button mt-4"
+                  className="emergency-button mt-4 w-full sm:w-auto"
                 >
                   Request Emergency Assistance
                 </button>
               </div>
             ) : (
               <>
-                {/* Premium Table */}
+                {/* Premium Table with Responsive Card Transformation */}
                 <div className="table-wrapper">
                   <table className="donor-table">
                     <thead>
@@ -562,7 +562,7 @@ Can you please help? Your timely response could save a life.
                     <tbody>
                       {currentDonors.map((donor) => (
                         <tr key={getDonorId(donor)} className={donor.readyToDonate ? 'emergency-row' : ''}>
-                          <td>
+                          <td data-label="Donor">
                             <div className="donor-info">
                               <div className="donor-avatar">
                                 {donor.name?.charAt(0).toUpperCase()}
@@ -576,24 +576,24 @@ Can you please help? Your timely response could save a life.
                               </div>
                             </div>
                           </td>
-                          <td>
+                          <td data-label="Blood Group">
                             <span className={`blood-badge ${donor.bloodGroup?.includes('+') ? 'positive' : 'negative'}`}>
                               {donor.bloodGroup}
                             </span>
                           </td>
-                          <td>
+                          <td data-label="Location">
                             <div className="location-info">
                               <FaMapMarkerAlt className="location-icon" />
                               <span>{donor.district}, {donor.taluk}</span>
                             </div>
                           </td>
-                          <td>
+                          <td data-label="Last Donation">
                             <div className="donation-info">
                               <FaCalendarAlt className="calendar-icon" />
                               <span>{donor.lastDonation || 'N/A'}</span>
                             </div>
                           </td>
-                          <td>
+                          <td data-label="Status">
                             {donor.readyToDonate ? (
                               <span className="status-badge available">
                                 <FaHeartbeat className="mr-1" />
@@ -606,7 +606,7 @@ Can you please help? Your timely response could save a life.
                               </span>
                             )}
                           </td>
-                          <td>
+                          <td data-label="Actions">
                             <div className="action-group">
                               <button 
                                 onClick={() => handleViewDonor(donor)}
@@ -710,13 +710,13 @@ Can you please help? Your timely response could save a life.
               <div className="modal-avatar">
                 {selectedDonor.name?.charAt(0).toUpperCase()}
               </div>
-              <div>
+              <div className="modal-header-text">
                 <h3>{selectedDonor.name}</h3>
                 <p>{selectedDonor.email || 'Email not available'}</p>
               </div>
               {selectedDonor.verified && (
                 <span className="verified-badge">
-                  <FaCheckCircle /> Verified Donor
+                  <FaCheckCircle /> Verified
                 </span>
               )}
             </div>
@@ -755,7 +755,7 @@ Can you please help? Your timely response could save a life.
                   </div>
                 </div>
 
-                <div className="info-item">
+                <div className="info-item full-width">
                   <FaMapMarkerAlt className="info-icon" />
                   <div>
                     <label>Location</label>
@@ -827,7 +827,7 @@ Can you please help? Your timely response could save a life.
                 <p>Your emergency request has been posted to all WhatsApp blood donor groups.</p>
                 <div className="whatsapp-notice">
                   <FaWhatsapp />
-                  <span>WhatsApp groups are now opening in new tabs...</span>
+                  <span>WhatsApp groups are now opening...</span>
                 </div>
                 <button
                   onClick={() => setShowEmergencyModal(false)}
