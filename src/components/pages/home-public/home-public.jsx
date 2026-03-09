@@ -14,7 +14,11 @@ const PublicHomePage = () => {
     <>
       <HeaderComponent />
       <HeroComponent {...HomePageDetails.hero} />
+
+
       <TwoCtaComponent />
+
+      
       <ThreeStepProcessComponent
         stepsText={HomePageDetails.stepsText}
         stepDetails={stepDetails}

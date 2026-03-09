@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import HealthStatusForm from "../form/HealthStatusForm";
-import EditProfileForm from "../form/EditProfileForm";
-import DonationUploadForm from "../form/DonationUploadForm";
+import HealthStatusForm from "../form/health-status-form/HealthStatusForm";
+
+import EditProfileForm from "../form/edit-profile-form/EditProfileForm";
+import DonationUploadForm from "../form/donation-upload-form/DonationUploadForm";
 import { useNavigate } from "react-router-dom";
 import OtpVerificationModal from "./otpVerificationModel";
 import CertificateModal from "./certificateModal";
@@ -510,7 +511,7 @@ const DonorProfile = () => {
 
   return (
     <WrapperSection>
-      <div className="donor-profile-wrapper relative md:-mt-[480px] -mt-[650px]">
+      <div className="donor-profile-wrapper relative md:-mt-[480px] -mt-[480px]">
         <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 via-purple-400 to-pink-600 rounded-3xl blur-xl opacity-75 animate-gradient-xy"></div>
 
         <div className="absolute inset-0 overflow-hidden rounded-3xl">

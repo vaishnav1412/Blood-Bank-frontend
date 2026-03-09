@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   FiMail,
   FiLock,
-  FiLogIn,
   FiAlertCircle,
   FiCheckCircle,
   FiShield,
@@ -16,7 +15,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import "./admin-login-forms.scss";
-import { loginAdmin ,fetchCount } from "../../../services/adminServices";
+import { loginAdmin ,fetchCount } from "../../../../services/adminServices";
 
 const AdminLoginForm = () => {
   const [formData, setFormData] = useState({

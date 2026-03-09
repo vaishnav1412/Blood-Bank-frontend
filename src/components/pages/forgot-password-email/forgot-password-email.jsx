@@ -1,5 +1,5 @@
 import HeroComponent from "../../sections/hero/hero-component";
-import ForgotPasswordForm from "../../sections/form/forgot-password";
+import ForgotPasswordForm from "../../sections/form/forgot-password/forgot-password";
 import ContactDetailsComponent from "../../sections/details/details-component";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";

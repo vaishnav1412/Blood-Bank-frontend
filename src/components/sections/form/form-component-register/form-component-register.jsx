@@ -1,13 +1,13 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import "./form-component-register.scss";
-import { DropdownIcon } from "../dropdown-icon/dropdown-icon";
-import { districtTalukMap } from "../../../data/utils/districtTalukMap";
-import WrapperSection from "../wrapper-section/wrapper-section-component";
+import { DropdownIcon } from "../../dropdown-icon/dropdown-icon";
+import { districtTalukMap } from "../../../../data/utils/districtTalukMap";
+import WrapperSection from "../../wrapper-section/wrapper-section-component";
 import {
   registerInputStyles,
   registerSelectStyles,
-} from "../../../data/style/style";
+} from "../../../../data/style/style";
 
 const FormComponentRegister = ({
   heading,

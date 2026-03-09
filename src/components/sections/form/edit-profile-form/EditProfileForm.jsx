@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import {
   FaTimes,
   FaUser,
@@ -714,5 +715,29 @@ const EditProfileForm = ({ user, setShowEditProfile, handleSaveProfile }) => {
     </div>
   );
 };
+
+EditProfileForm.propTypes = {
+  user: PropTypes.shape({
+    name: PropTypes.string,
+    gender: PropTypes.string,
+    bloodGroup: PropTypes.string,
+    dob: PropTypes.string,
+    weight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    platelet: PropTypes.string,
+    lastDonationDate: PropTypes.string,
+    mobile: PropTypes.string,
+    whatsapp: PropTypes.string,
+    email: PropTypes.string,
+    taluk: PropTypes.string,
+    district: PropTypes.string
+  }),
+  setShowEditProfile: PropTypes.func.isRequired,
+  handleSaveProfile: PropTypes.func.isRequired
+};
+
+EditProfileForm.defaultProps = {
+  user: null
+};
+
 
 export default EditProfileForm;

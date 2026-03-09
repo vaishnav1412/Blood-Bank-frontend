@@ -1,5 +1,5 @@
 import HeroComponent from "../../sections/hero/hero-component";
-import ContactFormPrivate from "../../sections/form/contact-form-private";
+import ContactFormPrivate from "../../sections/form/contact-form/contact-form-private";
 import ContactDetailsComponent from "../../sections/details/details-component";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";

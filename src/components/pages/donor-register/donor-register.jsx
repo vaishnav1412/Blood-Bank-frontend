@@ -6,7 +6,7 @@ import ThreeStepProcessComponent from "../../sections/three-step-process/three-s
 import SideBySideComponent from "../../sections/side-by-side/side-by-side-component";
 import QuoteComponent from "../../sections/quote/quote-component";
 import CriteriaComponent from "../../sections/criteria/criteria-component";
-import FormComponentRegister from "../../sections/form/form-component-register";
+import FormComponentRegister from "../../sections/form/form-component-register/form-component-register";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
 import FooterComponent from "../../sections/footer/footer-component";

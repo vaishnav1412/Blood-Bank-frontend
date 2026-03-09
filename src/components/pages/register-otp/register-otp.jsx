@@ -12,7 +12,7 @@ import ContactDetailsComponent from "../../sections/details/details-component";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
 import FooterComponent from "../../sections/footer/footer-component";
-import ContactForm from "../../sections/form/form-component-otp";
+import OtpForm from "../../sections/form/form-component-otp/form-component-otp";
 import { verifyRegisterOtp,resendRegisterOtp } from "../../../services/donorServices";
 
 const RegisterOtpPage = () => {
@@ -99,7 +99,7 @@ const RegisterOtpPage = () => {
 
       <HeroComponent {...ResetEmailCaptions.hero} />
 
-      <ContactForm
+      <OtpForm
         heading={"Almost Done! Confirm Your Email"}
         buttonText={"Complete Registration"}
         handleSubmit={handleSubmit}

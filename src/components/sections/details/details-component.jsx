@@ -126,7 +126,7 @@ ContactDetailsComponent.propTypes = {
   contactDetails: PropTypes.arrayOf(
     PropTypes.shape({
       key: PropTypes.string.isRequired,
-      stepNumber: PropTypes.string.isRequired,
+      stepNumber: PropTypes.node.isRequired,
       stepName: PropTypes.string.isRequired,
       stepDescription: PropTypes.string.isRequired,
       stepUrl: PropTypes.string.isRequired,

@@ -1,4 +1,4 @@
-import AdminLoginForm from '../../sections/form/admin-login-form'
+import AdminLoginForm from '../../sections/form/admin-login-form/admin-login-form'
 
 const AdminLogin = () => {
   return (

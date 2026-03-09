@@ -44,19 +44,26 @@ const HeaderComponent = () => {
     navigate("/");
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await getDonorInfo();
-        setUser(userData);
-      } catch (err) {
-        console.log("User not logged in");
-      }
-    };
+ useEffect(() => {
+  const fetchUser = async () => {
+    const token = localStorage.getItem("token");
 
-    fetchUser();
-  }, []);
+    if (!token) {
+      setUser(null);
+      return;
+    }
 
+    try {
+      const userData = await getDonorInfo();
+      setUser(userData);
+    } catch (err) {
+      console.log("Failed to fetch user");
+      setUser(null);
+    }
+  };
+
+  fetchUser();
+}, []);
   useEffect(() => {
     const onScroll = () => {
       setBlurActivation(window.pageYOffset > 5);

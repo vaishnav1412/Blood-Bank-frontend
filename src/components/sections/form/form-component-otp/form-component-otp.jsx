@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { FaSpinner, FaCheckCircle } from "react-icons/fa";
-import WrapperSection from "../wrapper-section/wrapper-section-component";
+import WrapperSection from "../../wrapper-section/wrapper-section-component";
 import "./form-component-otp.scss";
-const ContactForm = ({
+const OtpForm = ({
   heading,
   buttonText,
   formData,
@@ -325,7 +325,7 @@ const ContactForm = ({
 /* ===========================
    ✅ PropTypes Validation
 =========================== */
-ContactForm.propTypes = {
+OtpForm.propTypes = {
   heading: PropTypes.string.isRequired,
   buttonText: PropTypes.string.isRequired,
   formData: PropTypes.shape({
@@ -341,9 +341,9 @@ ContactForm.propTypes = {
 /* ===========================
    ✅ Default Props
 =========================== */
-ContactForm.defaultProps = {
+OtpForm.defaultProps = {
   status: "",
   loading: false,
 };
 
-export default ContactForm;
+export default OtpForm;

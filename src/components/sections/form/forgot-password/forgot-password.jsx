@@ -17,10 +17,10 @@ import {
   sendForgotOtp,
   verifyForgotOtp,
   resetForgotPassword,
-} from "../../../services/donorServices";
-import { getErrorMessage } from "../../../utils/getErrorMessage";
+} from "../../../../services/donorServices";
+import { getErrorMessage } from "../../../../utils/getErrorMessage";
 import "./forgot-password.scss";
-import WrapperSection from "../wrapper-section/wrapper-section-component";
+import WrapperSection from "../../wrapper-section/wrapper-section-component";
 import { useNavigate } from "react-router-dom";
 
 const ForgotPasswordForm = () => {

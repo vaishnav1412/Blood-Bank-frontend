@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import {
   FaTimes,
   FaWeight,
@@ -268,6 +269,16 @@ const HealthStatusForm = ({ onClose, onSubmit }) => {
       </div>
     </div>
   );
+};
+
+HealthStatusForm.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+};
+
+HealthStatusForm.defaultProps = {
+  onClose: () => {},
+  onSubmit: () => {},
 };
 
 export default HealthStatusForm;

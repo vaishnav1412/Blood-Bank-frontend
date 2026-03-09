@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import {
   FaClock,
-  FaTimes,
   FaSpinner,
   FaUserShield,
   FaInbox,
@@ -13,7 +13,7 @@ import {
 import { getMyContactHistory } from "../../../services/donorServices";
 import "./contact-chat.scss";
 
-const ContactChat = () => {
+const ContactChat = ({ refreshChat }) => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,7 +21,7 @@ const ContactChat = () => {
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [refreshChat]);
 
   const fetchConversations = async () => {
     try {
@@ -298,6 +298,14 @@ const ContactChat = () => {
       </div>
     </div>
   );
+};
+
+ContactChat.propTypes = {
+  refreshChat: PropTypes.bool
+};
+
+ContactChat.defaultProps = {
+  refreshChat: false
 };
 
 export default ContactChat;

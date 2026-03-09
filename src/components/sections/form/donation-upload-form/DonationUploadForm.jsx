@@ -12,6 +12,7 @@ import {
   FaSpinner,
   FaShieldAlt 
 } from "react-icons/fa";
+import PropTypes from "prop-types";
 
 const DonationUploadForm = ({
   showDonationUpload,
@@ -279,6 +280,35 @@ const DonationUploadForm = ({
       </div>
     </div>
   );
+};
+
+
+DonationUploadForm.propTypes = {
+  showDonationUpload: PropTypes.bool.isRequired,
+  setShowDonationUpload: PropTypes.func.isRequired,
+  uploadForm: PropTypes.shape({
+    imagePreview: PropTypes.string,
+    donationDate: PropTypes.string,
+    donationCenter: PropTypes.string,
+    bloodGroup: PropTypes.string,
+    units: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  }).isRequired,
+  setUploadForm: PropTypes.func.isRequired,
+  handleUploadDonation: PropTypes.func.isRequired,
+  handleImageUpload: PropTypes.func.isRequired,
+  fileInputRef: PropTypes.shape({
+    current: PropTypes.any
+  }),
+  clearImage: PropTypes.func.isRequired,
+  isUploading: PropTypes.bool,
+  user: PropTypes.object,
+  bloodGroup: PropTypes.string
+};
+
+DonationUploadForm.defaultProps = {
+  isUploading: false,
+  user: null,
+  bloodGroup: ""
 };
 
 export default DonationUploadForm;

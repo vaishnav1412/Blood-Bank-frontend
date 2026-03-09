@@ -13,17 +13,17 @@ import {
 } from "react-icons/fa";
 import "./host-blood-drive";
 import toast from "react-hot-toast";
-import WrapperSection from "../wrapper-section/wrapper-section-component";
+import WrapperSection from "../../wrapper-section/wrapper-section-component";
 import {
   organizationTypes,
   organizationTypeUI,
   statusUI,
-} from "../../../data/content/camp";
+} from "../../../../data/content/camp";
 import {
   submitBloodDriveApplication,
   fetchAllCampRequests,
-} from "../../../services/donorServices";
-import { getErrorMessage } from "../../../utils/getErrorMessage";
+} from "../../../../services/donorServices";
+import { getErrorMessage } from "../../../../utils/getErrorMessage";
 
 const HostBloodDrive = () => {
   const [activeStep, setActiveStep] = useState(1);

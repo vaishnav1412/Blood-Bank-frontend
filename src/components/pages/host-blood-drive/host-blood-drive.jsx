@@ -5,7 +5,7 @@ import QuoteComponent from "../../sections/quote/quote-component";
 import HeaderComponent from "../../sections/header/header-component";
 import BeforeFooterCTA from "../../sections/before-footer-cta/before-footer-cta-components";
 import FooterComponent from "../../sections/footer/footer-component";
-import HostBloodDrive from "../../sections/form/host-blood-drive";
+import HostBloodDrive from "../../sections/form/host-blood-drive/host-blood-drive";
 import {
   stepDetails,
   HostBloodDrivePageDetails,

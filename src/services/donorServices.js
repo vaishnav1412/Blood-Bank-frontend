@@ -1,7 +1,6 @@
 import axiosInstance from "../api/axiosInstance";
 import { publicAxios } from "../api/publicInstance";
 
-
 export const loginDonor = async (email, password) => {
   const response = await axiosInstance.post("/api/v1/donor/auth/login", {
     email: email.trim(),
@@ -88,7 +87,7 @@ export const fetchAllCampRequests = async () => {
 
 };
 
-//-------------------------------------------
+//---------------------contact us-----------------------
 
 
 export const sendContactMessage = (data) => {
@@ -104,12 +103,14 @@ export const getMyContactHistory = async () => {
   return response.data;
 };
 
+//--------------------doner profile---------------------------------
+
+
 export const updateDonorProfile = async (updatedData) => {
   const response = await axiosInstance.put(
     "/api/v1/donor/profile",
     updatedData
   );
-
   return response.data;
 };
 
@@ -123,7 +124,6 @@ export const updateHealthStatus = async (healthData) => {
     "/api/v1/donor/profile/health-status",
     healthData
   );
-
   return response.data;
 };
 
@@ -142,7 +142,6 @@ export const uploadProfilePhoto = async (formData) => {
       },
     }
   );
-
   return response.data;
 };
 
@@ -162,7 +161,6 @@ export const uploadDonationProof = async (formData) => {
       },
     }
   );
-
   return response.data;
 };
 
@@ -175,18 +173,22 @@ export const deleteDonationProof = async (donationId) => {
   const { data } = await axiosInstance.delete(
     `/api/v1/donor/donations/proof${donationId}`
   );
-
   return data;
 };
+
+
+//------------------------need blood part----------------------------
+
 
 export const searchDonors = async (filters = {}) => {
   const response = await publicAxios.get("/api/v1/donor/donations/search", {
     params: filters,
   });
-
   return response.data;
 };
 
+
+//----------------------------gallery part------------------------------
 
 
 export const getGalleryItems = async () => {
@@ -206,3 +208,5 @@ export const commentOnItem = async (id, text) => {
   });
   return res.data;
 };
+
+//------------------------------------------------------------------------

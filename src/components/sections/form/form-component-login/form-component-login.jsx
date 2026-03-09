@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaSpinner, FaGoogle } from "react-icons/fa";
-import WrapperSection from "../wrapper-section/wrapper-section-component";
-import { labelStyles, inputStyles } from "../../../data/style/style";
+import WrapperSection from "../../wrapper-section/wrapper-section-component";
+import { labelStyles, inputStyles } from "../../../../data/style/style";
 import "./form-component-login.scss";
 import PropTypes from "prop-types";
 
